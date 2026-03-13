@@ -49,7 +49,7 @@ async function parseNeedAI(message: string): Promise<Need | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   const base = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
-  if (!apiKey) return null;
+  if (!apiKey) throw new Error('OPENAI_API_KEY is missing. AI search is enabled but not configured.');
 
   const prompt = `Extract rental search filters from user query. Return strict JSON only with keys:
 city, suburb, maxPrice, furnished, billsIncluded, nearSchool, queryText.
@@ -107,7 +107,10 @@ export async function POST(req: NextRequest) {
     const userText = String(message || '').trim();
 
     const aiNeed = await parseNeedAI(userText);
-    const need = aiNeed || parseNeedRuleBased(userText);
+    if (!aiNeed) {
+      return NextResponse.json({ error: 'AI parsing failed. Please retry with a clearer query.' }, { status: 502 });
+    }
+    const need = aiNeed;
 
     const results = await searchListings(need);
 
@@ -119,7 +122,7 @@ export async function POST(req: NextRequest) {
     if (need.billsIncluded) detailBits.push('bills included');
     if (need.nearSchool) detailBits.push(`near ${need.nearSchool}`);
 
-    const mode = aiNeed ? 'AI-assisted' : 'rule-based';
+    const mode = 'AI-only';
     const reply = results.length
       ? `Found ${results.length} matching options${detailBits.length ? ` (${detailBits.join(', ')})` : ''}. (${mode})`
       : 'No matching listings yet. Try increasing budget, expanding location, or removing one filter.';
