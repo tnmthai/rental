@@ -15,6 +15,8 @@ export type NewListing = {
   city: string;
   price_nzd_week: number;
   source_url: string;
+  image_url?: string | null;
+  description?: string | null;
   furnished?: boolean;
   bills_included?: boolean;
   near_school?: string | null;
@@ -53,7 +55,7 @@ export async function searchListings(filters: ListingSearch) {
   }
 
   const sql = `
-    SELECT id, title, city, price_nzd_week, source_url, furnished, bills_included, near_school
+    SELECT id, title, city, price_nzd_week, source_url, image_url, description, furnished, bills_included, near_school
     FROM listings
     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
     ORDER BY price_nzd_week ASC
@@ -68,15 +70,17 @@ export async function createListing(input: NewListing) {
   const p = getPool();
   const { rows } = await p.query(
     `
-      INSERT INTO listings (title, city, price_nzd_week, source_url, furnished, bills_included, near_school)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING id, title, city, price_nzd_week, source_url, furnished, bills_included, near_school, created_at
+      INSERT INTO listings (title, city, price_nzd_week, source_url, image_url, description, furnished, bills_included, near_school)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id, title, city, price_nzd_week, source_url, image_url, description, furnished, bills_included, near_school, created_at
     `,
     [
       input.title,
       input.city,
       input.price_nzd_week,
       input.source_url,
+      input.image_url || null,
+      input.description || null,
       Boolean(input.furnished),
       Boolean(input.bills_included),
       input.near_school || null
@@ -89,7 +93,7 @@ export async function listRecentListings(limit = 20) {
   const p = getPool();
   const { rows } = await p.query(
     `
-      SELECT id, title, city, price_nzd_week, source_url, furnished, bills_included, near_school, created_at
+      SELECT id, title, city, price_nzd_week, source_url, image_url, description, furnished, bills_included, near_school, created_at
       FROM listings
       ORDER BY created_at DESC
       LIMIT $1

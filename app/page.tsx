@@ -8,6 +8,8 @@ type Hit = {
   city: string;
   price_nzd_week: number;
   source_url: string;
+  image_url?: string | null;
+  description?: string | null;
   furnished?: boolean;
   bills_included?: boolean;
   near_school?: string | null;
@@ -24,6 +26,8 @@ export default function HomePage() {
     city: 'Auckland',
     price_nzd_week: 250,
     source_url: '',
+    image_url: '',
+    description: '',
     furnished: true,
     bills_included: false,
     near_school: 'AUT'
@@ -59,7 +63,7 @@ export default function HomePage() {
       setSubmitMsg(`Lỗi: ${data.error || 'submit failed'}`);
     } else {
       setSubmitMsg(`Đã đăng listing #${data.item.id}`);
-      setForm({ ...form, title: '', source_url: '' });
+      setForm({ ...form, title: '', source_url: '', image_url: '', description: '' });
     }
     setSubmitting(false);
   }
@@ -95,10 +99,20 @@ export default function HomePage() {
             <h3>Kết quả</h3>
             <ul>
               {hits.map((h) => (
-                <li key={h.id} style={{ marginBottom: 10 }}>
-                  <b>{h.title}</b> — {h.city} — ${h.price_nzd_week}/week —{' '}
-                  {h.furnished ? 'furnished' : 'unfurnished'} — {h.bills_included ? 'bills included' : 'bills separate'}
-                  {h.near_school ? ` — near ${h.near_school}` : ''} —{' '}
+                <li key={h.id} style={{ marginBottom: 16, listStyle: 'none', border: '1px solid #eee', padding: 10, borderRadius: 8 }}>
+                  {h.image_url ? (
+                    <img
+                      src={h.image_url}
+                      alt={h.title}
+                      style={{ width: '100%', maxWidth: 420, height: 'auto', borderRadius: 8, marginBottom: 8 }}
+                    />
+                  ) : null}
+                  <div>
+                    <b>{h.title}</b> — {h.city} — ${h.price_nzd_week}/week — {h.furnished ? 'furnished' : 'unfurnished'} —{' '}
+                    {h.bills_included ? 'bills included' : 'bills separate'}
+                    {h.near_school ? ` — near ${h.near_school}` : ''}
+                  </div>
+                  {h.description ? <p style={{ margin: '6px 0' }}>{h.description}</p> : null}
                   <a href={h.source_url} target="_blank">
                     nguồn
                   </a>
@@ -128,6 +142,17 @@ export default function HomePage() {
             placeholder="Source URL"
             value={form.source_url}
             onChange={(e) => setForm({ ...form, source_url: e.target.value })}
+          />
+          <input
+            placeholder="Image URL (vd: /uploads/auckland/room1.jpg)"
+            value={form.image_url}
+            onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+          />
+          <textarea
+            placeholder="Description"
+            rows={3}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
           <input
             placeholder="Near school (AUT/UoA...)"
