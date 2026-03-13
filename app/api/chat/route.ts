@@ -72,7 +72,10 @@ Use null when unknown. Query: ${message}`;
     })
   });
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`AI upstream error (${res.status}): ${errText.slice(0, 300)}`);
+  }
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content;
   if (!text) return null;
@@ -114,7 +117,7 @@ export async function POST(req: NextRequest) {
 
     const aiNeed = await parseNeedAI(userText);
     if (!aiNeed) {
-      return NextResponse.json({ error: 'AI parsing failed. Please retry with a clearer query.' }, { status: 502 });
+      return NextResponse.json({ error: 'AI parsing failed: model returned non-JSON or empty content.' }, { status: 502 });
     }
     const need = aiNeed;
 
