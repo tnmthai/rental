@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 
 function normalizeImageUrls(input: unknown): string[] {
   if (!input) return [];
@@ -28,6 +29,7 @@ type Hit = {
 };
 
 export default function HomePage() {
+  const { data: session } = useSession();
   const [query, setQuery] = useState('Room under 250 NZD/week near LU in Lincoln, furnished, bills included');
   const [loading, setLoading] = useState(false);
   const [reply, setReply] = useState('');
@@ -49,7 +51,32 @@ export default function HomePage() {
   }
 
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: '48px 16px 80px' }}>
+    <main style={{ maxWidth: 980, margin: '0 auto', padding: '24px 16px 80px' }}>
+      <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 24 }}>
+        {session?.user ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#3c4043' }}>
+            <span>
+              Hello {session.user.name || session.user.email?.split('@')[0] || 'there'}
+            </span>
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', background: '#fff' }}
+            >
+              Sign out
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <a href="/login" style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', textDecoration: 'none', color: '#1a73e8' }}>
+              Log in
+            </a>
+            <a href="/login" style={{ border: '1px solid #1a73e8', background: '#1a73e8', borderRadius: 999, padding: '6px 12px', textDecoration: 'none', color: '#fff' }}>
+              Create account
+            </a>
+          </div>
+        )}
+      </header>
+
       <section style={{ textAlign: 'center', marginBottom: 26 }}>
         <div style={{ fontSize: 54, fontWeight: 700, letterSpacing: -1, marginBottom: 14 }}>
           <span style={{ color: '#4285F4' }}>R</span>
@@ -94,7 +121,7 @@ export default function HomePage() {
         </div>
 
         <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
-          <a href="/login">Login</a> · <a href="/post">Create listing</a>
+          <a href="/post">Create listing</a>
         </p>
       </section>
 
