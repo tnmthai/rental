@@ -52,16 +52,14 @@ export async function searchListings(filters: ListingSearch) {
   }
   if (filters.suburb) {
     params.push(`%${filters.suburb}%`);
-    where.push(`(title ILIKE $${params.length} OR description ILIKE $${params.length})`);
+    where.push(`(title ILIKE $${params.length} OR description ILIKE $${params.length} OR city ILIKE $${params.length})`);
   }
   if (filters.maxPrice) {
     params.push(filters.maxPrice);
     where.push(`price_nzd_week <= $${params.length}`);
   }
-  if (filters.queryText) {
-    params.push(`%${filters.queryText}%`);
-    where.push(`(title ILIKE $${params.length} OR description ILIKE $${params.length} OR city ILIKE $${params.length} OR near_school ILIKE $${params.length})`);
-  }
+  // NOTE: do not hard-filter by full natural-language queryText;
+  // it can be too strict and return zero rows. queryText is kept for future ranking/semantic use.
   if (filters.furnished === true) {
     where.push('furnished = true');
   }
