@@ -64,8 +64,9 @@ Use null when unknown. Query: ${message}`;
     body: JSON.stringify({
       model,
       temperature: 0,
+      response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: 'You are a strict JSON extractor.' },
+        { role: 'system', content: 'You are a strict JSON extractor. Output JSON only.' },
         { role: 'user', content: prompt }
       ]
     })
@@ -77,7 +78,12 @@ Use null when unknown. Query: ${message}`;
   if (!text) return null;
 
   try {
-    const j = JSON.parse(text);
+    const normalized = String(text).trim();
+    const candidate = normalized.startsWith('{')
+      ? normalized
+      : (normalized.match(/\{[\s\S]*\}/)?.[0] || '');
+    if (!candidate) return null;
+    const j = JSON.parse(candidate);
     return {
       city: j.city || undefined,
       suburb: j.suburb || undefined,
