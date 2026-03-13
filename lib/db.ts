@@ -110,3 +110,40 @@ export async function listRecentListings(limit = 20) {
   );
   return rows;
 }
+
+export async function findUserByEmail(email: string) {
+  const p = getPool();
+  const { rows } = await p.query(
+    `SELECT id, name, email, password_hash, provider, provider_id FROM users WHERE lower(email)=lower($1) LIMIT 1`,
+    [email]
+  );
+  return rows[0] || null;
+}
+
+export async function findUserByProvider(provider: string, providerId: string) {
+  const p = getPool();
+  const { rows } = await p.query(
+    `SELECT id, name, email, password_hash, provider, provider_id FROM users WHERE provider=$1 AND provider_id=$2 LIMIT 1`,
+    [provider, providerId]
+  );
+  return rows[0] || null;
+}
+
+export async function createUser(input: {
+  name?: string | null;
+  email: string;
+  passwordHash?: string | null;
+  provider?: string | null;
+  providerId?: string | null;
+}) {
+  const p = getPool();
+  const { rows } = await p.query(
+    `
+      INSERT INTO users (name, email, password_hash, provider, provider_id)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, name, email, provider, provider_id
+    `,
+    [input.name || null, input.email, input.passwordHash || null, input.provider || 'email', input.providerId || null]
+  );
+  return rows[0];
+}

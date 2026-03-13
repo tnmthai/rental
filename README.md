@@ -37,6 +37,17 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS furnished BOOLEAN NOT NULL DEFAULT
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS bills_included BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS near_school TEXT;
 
+CREATE TABLE IF NOT EXISTS users (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT,
+  provider TEXT NOT NULL DEFAULT 'email',
+  provider_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS users_provider_idx ON users(provider, provider_id);
+
 -- optional cleanup if old single-image column exists
 -- ALTER TABLE listings DROP COLUMN IF EXISTS image_url;
 
@@ -54,6 +65,12 @@ VALUES
 - Set env vars:
   - `DATABASE_URL` (from Railway Postgres)
   - `NODE_ENV=production`
+  - `NEXTAUTH_URL` (e.g. `https://your-app.up.railway.app`)
+  - `NEXTAUTH_SECRET` (random long string)
+  - `GOOGLE_CLIENT_ID`
+  - `GOOGLE_CLIENT_SECRET`
+  - `FACEBOOK_CLIENT_ID`
+  - `FACEBOOK_CLIENT_SECRET`
   - `CLOUDINARY_CLOUD_NAME`
   - `CLOUDINARY_API_KEY`
   - `CLOUDINARY_API_SECRET`

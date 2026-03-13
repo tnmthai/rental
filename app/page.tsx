@@ -94,7 +94,7 @@ export default function HomePage() {
         </div>
 
         <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
-          Post listing page: <a href="/post">/post</a>
+          <a href="/login">Login</a> · <a href="/post">Create listing</a>
         </p>
       </section>
 
