@@ -6,7 +6,6 @@ function normalizeImageUrls(input: unknown): string[] {
   if (!input) return [];
   if (Array.isArray(input)) return input.map(String).filter(Boolean);
   if (typeof input === 'string') {
-    // support old comma/newline formats
     return input
       .split(/\r?\n|,/) 
       .map((x) => x.trim())
@@ -29,25 +28,10 @@ type Hit = {
 };
 
 export default function HomePage() {
-  const [query, setQuery] = useState('Phòng dưới 250 NZD/tuần gần AUT, Auckland, furnished, bills included');
+  const [query, setQuery] = useState('Room under 250 NZD/week near LU in Lincoln, furnished, bills included');
   const [loading, setLoading] = useState(false);
   const [reply, setReply] = useState('');
   const [hits, setHits] = useState<Hit[]>([]);
-
-  const [form, setForm] = useState({
-    title: '',
-    city: 'Auckland',
-    price_nzd_week: 250,
-    source_url: '',
-    description: '',
-    furnished: true,
-    bills_included: false,
-    near_school: 'AUT'
-  });
-  const [images, setImages] = useState<FileList | null>(null);
-  const [descFile, setDescFile] = useState<File | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitMsg, setSubmitMsg] = useState('');
 
   async function run() {
     setLoading(true);
@@ -64,189 +48,99 @@ export default function HomePage() {
     setLoading(false);
   }
 
-  async function submitListing() {
-    setSubmitting(true);
-    setSubmitMsg('');
-    try {
-      let imageUrls: string[] = [];
-
-      if (images && images.length > 0) {
-        const fd = new FormData();
-        fd.set('city', form.city);
-        Array.from(images).forEach((file) => fd.append('images', file));
-        const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
-        const upData = await upRes.json();
-        if (!upRes.ok) throw new Error(upData.error || 'Upload images failed');
-        imageUrls = upData.urls || [];
-      }
-
-      let description = form.description;
-      if (descFile) {
-        description = await descFile.text();
-      }
-
-      const res = await fetch('/api/listings', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...form, image_urls: imageUrls, description })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'submit failed');
-
-      setSubmitMsg(`Đã đăng listing #${data.item.id} (${imageUrls.length} ảnh)`);
-      setForm({ ...form, title: '', source_url: '', description: '' });
-      setImages(null);
-      setDescFile(null);
-    } catch (e: any) {
-      setSubmitMsg(`Lỗi: ${e.message || 'submit failed'}`);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   return (
-    <main style={{ maxWidth: 920, margin: '0 auto' }}>
-      <h1>Student Rental NZ (Vòng 2.5)</h1>
-      <p>Chat tìm phòng + form đăng tin (nhiều ảnh + file mô tả).</p>
-      <p>
-        👉 Trang đăng bài riêng (Cloudinary): <a href="/post">/post</a>
-      </p>
+    <main style={{ maxWidth: 980, margin: '0 auto', padding: '48px 16px 80px' }}>
+      <section style={{ textAlign: 'center', marginBottom: 26 }}>
+        <div style={{ fontSize: 54, fontWeight: 700, letterSpacing: -1, marginBottom: 14 }}>
+          <span style={{ color: '#4285F4' }}>R</span>
+          <span style={{ color: '#EA4335' }}>e</span>
+          <span style={{ color: '#FBBC05' }}>n</span>
+          <span style={{ color: '#4285F4' }}>t</span>
+          <span style={{ color: '#34A853' }}>F</span>
+          <span style={{ color: '#EA4335' }}>i</span>
+          <span style={{ color: '#4285F4' }}>n</span>
+          <span style={{ color: '#34A853' }}>d</span>
+          <span style={{ color: '#FBBC05' }}>e</span>
+          <span style={{ color: '#EA4335' }}>r</span>
+        </div>
 
-      <section style={{ border: '1px solid #ddd', borderRadius: 10, padding: 16, marginBottom: 20 }}>
-        <h2>Tìm bằng chat</h2>
-        <textarea
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          rows={4}
-          style={{ width: '100%', padding: 12 }}
-        />
-        <div style={{ marginTop: 12 }}>
-          <button onClick={run} disabled={loading} style={{ padding: '10px 16px' }}>
-            {loading ? 'Đang tìm...' : 'Tìm bằng chat'}
+        <div
+          style={{
+            display: 'flex',
+            gap: 10,
+            padding: 10,
+            border: '1px solid #dfe1e5',
+            borderRadius: 999,
+            boxShadow: '0 1px 6px rgba(32,33,36,.1)',
+            background: '#fff'
+          }}
+        >
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search rentals in natural language..."
+            style={{ flex: 1, border: 'none', outline: 'none', fontSize: 16, padding: '8px 10px' }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') run();
+            }}
+          />
+          <button
+            onClick={run}
+            disabled={loading}
+            style={{ border: 'none', borderRadius: 999, padding: '10px 18px', background: '#1a73e8', color: '#fff' }}
+          >
+            {loading ? 'Searching...' : 'Search'}
           </button>
         </div>
 
-        {reply && (
-          <section style={{ marginTop: 20 }}>
-            <h3>Assistant</h3>
-            <p>{reply}</p>
-          </section>
-        )}
+        <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
+          Post listing page: <a href="/post">/post</a>
+        </p>
+      </section>
 
-        {hits.length > 0 && (
-          <section style={{ marginTop: 20 }}>
-            <h3>Kết quả</h3>
-            <ul style={{ padding: 0 }}>
-              {hits.map((h) => {
-                const gallery = normalizeImageUrls(h.image_urls);
-                return (
-                <li key={h.id} style={{ marginBottom: 16, listStyle: 'none', border: '1px solid #eee', padding: 10, borderRadius: 8 }}>
-                  {gallery.length > 0 ? (
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-                        gap: 8,
-                        marginBottom: 10
-                      }}
-                    >
-                      {gallery.map((url, idx) => (
-                        <a key={`${h.id}-${idx}`} href={url} target="_blank" title={`image-${idx + 1}`}>
-                          <img
-                            src={url}
-                            alt={`${h.title}-${idx + 1}`}
-                            style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
-                            onError={(e) => {
-                              const target = e.currentTarget as HTMLImageElement;
-                              target.style.display = 'none';
-                            }}
-                          />
-                        </a>
-                      ))}
-                    </div>
-                  ) : null}
-                  <div>
-                    <b>{h.title}</b> — {h.city} — ${h.price_nzd_week}/week — {h.furnished ? 'furnished' : 'unfurnished'} —{' '}
-                    {h.bills_included ? 'bills included' : 'bills separate'}
-                    {h.near_school ? ` — near ${h.near_school}` : ''}
+      {reply && (
+        <section style={{ marginBottom: 18, color: '#3c4043', fontSize: 15 }}>
+          <strong>Assistant:</strong> {reply}
+        </section>
+      )}
+
+      {hits.length > 0 && (
+        <section>
+          {hits.map((h) => {
+            const gallery = normalizeImageUrls(h.image_urls);
+            return (
+              <article key={h.id} style={{ borderTop: '1px solid #eee', padding: '18px 0' }}>
+                <h3 style={{ margin: 0, color: '#1a0dab', fontSize: 20 }}>{h.title}</h3>
+                <div style={{ color: '#006621', fontSize: 13, marginTop: 3 }}>{h.source_url}</div>
+                <div style={{ marginTop: 6, color: '#4d5156' }}>
+                  {h.city} · ${h.price_nzd_week}/week · {h.furnished ? 'furnished' : 'unfurnished'} ·{' '}
+                  {h.bills_included ? 'bills included' : 'bills separate'}
+                  {h.near_school ? ` · near ${h.near_school}` : ''}
+                </div>
+                {h.description ? <p style={{ margin: '8px 0 10px', color: '#4d5156' }}>{h.description}</p> : null}
+
+                {gallery.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, maxWidth: 650 }}>
+                    {gallery.map((url, idx) => (
+                      <a key={`${h.id}-${idx}`} href={url} target="_blank" title={`image-${idx + 1}`}>
+                        <img
+                          src={url}
+                          alt={`${h.title}-${idx + 1}`}
+                          style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
+                          onError={(e) => {
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </a>
+                    ))}
                   </div>
-                  {h.description ? <p style={{ margin: '6px 0' }}>{h.description}</p> : null}
-                  <a href={h.source_url} target="_blank">
-                    nguồn
-                  </a>
-                </li>
-                );
-              })}
-            </ul>
-          </section>
-        )}
-      </section>
-
-      <section style={{ border: '1px solid #ddd', borderRadius: 10, padding: 16 }}>
-        <h2>Đăng listing mới</h2>
-        <div style={{ display: 'grid', gap: 10 }}>
-          <input
-            placeholder="Tiêu đề"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-          />
-          <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-          <input
-            type="number"
-            placeholder="Price NZD/week"
-            value={form.price_nzd_week}
-            onChange={(e) => setForm({ ...form, price_nzd_week: Number(e.target.value) })}
-          />
-          <input
-            placeholder="Source URL"
-            value={form.source_url}
-            onChange={(e) => setForm({ ...form, source_url: e.target.value })}
-          />
-
-          <label>
-            Upload nhiều hình ảnh:
-            <input type="file" accept="image/*" multiple onChange={(e) => setImages(e.target.files)} />
-          </label>
-
-          <textarea
-            placeholder="Description text (hoặc upload file ở dưới)"
-            rows={3}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-
-          <label>
-            Upload file mô tả (.txt/.md):
-            <input type="file" accept=".txt,.md,text/plain,text/markdown" onChange={(e) => setDescFile(e.target.files?.[0] || null)} />
-          </label>
-
-          <input
-            placeholder="Near school (AUT/UoA...)"
-            value={form.near_school}
-            onChange={(e) => setForm({ ...form, near_school: e.target.value })}
-          />
-          <label>
-            <input
-              type="checkbox"
-              checked={form.furnished}
-              onChange={(e) => setForm({ ...form, furnished: e.target.checked })}
-            />{' '}
-            Furnished
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={form.bills_included}
-              onChange={(e) => setForm({ ...form, bills_included: e.target.checked })}
-            />{' '}
-            Bills included
-          </label>
-          <button onClick={submitListing} disabled={submitting} style={{ padding: '10px 16px', width: 220 }}>
-            {submitting ? 'Đang gửi...' : 'Đăng listing (upload ảnh + mô tả)'}
-          </button>
-          {submitMsg && <p>{submitMsg}</p>}
-        </div>
-      </section>
+                ) : null}
+              </article>
+            );
+          })}
+        </section>
+      )}
     </main>
   );
 }

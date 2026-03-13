@@ -31,7 +31,7 @@ export default function PostListingPage() {
 
         const upRes = await fetch('/api/upload-cloudinary', { method: 'POST', body: fd });
         const upData = await upRes.json();
-        if (!upRes.ok) throw new Error(upData.error || 'Upload ảnh thất bại');
+        if (!upRes.ok) throw new Error(upData.error || 'Image upload failed');
         imageUrls = upData.urls || [];
       }
 
@@ -44,14 +44,14 @@ export default function PostListingPage() {
         body: JSON.stringify({ ...form, image_urls: imageUrls, description })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Lưu bài thất bại');
+      if (!res.ok) throw new Error(data.error || 'Failed to save listing');
 
-      setMsg(`✅ Đã đăng listing #${data.item.id} với ${imageUrls.length} ảnh Cloudinary`);
+      setMsg(`✅ Listing #${data.item.id} posted with ${imageUrls.length} Cloudinary images`);
       setForm({ ...form, title: '', source_url: '', description: '' });
       setImages(null);
       setDescFile(null);
     } catch (e: any) {
-      setMsg(`❌ ${e.message || 'Có lỗi xảy ra'}`);
+      setMsg(`❌ ${e.message || 'Something went wrong'}`);
     } finally {
       setSubmitting(false);
     }
@@ -59,11 +59,11 @@ export default function PostListingPage() {
 
   return (
     <main style={{ maxWidth: 860, margin: '0 auto' }}>
-      <h1>Đăng bài mới (Cloudinary)</h1>
-      <p>Trang riêng để đăng listing: upload nhiều ảnh lên Cloudinary + file mô tả.</p>
+      <h1>Create Listing (Cloudinary)</h1>
+      <p>Dedicated posting page: upload multiple images to Cloudinary + optional description file.</p>
 
       <div style={{ display: 'grid', gap: 10 }}>
-        <input placeholder="Tiêu đề" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+        <input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
         <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
         <input
           type="number"
@@ -78,7 +78,7 @@ export default function PostListingPage() {
         />
 
         <label>
-          Upload nhiều ảnh:
+          Upload multiple images:
           <input type="file" accept="image/*" multiple onChange={(e) => setImages(e.target.files)} />
         </label>
 
@@ -90,12 +90,12 @@ export default function PostListingPage() {
         />
 
         <label>
-          Hoặc upload file mô tả (.txt/.md):
+          Or upload description file (.txt/.md):
           <input type="file" accept=".txt,.md,text/plain,text/markdown" onChange={(e) => setDescFile(e.target.files?.[0] || null)} />
         </label>
 
         <input
-          placeholder="Near school (AUT/UoA...)"
+          placeholder="Near school (AUT/UoA/LU...)"
           value={form.near_school}
           onChange={(e) => setForm({ ...form, near_school: e.target.value })}
         />
@@ -119,7 +119,7 @@ export default function PostListingPage() {
         </label>
 
         <button onClick={onSubmit} disabled={submitting} style={{ padding: '10px 16px', width: 220 }}>
-          {submitting ? 'Đang đăng...' : 'Đăng bài'}
+          {submitting ? 'Publishing...' : 'Publish Listing'}
         </button>
 
         {msg ? <p>{msg}</p> : null}

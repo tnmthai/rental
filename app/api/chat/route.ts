@@ -51,16 +51,16 @@ export async function POST(req: NextRequest) {
     const results = await searchListings(need);
 
     const detailBits: string[] = [];
-    if (need.city) detailBits.push(`ở ${need.city}`);
-    if (need.maxPrice) detailBits.push(`dưới ${need.maxPrice} NZD/tuần`);
-    if (need.suburb) detailBits.push(`khu ${need.suburb}`);
-    if (need.furnished) detailBits.push('có nội thất');
-    if (need.billsIncluded) detailBits.push('bao bills');
-    if (need.nearSchool) detailBits.push(`gần ${need.nearSchool}`);
+    if (need.city) detailBits.push(`in ${need.city}`);
+    if (need.maxPrice) detailBits.push(`under ${need.maxPrice} NZD/week`);
+    if (need.suburb) detailBits.push(`around ${need.suburb}`);
+    if (need.furnished) detailBits.push('furnished');
+    if (need.billsIncluded) detailBits.push('bills included');
+    if (need.nearSchool) detailBits.push(`near ${need.nearSchool}`);
 
     const reply = results.length
-      ? `Mình tìm thấy ${results.length} lựa chọn${detailBits.length ? ` (${detailBits.join(', ')})` : ''}.`
-      : 'Chưa có listing khớp. Bạn thử tăng ngân sách, nới khu vực, hoặc bỏ bớt điều kiện.';
+      ? `Found ${results.length} matching options${detailBits.length ? ` (${detailBits.join(', ')})` : ''}.`
+      : 'No matching listings yet. Try increasing budget, expanding location, or removing one filter.';
 
     return NextResponse.json({ reply, filters: need, results });
   } catch (e: any) {
