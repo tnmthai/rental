@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import SubNav from '@/app/components/SubNav';
 
 type Pending = {
   id: number;
@@ -45,6 +46,7 @@ export default function ModerationPage() {
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
+      <SubNav />
       <header style={{ marginBottom: 18 }}>
         <h1 style={{ margin: 0 }}>Moderation Queue</h1>
         <p style={{ color: '#667085', margin: '8px 0 0' }}>Admin only · Review pending listings before publish</p>
@@ -85,13 +87,16 @@ export default function ModerationPage() {
                 <div style={{ marginTop: 2, fontSize: 13, color: '#667085' }}>
                   Posted at: {new Date(i.created_at).toLocaleString()}
                 </div>
-                {i.source_url ? (
-                  <div style={{ marginTop: 6, fontSize: 13 }}>
+                <div style={{ marginTop: 6, fontSize: 13, display: 'flex', gap: 10 }}>
+                  <a href={`/listing/${i.id}`} style={{ color: '#1a73e8' }}>
+                    View full post
+                  </a>
+                  {i.source_url ? (
                     <a href={i.source_url} target="_blank" style={{ color: '#1a73e8' }}>
-                      Open listing source ↗
+                      Open source ↗
                     </a>
-                  </div>
-                ) : null}
+                  ) : null}
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>

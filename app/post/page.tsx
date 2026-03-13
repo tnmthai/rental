@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useSession, signIn } from 'next-auth/react';
+import SubNav from '@/app/components/SubNav';
 
 type NzLocation = {
   region: string;
@@ -128,12 +129,13 @@ export default function PostListingPage() {
   };
 
   if (status === 'loading') {
-    return <main style={{ maxWidth: 980, margin: '0 auto', padding: '34px 16px' }}>Loading...</main>;
+    return <main style={{ maxWidth: 980, margin: '0 auto', padding: '34px 16px' }}><SubNav />Loading...</main>;
   }
 
   if (!session?.user) {
     return (
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '60px 16px' }}>
+        <SubNav />
         <section style={{ border: '1px solid #e7edf5', borderRadius: 14, padding: 24, textAlign: 'center' }}>
           <h1 style={{ marginTop: 0 }}>Sign in required</h1>
           <p style={{ color: '#5b677a' }}>Please sign in before creating a listing.</p>
@@ -150,6 +152,7 @@ export default function PostListingPage() {
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: '34px 16px 56px', background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 220px)' }}>
+      <SubNav />
       <section
         style={{
           border: '1px solid #e7edf5',

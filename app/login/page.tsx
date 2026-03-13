@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { signIn } from 'next-auth/react';
+import SubNav from '@/app/components/SubNav';
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -42,6 +43,7 @@ export default function LoginPage() {
 
   return (
     <main style={{ maxWidth: 420, margin: '40px auto', padding: 20, border: '1px solid #e5e7eb', borderRadius: 12 }}>
+      <SubNav />
       <h1 style={{ marginTop: 0 }}>{mode === 'login' ? 'Sign in' : 'Create account'}</h1>
 
       <div style={{ display: 'grid', gap: 10, marginBottom: 14 }}>

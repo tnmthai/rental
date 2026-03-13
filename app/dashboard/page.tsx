@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession, signIn } from 'next-auth/react';
+import SubNav from '@/app/components/SubNav';
 
 type Listing = {
   id: number;
@@ -44,10 +45,11 @@ export default function DashboardPage() {
     await load();
   }
 
-  if (status === 'loading') return <main style={{ padding: 24 }}>Loading...</main>;
+  if (status === 'loading') return <main style={{ padding: 24 }}><SubNav />Loading...</main>;
   if (!session?.user)
     return (
       <main style={{ padding: 24 }}>
+        <SubNav />
         <h1>My Dashboard</h1>
         <p>Please sign in first.</p>
         <button onClick={() => signIn(undefined, { callbackUrl: '/dashboard' })}>Go to login</button>
@@ -56,6 +58,7 @@ export default function DashboardPage() {
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
+      <SubNav />
       <h1>My Dashboard</h1>
       <p>Hello {session.user.name || session.user.email}</p>
       {msg ? <p>{msg}</p> : null}

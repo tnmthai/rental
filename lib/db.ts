@@ -203,6 +203,23 @@ export async function listPendingListings() {
   return rows;
 }
 
+export async function getListingById(listingId: number) {
+  const p = getPool();
+  const { rows } = await p.query(
+    `
+      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.image_urls, l.description,
+             l.furnished, l.bills_included, l.near_school, l.status, l.created_at, l.expires_at,
+             u.name AS user_name, u.email AS user_email
+      FROM listings l
+      LEFT JOIN users u ON u.id = l.user_id
+      WHERE l.id = $1
+      LIMIT 1
+    `,
+    [listingId]
+  );
+  return rows[0] || null;
+}
+
 export async function createSavedSearch(input: SavedSearchInput) {
   const p = getPool();
   const { rows } = await p.query(
