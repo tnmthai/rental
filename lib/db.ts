@@ -191,7 +191,7 @@ export async function listPendingListings() {
   const p = getPool();
   const { rows } = await p.query(
     `
-      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.created_at,
+      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.created_at,
              u.name AS user_name, u.email AS user_email
       FROM listings l
       LEFT JOIN users u ON u.id = l.user_id

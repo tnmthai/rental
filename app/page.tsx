@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 
 function normalizeImageUrls(input: unknown): string[] {
@@ -35,6 +35,8 @@ export default function HomePage() {
   const [reply, setReply] = useState('');
   const [hits, setHits] = useState<Hit[]>([]);
   const [saveMsg, setSaveMsg] = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
+  const [newCount, setNewCount] = useState(0);
 
   async function run() {
     setLoading(true);
@@ -65,11 +67,67 @@ export default function HomePage() {
     setSaveMsg(res.ok ? 'Saved search created.' : data.error || 'Failed to save');
   }
 
+  useEffect(() => {
+    let timer: any;
+    async function pollAdminCount() {
+      const res = await fetch('/api/admin/moderation/count');
+      if (!res.ok) return;
+      const data = await res.json();
+      const count = Number(data.pending_count || 0);
+      setPendingCount(count);
+      const key = 'admin_last_seen_pending_count';
+      const lastSeen = Number(localStorage.getItem(key) || 0);
+      setNewCount(Math.max(count - lastSeen, 0));
+    }
+    if (session?.user) {
+      pollAdminCount();
+      timer = setInterval(pollAdminCount, 20000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [session?.user]);
+
+  function markAdminSeen() {
+    localStorage.setItem('admin_last_seen_pending_count', String(pendingCount));
+    setNewCount(0);
+  }
+
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: '24px 16px 80px' }}>
       <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 24 }}>
         {session?.user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#3c4043' }}>
+            {(pendingCount > 0 || newCount > 0) ? (
+              <a
+                href="/admin/moderation"
+                onClick={markAdminSeen}
+                style={{ position: 'relative', textDecoration: 'none', fontSize: 18, lineHeight: 1 }}
+                title="Moderation notifications"
+              >
+                🔔
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -10,
+                    background: '#ef4444',
+                    color: '#fff',
+                    borderRadius: 999,
+                    minWidth: 18,
+                    height: 18,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '0 4px'
+                  }}
+                >
+                  {newCount > 0 ? newCount : pendingCount}
+                </span>
+              </a>
+            ) : null}
             <span>
               Hello {session.user.name || session.user.email?.split('@')[0] || 'there'}
             </span>

@@ -10,6 +10,7 @@ type Pending = {
   title: string;
   city: string;
   price_nzd_week: number;
+  source_url?: string | null;
   created_at: string;
 };
 
@@ -84,6 +85,13 @@ export default function ModerationPage() {
                 <div style={{ marginTop: 2, fontSize: 13, color: '#667085' }}>
                   Posted at: {new Date(i.created_at).toLocaleString()}
                 </div>
+                {i.source_url ? (
+                  <div style={{ marginTop: 6, fontSize: 13 }}>
+                    <a href={i.source_url} target="_blank" style={{ color: '#1a73e8' }}>
+                      Open listing source ↗
+                    </a>
+                  </div>
+                ) : null}
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
