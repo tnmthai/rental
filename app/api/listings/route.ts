@@ -40,7 +40,9 @@ export async function POST(req: NextRequest) {
       city,
       source_url,
       price_nzd_week,
-      image_url: body.image_url ? String(body.image_url).trim() : null,
+      image_urls: Array.isArray(body.image_urls)
+        ? body.image_urls.map((x: unknown) => String(x)).filter(Boolean)
+        : [],
       description: body.description ? String(body.description).trim() : null,
       furnished: Boolean(body.furnished),
       bills_included: Boolean(body.bills_included),

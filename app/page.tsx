@@ -8,7 +8,7 @@ type Hit = {
   city: string;
   price_nzd_week: number;
   source_url: string;
-  image_url?: string | null;
+  image_urls?: string[];
   description?: string | null;
   furnished?: boolean;
   bills_included?: boolean;
@@ -26,12 +26,13 @@ export default function HomePage() {
     city: 'Auckland',
     price_nzd_week: 250,
     source_url: '',
-    image_url: '',
     description: '',
     furnished: true,
     bills_included: false,
     near_school: 'AUT'
   });
+  const [images, setImages] = useState<FileList | null>(null);
+  const [descFile, setDescFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg] = useState('');
 
@@ -53,25 +54,47 @@ export default function HomePage() {
   async function submitListing() {
     setSubmitting(true);
     setSubmitMsg('');
-    const res = await fetch('/api/listings', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(form)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setSubmitMsg(`Lỗi: ${data.error || 'submit failed'}`);
-    } else {
-      setSubmitMsg(`Đã đăng listing #${data.item.id}`);
-      setForm({ ...form, title: '', source_url: '', image_url: '', description: '' });
+    try {
+      let imageUrls: string[] = [];
+
+      if (images && images.length > 0) {
+        const fd = new FormData();
+        fd.set('city', form.city);
+        Array.from(images).forEach((file) => fd.append('images', file));
+        const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
+        const upData = await upRes.json();
+        if (!upRes.ok) throw new Error(upData.error || 'Upload images failed');
+        imageUrls = upData.urls || [];
+      }
+
+      let description = form.description;
+      if (descFile) {
+        description = await descFile.text();
+      }
+
+      const res = await fetch('/api/listings', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...form, image_urls: imageUrls, description })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'submit failed');
+
+      setSubmitMsg(`Đã đăng listing #${data.item.id} (${imageUrls.length} ảnh)`);
+      setForm({ ...form, title: '', source_url: '', description: '' });
+      setImages(null);
+      setDescFile(null);
+    } catch (e: any) {
+      setSubmitMsg(`Lỗi: ${e.message || 'submit failed'}`);
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   }
 
   return (
     <main style={{ maxWidth: 920, margin: '0 auto' }}>
-      <h1>Student Rental NZ (Vòng 2)</h1>
-      <p>Chat tìm phòng + form đăng tin cơ bản.</p>
+      <h1>Student Rental NZ (Vòng 2.5)</h1>
+      <p>Chat tìm phòng + form đăng tin (nhiều ảnh + file mô tả).</p>
 
       <section style={{ border: '1px solid #ddd', borderRadius: 10, padding: 16, marginBottom: 20 }}>
         <h2>Tìm bằng chat</h2>
@@ -97,12 +120,12 @@ export default function HomePage() {
         {hits.length > 0 && (
           <section style={{ marginTop: 20 }}>
             <h3>Kết quả</h3>
-            <ul>
+            <ul style={{ padding: 0 }}>
               {hits.map((h) => (
                 <li key={h.id} style={{ marginBottom: 16, listStyle: 'none', border: '1px solid #eee', padding: 10, borderRadius: 8 }}>
-                  {h.image_url ? (
+                  {h.image_urls?.[0] ? (
                     <img
-                      src={h.image_url}
+                      src={h.image_urls[0]}
                       alt={h.title}
                       style={{ width: '100%', maxWidth: 420, height: 'auto', borderRadius: 8, marginBottom: 8 }}
                     />
@@ -143,17 +166,24 @@ export default function HomePage() {
             value={form.source_url}
             onChange={(e) => setForm({ ...form, source_url: e.target.value })}
           />
-          <input
-            placeholder="Image URL (vd: /uploads/auckland/room1.jpg)"
-            value={form.image_url}
-            onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-          />
+
+          <label>
+            Upload nhiều hình ảnh:
+            <input type="file" accept="image/*" multiple onChange={(e) => setImages(e.target.files)} />
+          </label>
+
           <textarea
-            placeholder="Description"
+            placeholder="Description text (hoặc upload file ở dưới)"
             rows={3}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
+
+          <label>
+            Upload file mô tả (.txt/.md):
+            <input type="file" accept=".txt,.md,text/plain,text/markdown" onChange={(e) => setDescFile(e.target.files?.[0] || null)} />
+          </label>
+
           <input
             placeholder="Near school (AUT/UoA...)"
             value={form.near_school}
@@ -175,8 +205,8 @@ export default function HomePage() {
             />{' '}
             Bills included
           </label>
-          <button onClick={submitListing} disabled={submitting} style={{ padding: '10px 16px', width: 200 }}>
-            {submitting ? 'Đang gửi...' : 'Đăng listing'}
+          <button onClick={submitListing} disabled={submitting} style={{ padding: '10px 16px', width: 220 }}>
+            {submitting ? 'Đang gửi...' : 'Đăng listing (upload ảnh + mô tả)'}
           </button>
           {submitMsg && <p>{submitMsg}</p>}
         </div>
