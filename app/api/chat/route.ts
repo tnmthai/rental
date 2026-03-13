@@ -10,7 +10,9 @@ function parseNeed(msg: string) {
       ? 'Christchurch'
       : lower.includes('wellington')
         ? 'Wellington'
-        : undefined;
+        : lower.includes('lincoln')
+          ? 'Lincoln'
+          : undefined;
 
   const m = lower.match(/(\d{2,4})\s*(nzd|\$)?\/?\s*(week|wk|tuần)?/);
   const maxPrice = m ? Number(m[1]) : undefined;
@@ -24,9 +26,13 @@ function parseNeed(msg: string) {
     ? 'AUT'
     : lower.includes('uoa') || lower.includes('auckland university')
       ? 'UoA'
-      : undefined;
+      : lower.includes('lu') || lower.includes('lincoln university')
+        ? 'LU'
+        : undefined;
 
-  return { city, maxPrice, furnished, billsIncluded, nearSchool };
+  const suburb = lower.includes('lincoln') ? 'lincoln' : undefined;
+
+  return { city, suburb, maxPrice, furnished, billsIncluded, nearSchool };
 }
 
 export async function POST(req: NextRequest) {
@@ -47,6 +53,7 @@ export async function POST(req: NextRequest) {
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`ở ${need.city}`);
     if (need.maxPrice) detailBits.push(`dưới ${need.maxPrice} NZD/tuần`);
+    if (need.suburb) detailBits.push(`khu ${need.suburb}`);
     if (need.furnished) detailBits.push('có nội thất');
     if (need.billsIncluded) detailBits.push('bao bills');
     if (need.nearSchool) detailBits.push(`gần ${need.nearSchool}`);

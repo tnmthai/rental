@@ -4,6 +4,7 @@ let pool: Pool | null = null;
 
 export type ListingSearch = {
   city?: string;
+  suburb?: string;
   maxPrice?: number;
   furnished?: boolean;
   billsIncluded?: boolean;
@@ -39,6 +40,10 @@ export async function searchListings(filters: ListingSearch) {
     params.push(`%${filters.city}%`);
     where.push(`city ILIKE $${params.length}`);
   }
+  if (filters.suburb) {
+    params.push(`%${filters.suburb}%`);
+    where.push(`(title ILIKE $${params.length} OR description ILIKE $${params.length})`);
+  }
   if (filters.maxPrice) {
     params.push(filters.maxPrice);
     where.push(`price_nzd_week <= $${params.length}`);
@@ -54,11 +59,14 @@ export async function searchListings(filters: ListingSearch) {
     where.push(`near_school ILIKE $${params.length}`);
   }
 
+  const rankNearSchool = filters.nearSchool ? `CASE WHEN near_school ILIKE '%${filters.nearSchool.replace(/'/g, "''") }%' THEN 0 ELSE 1 END,` : '';
+  const rankCity = filters.city ? `CASE WHEN city ILIKE '%${filters.city.replace(/'/g, "''") }%' THEN 0 ELSE 1 END,` : '';
+
   const sql = `
     SELECT id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school
     FROM listings
     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-    ORDER BY price_nzd_week ASC
+    ORDER BY ${rankNearSchool} ${rankCity} price_nzd_week ASC
     LIMIT 12
   `;
 
