@@ -40,6 +40,7 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS furnished BOOLEAN NOT NULL DEFAULT
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS bills_included BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS near_school TEXT;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
 
 CREATE TABLE IF NOT EXISTS users (
   id BIGSERIAL PRIMARY KEY,
@@ -56,6 +57,16 @@ ALTER TABLE listings
   ADD CONSTRAINT listings_user_fk
   FOREIGN KEY (user_id) REFERENCES users(id)
   ON DELETE SET NULL;
+
+CREATE TABLE IF NOT EXISTS saved_searches (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  query TEXT NOT NULL,
+  filters_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
 -- optional cleanup if old single-image column exists
 -- ALTER TABLE listings DROP COLUMN IF EXISTS image_url;
@@ -80,6 +91,7 @@ VALUES
   - `GOOGLE_CLIENT_SECRET`
   - `FACEBOOK_CLIENT_ID`
   - `FACEBOOK_CLIENT_SECRET`
+  - `ADMIN_EMAILS` (comma-separated admin emails for moderation page)
   - `CLOUDINARY_CLOUD_NAME`
   - `CLOUDINARY_API_KEY`
   - `CLOUDINARY_API_SECRET`

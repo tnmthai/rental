@@ -34,6 +34,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [reply, setReply] = useState('');
   const [hits, setHits] = useState<Hit[]>([]);
+  const [saveMsg, setSaveMsg] = useState('');
 
   async function run() {
     setLoading(true);
@@ -48,6 +49,20 @@ export default function HomePage() {
     setReply(data.reply || data.error || 'No reply');
     setHits(data.results || []);
     setLoading(false);
+  }
+
+  async function saveSearch() {
+    if (!session?.user) {
+      setSaveMsg('Please log in first.');
+      return;
+    }
+    const res = await fetch('/api/my/saved-searches', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Quick saved search', query })
+    });
+    const data = await res.json();
+    setSaveMsg(res.ok ? 'Saved search created.' : data.error || 'Failed to save');
   }
 
   return (
@@ -115,11 +130,18 @@ export default function HomePage() {
           >
             {loading ? 'Searching...' : 'Search'}
           </button>
+          <button
+            onClick={saveSearch}
+            style={{ border: '1px solid #dfe1e5', borderRadius: 999, padding: '10px 14px', background: '#fff' }}
+          >
+            Save
+          </button>
         </div>
 
         <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
-          <a href="/post">Create listing</a>
+          <a href="/post">Create listing</a> · <a href="/dashboard">My dashboard</a>
         </p>
+        {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
       </section>
 
       {reply && (
