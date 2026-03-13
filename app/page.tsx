@@ -123,12 +123,29 @@ export default function HomePage() {
             <ul style={{ padding: 0 }}>
               {hits.map((h) => (
                 <li key={h.id} style={{ marginBottom: 16, listStyle: 'none', border: '1px solid #eee', padding: 10, borderRadius: 8 }}>
-                  {h.image_urls?.[0] ? (
-                    <img
-                      src={h.image_urls[0]}
-                      alt={h.title}
-                      style={{ width: '100%', maxWidth: 420, height: 'auto', borderRadius: 8, marginBottom: 8 }}
-                    />
+                  {h.image_urls && h.image_urls.length > 0 ? (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                        gap: 8,
+                        marginBottom: 10
+                      }}
+                    >
+                      {h.image_urls.map((url, idx) => (
+                        <a key={`${h.id}-${idx}`} href={url} target="_blank" title={`image-${idx + 1}`}>
+                          <img
+                            src={url}
+                            alt={`${h.title}-${idx + 1}`}
+                            style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                        </a>
+                      ))}
+                    </div>
                   ) : null}
                   <div>
                     <b>{h.title}</b> — {h.city} — ${h.price_nzd_week}/week — {h.furnished ? 'furnished' : 'unfurnished'} —{' '}
