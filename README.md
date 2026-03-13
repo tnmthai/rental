@@ -18,6 +18,7 @@ Run this SQL on Railway Postgres:
 ```sql
 CREATE TABLE IF NOT EXISTS listings (
   id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT,
   title TEXT NOT NULL,
   city TEXT NOT NULL,
   price_nzd_week INT NOT NULL,
@@ -27,15 +28,18 @@ CREATE TABLE IF NOT EXISTS listings (
   furnished BOOLEAN NOT NULL DEFAULT false,
   bills_included BOOLEAN NOT NULL DEFAULT false,
   near_school TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
+  created_at TIMESTAMPTZ DEFAULT now(),
+  expires_at TIMESTAMPTZ
 );
 
 -- migrate from old versions
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS user_id BIGINT;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS image_urls TEXT[] NOT NULL DEFAULT '{}';
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS furnished BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS bills_included BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS near_school TEXT;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS users (
   id BIGSERIAL PRIMARY KEY,
@@ -47,6 +51,11 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS users_provider_idx ON users(provider, provider_id);
+
+ALTER TABLE listings
+  ADD CONSTRAINT listings_user_fk
+  FOREIGN KEY (user_id) REFERENCES users(id)
+  ON DELETE SET NULL;
 
 -- optional cleanup if old single-image column exists
 -- ALTER TABLE listings DROP COLUMN IF EXISTS image_url;

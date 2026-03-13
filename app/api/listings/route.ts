@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createListing, listRecentListings } from '@/lib/db';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { createListing, findUserByEmail, listRecentListings } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function GET() {
@@ -13,6 +15,16 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized. Please log in first.' }, { status: 401 });
+    }
+
+    const user = await findUserByEmail(session.user.email);
+    if (!user) {
+      return NextResponse.json({ error: 'User account not found.' }, { status: 401 });
+    }
+
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const rl = checkRateLimit(`post-listing:${ip}`, 8, 60_000);
     if (!rl.ok) {
@@ -47,6 +59,7 @@ export async function POST(req: NextRequest) {
     const imageUrlSingle = typeof body.image_url === 'string' && body.image_url.trim() ? [body.image_url.trim()] : [];
 
     const created = await createListing({
+      user_id: Number(user.id),
       title,
       city,
       source_url,
@@ -55,7 +68,8 @@ export async function POST(req: NextRequest) {
       description: body.description ? String(body.description).trim() : null,
       furnished: Boolean(body.furnished),
       bills_included: Boolean(body.bills_included),
-      near_school: body.near_school ? String(body.near_school).trim() : null
+      near_school: body.near_school ? String(body.near_school).trim() : null,
+      duration_days: Number(body.duration_days || 30)
     });
 
     return NextResponse.json({ item: created }, { status: 201 });

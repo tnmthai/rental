@@ -70,9 +70,6 @@ export default function HomePage() {
             <a href="/login" style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', textDecoration: 'none', color: '#1a73e8' }}>
               Log in
             </a>
-            <a href="/login" style={{ border: '1px solid #1a73e8', background: '#1a73e8', borderRadius: 999, padding: '6px 12px', textDecoration: 'none', color: '#fff' }}>
-              Create account
-            </a>
           </div>
         )}
       </header>

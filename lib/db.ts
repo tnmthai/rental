@@ -12,6 +12,7 @@ export type ListingSearch = {
 };
 
 export type NewListing = {
+  user_id: number;
   title: string;
   city: string;
   price_nzd_week: number;
@@ -21,6 +22,7 @@ export type NewListing = {
   furnished?: boolean;
   bills_included?: boolean;
   near_school?: string | null;
+  duration_days?: number;
 };
 
 export function getPool() {
@@ -34,7 +36,7 @@ export function getPool() {
 export async function searchListings(filters: ListingSearch) {
   const p = getPool();
   const params: Array<string | number | boolean> = [];
-  const where: string[] = [];
+  const where: string[] = ['(expires_at IS NULL OR expires_at > now())'];
 
   if (filters.city) {
     params.push(`%${filters.city}%`);
@@ -63,7 +65,7 @@ export async function searchListings(filters: ListingSearch) {
   const rankCity = filters.city ? `CASE WHEN city ILIKE '%${filters.city.replace(/'/g, "''") }%' THEN 0 ELSE 1 END,` : '';
 
   const sql = `
-    SELECT id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school
+    SELECT id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at
     FROM listings
     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
     ORDER BY ${rankNearSchool} ${rankCity} price_nzd_week ASC
@@ -78,11 +80,12 @@ export async function createListing(input: NewListing) {
   const p = getPool();
   const { rows } = await p.query(
     `
-      INSERT INTO listings (title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school)
-      VALUES ($1, $2, $3, $4, $5::text[], $6, $7, $8, $9)
-      RETURNING id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at
+      INSERT INTO listings (user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, expires_at)
+      VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9, $10, now() + make_interval(days => $11))
+      RETURNING id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at
     `,
     [
+      input.user_id,
       input.title,
       input.city,
       input.price_nzd_week,
@@ -91,7 +94,8 @@ export async function createListing(input: NewListing) {
       input.description || null,
       Boolean(input.furnished),
       Boolean(input.bills_included),
-      input.near_school || null
+      input.near_school || null,
+      Math.min(Math.max(Number(input.duration_days || 30), 1), 180)
     ]
   );
   return rows[0];
@@ -101,7 +105,7 @@ export async function listRecentListings(limit = 20) {
   const p = getPool();
   const { rows } = await p.query(
     `
-      SELECT id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at
+      SELECT id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at
       FROM listings
       ORDER BY created_at DESC
       LIMIT $1

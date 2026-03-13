@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useSession, signIn } from 'next-auth/react';
 
 type NzLocation = {
   region: string;
@@ -39,6 +40,7 @@ const SCHOOLS_BY_REGION: Record<string, string[]> = {
 };
 
 export default function PostListingPage() {
+  const { data: session, status } = useSession();
   const [form, setForm] = useState({
     title: '',
     region: 'Auckland',
@@ -47,6 +49,7 @@ export default function PostListingPage() {
     price_nzd_week: 250,
     source_url: '',
     description: '',
+    duration_days: 30,
     furnished: true,
     bills_included: false,
     near_school: '(None)'
@@ -98,14 +101,15 @@ export default function PostListingPage() {
           description: form.description,
           furnished: form.furnished,
           bills_included: form.bills_included,
-          near_school: form.near_school === '(None)' ? null : form.near_school
+          near_school: form.near_school === '(None)' ? null : form.near_school,
+          duration_days: form.duration_days
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save listing');
 
       setMsg(`✅ Listing #${data.item.id} posted with ${imageUrls.length} image(s)`);
-      setForm({ ...form, title: '', source_url: '', description: '' });
+      setForm({ ...form, title: '', source_url: '', description: '', duration_days: 30 });
       setImages(null);
     } catch (e: any) {
       setMsg(`❌ ${e.message || 'Something went wrong'}`);
@@ -122,6 +126,27 @@ export default function PostListingPage() {
     outline: 'none',
     background: '#fff'
   };
+
+  if (status === 'loading') {
+    return <main style={{ maxWidth: 980, margin: '0 auto', padding: '34px 16px' }}>Loading...</main>;
+  }
+
+  if (!session?.user) {
+    return (
+      <main style={{ maxWidth: 560, margin: '0 auto', padding: '60px 16px' }}>
+        <section style={{ border: '1px solid #e7edf5', borderRadius: 14, padding: 24, textAlign: 'center' }}>
+          <h1 style={{ marginTop: 0 }}>Sign in required</h1>
+          <p style={{ color: '#5b677a' }}>Please sign in before creating a listing.</p>
+          <button
+            onClick={() => signIn(undefined, { callbackUrl: '/post' })}
+            style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid #1a73e8', background: '#1a73e8', color: '#fff' }}
+          >
+            Go to login
+          </button>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: '34px 16px 56px', background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 220px)' }}>
@@ -203,6 +228,18 @@ export default function PostListingPage() {
               type="number"
               value={form.price_nzd_week}
               onChange={(e) => setForm({ ...form, price_nzd_week: Number(e.target.value) })}
+            />
+          </label>
+
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Listing duration (days)</span>
+            <input
+              style={inputStyle}
+              type="number"
+              min={1}
+              max={180}
+              value={form.duration_days}
+              onChange={(e) => setForm({ ...form, duration_days: Number(e.target.value) })}
             />
           </label>
 
