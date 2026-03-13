@@ -49,7 +49,7 @@ async function parseNeedAI(message: string): Promise<Need | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   const base = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
-  if (!apiKey) throw new Error('OPENAI_API_KEY is missing. AI search is enabled but not configured.');
+  if (!apiKey) return null;
 
   const prompt = `Extract rental search filters from user query. Return strict JSON only with keys:
 city, suburb, maxPrice, furnished, billsIncluded, nearSchool, queryText.
@@ -73,8 +73,7 @@ Use null when unknown. Query: ${message}`;
   });
 
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`AI upstream error (${res.status}): ${errText.slice(0, 300)}`);
+    return null;
   }
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content;
@@ -116,10 +115,7 @@ export async function POST(req: NextRequest) {
     const userText = String(message || '').trim();
 
     const aiNeed = await parseNeedAI(userText);
-    if (!aiNeed) {
-      return NextResponse.json({ error: 'AI parsing failed: model returned non-JSON or empty content.' }, { status: 502 });
-    }
-    const need = aiNeed;
+    const need = aiNeed || parseNeedRuleBased(userText);
 
     const results = await searchListings(need);
 
@@ -131,7 +127,7 @@ export async function POST(req: NextRequest) {
     if (need.billsIncluded) detailBits.push('bills included');
     if (need.nearSchool) detailBits.push(`near ${need.nearSchool}`);
 
-    const mode = 'AI-only';
+    const mode = aiNeed ? 'AI-assisted' : 'rule-based (fallback)';
     const reply = results.length
       ? `Found ${results.length} matching options${detailBits.length ? ` (${detailBits.join(', ')})` : ''}. (${mode})`
       : 'No matching listings yet. Try increasing budget, expanding location, or removing one filter.';
