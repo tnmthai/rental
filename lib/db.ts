@@ -190,7 +190,15 @@ export async function extendListingExpiry(listingId: number, extraDays: number) 
 export async function listPendingListings() {
   const p = getPool();
   const { rows } = await p.query(
-    `SELECT id, user_id, title, city, price_nzd_week, created_at FROM listings WHERE status='pending' ORDER BY created_at ASC LIMIT 200`
+    `
+      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.created_at,
+             u.name AS user_name, u.email AS user_email
+      FROM listings l
+      LEFT JOIN users u ON u.id = l.user_id
+      WHERE l.status='pending'
+      ORDER BY l.created_at ASC
+      LIMIT 200
+    `
   );
   return rows;
 }
