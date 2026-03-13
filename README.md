@@ -54,6 +54,9 @@ VALUES
 - Set env vars:
   - `DATABASE_URL` (from Railway Postgres)
   - `NODE_ENV=production`
+  - `CLOUDINARY_CLOUD_NAME`
+  - `CLOUDINARY_API_KEY`
+  - `CLOUDINARY_API_SECRET`
 - Build command: `npm run build`
 - Start command: `npm run start`
 
@@ -62,7 +65,8 @@ VALUES
 - `POST /api/chat` → chat-based filter search
 - `GET /api/listings` → list recent listings
 - `POST /api/listings` → create listing
-- `POST /api/upload` → upload multiple images (`multipart/form-data`, field: `images`, plus `city`)
+- `POST /api/upload` → upload multiple images to local filesystem (legacy/test)
+- `POST /api/upload-cloudinary` → upload multiple images to Cloudinary (recommended)
 
 Basic in-memory rate limit is enabled for chat + listing submit routes.
 

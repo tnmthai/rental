@@ -108,6 +108,9 @@ export default function HomePage() {
     <main style={{ maxWidth: 920, margin: '0 auto' }}>
       <h1>Student Rental NZ (Vòng 2.5)</h1>
       <p>Chat tìm phòng + form đăng tin (nhiều ảnh + file mô tả).</p>
+      <p>
+        👉 Trang đăng bài riêng (Cloudinary): <a href="/post">/post</a>
+      </p>
 
       <section style={{ border: '1px solid #ddd', borderRadius: 10, padding: 16, marginBottom: 20 }}>
         <h2>Tìm bằng chat</h2>
