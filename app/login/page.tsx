@@ -47,8 +47,39 @@ export default function LoginPage() {
       <h1 style={{ marginTop: 0 }}>{mode === 'login' ? 'Sign in' : 'Create account'}</h1>
 
       <div style={{ display: 'grid', gap: 10, marginBottom: 14 }}>
-        <button onClick={() => signIn('google', { callbackUrl: '/' })}>Continue with Google</button>
-        <button onClick={() => signIn('facebook', { callbackUrl: '/' })}>Continue with Facebook</button>
+        <button
+          onClick={() => signIn('google', { callbackUrl: '/' })}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            border: '1px solid #e5e7eb',
+            borderRadius: 10,
+            padding: '10px 12px',
+            background: '#fff'
+          }}
+        >
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#4285F4' }}>G</span>
+          Continue with Google
+        </button>
+        <button
+          onClick={() => signIn('facebook', { callbackUrl: '/' })}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            border: '1px solid #e5e7eb',
+            borderRadius: 10,
+            padding: '10px 12px',
+            background: '#1877F2',
+            color: '#fff'
+          }}
+        >
+          <span style={{ fontSize: 18 }}>ⓕ</span>
+          Continue with Facebook
+        </button>
       </div>
 
       <div style={{ textAlign: 'center', color: '#6b7280', marginBottom: 12 }}>or use email</div>
