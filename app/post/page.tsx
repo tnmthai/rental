@@ -32,6 +32,12 @@ const NZ_LOCATIONS: NzLocation[] = [
   }
 ];
 
+const SCHOOLS_BY_REGION: Record<string, string[]> = {
+  Auckland: ['(None)', 'AUT', 'University of Auckland (UoA)', 'Massey University (Albany)'],
+  Canterbury: ['(None)', 'University of Canterbury (UC)', 'Lincoln University (LU)'],
+  Wellington: ['(None)', 'Victoria University of Wellington', 'Massey University (Wellington)']
+};
+
 export default function PostListingPage() {
   const [form, setForm] = useState({
     title: '',
@@ -43,7 +49,7 @@ export default function PostListingPage() {
     description: '',
     furnished: true,
     bills_included: false,
-    near_school: 'AUT'
+    near_school: '(None)'
   });
 
   const [images, setImages] = useState<FileList | null>(null);
@@ -57,6 +63,10 @@ export default function PostListingPage() {
   const suburbs = useMemo(() => {
     return areas.find((a) => a.area === form.area)?.suburbs ?? [];
   }, [areas, form.area]);
+
+  const schools = useMemo(() => {
+    return SCHOOLS_BY_REGION[form.region] || ['(None)'];
+  }, [form.region]);
 
   async function onSubmit() {
     setSubmitting(true);
@@ -88,7 +98,7 @@ export default function PostListingPage() {
           description: form.description,
           furnished: form.furnished,
           bills_included: form.bills_included,
-          near_school: form.near_school
+          near_school: form.near_school === '(None)' ? null : form.near_school
         })
       });
       const data = await res.json();
@@ -104,30 +114,48 @@ export default function PostListingPage() {
     }
   }
 
+  const inputStyle: React.CSSProperties = {
+    padding: '11px 12px',
+    border: '1px solid #dbe3ef',
+    borderRadius: 10,
+    fontSize: 14,
+    outline: 'none',
+    background: '#fff'
+  };
+
   return (
-    <main style={{ maxWidth: 920, margin: '0 auto', padding: '28px 16px 48px' }}>
-      <section style={{ border: '1px solid #e5e7eb', borderRadius: 14, padding: 22, background: '#fff' }}>
-        <h1 style={{ marginTop: 0, marginBottom: 8 }}>Create Listing</h1>
-        <p style={{ marginTop: 0, color: '#4b5563' }}>
-          Publish a rental post with multiple images and clear location hierarchy for New Zealand.
+    <main style={{ maxWidth: 980, margin: '0 auto', padding: '34px 16px 56px', background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 220px)' }}>
+      <section
+        style={{
+          border: '1px solid #e7edf5',
+          borderRadius: 18,
+          padding: 24,
+          background: '#fff',
+          boxShadow: '0 10px 30px rgba(20, 61, 120, 0.06)'
+        }}
+      >
+        <h1 style={{ marginTop: 0, marginBottom: 8, fontWeight: 700, letterSpacing: -0.2 }}>Create Listing</h1>
+        <p style={{ marginTop: 0, color: '#5b677a' }}>
+          Publish a rental post with multiple images and a structured NZ location selector.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            <span>Title</span>
-            <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Sunny room near LU" />
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Title</span>
+            <input style={inputStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Sunny room near LU" />
           </label>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span>Region</span>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Region</span>
             <select
+              style={inputStyle}
               value={form.region}
               onChange={(e) => {
                 const region = e.target.value;
                 const nextAreas = NZ_LOCATIONS.find((r) => r.region === region)?.areas ?? [];
                 const firstArea = nextAreas[0]?.area ?? '';
                 const firstSuburb = nextAreas[0]?.suburbs[0] ?? '';
-                setForm({ ...form, region, area: firstArea, suburb: firstSuburb });
+                setForm({ ...form, region, area: firstArea, suburb: firstSuburb, near_school: '(None)' });
               }}
             >
               {NZ_LOCATIONS.map((r) => (
@@ -139,8 +167,9 @@ export default function PostListingPage() {
           </label>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span>City / District</span>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>City / District</span>
             <select
+              style={inputStyle}
               value={form.area}
               onChange={(e) => {
                 const area = e.target.value;
@@ -157,8 +186,8 @@ export default function PostListingPage() {
           </label>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span>Suburb</span>
-            <select value={form.suburb} onChange={(e) => setForm({ ...form, suburb: e.target.value })}>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Suburb</span>
+            <select style={inputStyle} value={form.suburb} onChange={(e) => setForm({ ...form, suburb: e.target.value })}>
               {suburbs.map((s) => (
                 <option key={s} value={s}>
                   {s}
@@ -168,49 +197,32 @@ export default function PostListingPage() {
           </label>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span>Price (NZD / week)</span>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Price (NZD / week)</span>
             <input
+              style={inputStyle}
               type="number"
               value={form.price_nzd_week}
               onChange={(e) => setForm({ ...form, price_nzd_week: Number(e.target.value) })}
             />
           </label>
 
-          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            <span>Source URL</span>
-            <input
-              value={form.source_url}
-              onChange={(e) => setForm({ ...form, source_url: e.target.value })}
-              placeholder="Facebook / TradeMe / etc"
-            />
-          </label>
-
-          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            <span>Description</span>
-            <textarea
-              rows={4}
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Include details like move-in date, bond, flatmates, transport..."
-            />
-          </label>
-
-          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            <span>Images</span>
-            <input type="file" accept="image/*" multiple onChange={(e) => setImages(e.target.files)} />
-          </label>
-
           <label style={{ display: 'grid', gap: 6 }}>
-            <span>Near School</span>
-            <input value={form.near_school} onChange={(e) => setForm({ ...form, near_school: e.target.value })} placeholder="AUT / UoA / LU" />
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Near School (Optional)</span>
+            <select style={inputStyle} value={form.near_school} onChange={(e) => setForm({ ...form, near_school: e.target.value })}>
+              {schools.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
           </label>
 
           <div style={{ display: 'flex', gap: 18, alignItems: 'end' }}>
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#374151' }}>
               <input type="checkbox" checked={form.furnished} onChange={(e) => setForm({ ...form, furnished: e.target.checked })} />
               Furnished
             </label>
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#374151' }}>
               <input
                 type="checkbox"
                 checked={form.bills_included}
@@ -219,10 +231,47 @@ export default function PostListingPage() {
               Bills included
             </label>
           </div>
+
+          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Source URL</span>
+            <input
+              style={inputStyle}
+              value={form.source_url}
+              onChange={(e) => setForm({ ...form, source_url: e.target.value })}
+              placeholder="Facebook / TradeMe / etc"
+            />
+          </label>
+
+          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Description</span>
+            <textarea
+              style={{ ...inputStyle, minHeight: 110, resize: 'vertical' }}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Include details like move-in date, bond, flatmates, and transport."
+            />
+          </label>
+
+          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Images</span>
+            <input style={inputStyle} type="file" accept="image/*" multiple onChange={(e) => setImages(e.target.files)} />
+            <small style={{ color: '#6b7280' }}>You can select multiple images in one upload.</small>
+          </label>
         </div>
 
         <div style={{ marginTop: 18 }}>
-          <button onClick={onSubmit} disabled={submitting} style={{ padding: '10px 18px' }}>
+          <button
+            onClick={onSubmit}
+            disabled={submitting}
+            style={{
+              padding: '11px 18px',
+              borderRadius: 10,
+              border: '1px solid #1a73e8',
+              background: '#1a73e8',
+              color: '#fff',
+              fontWeight: 600
+            }}
+          >
             {submitting ? 'Publishing...' : 'Publish Listing'}
           </button>
           {msg ? <p style={{ marginTop: 10 }}>{msg}</p> : null}
