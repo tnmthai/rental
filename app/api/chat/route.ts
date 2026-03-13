@@ -2,7 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { searchListings } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limit';
 
-function parseNeed(msg: string) {
+type Need = {
+  city?: string;
+  suburb?: string;
+  maxPrice?: number;
+  furnished?: boolean;
+  billsIncluded?: boolean;
+  nearSchool?: string;
+  queryText?: string;
+};
+
+function parseNeedRuleBased(msg: string): Need {
   const lower = msg.toLowerCase();
   const city = lower.includes('auckland')
     ? 'Auckland'
@@ -32,7 +42,54 @@ function parseNeed(msg: string) {
 
   const suburb = lower.includes('lincoln') ? 'lincoln' : undefined;
 
-  return { city, suburb, maxPrice, furnished, billsIncluded, nearSchool };
+  return { city, suburb, maxPrice, furnished, billsIncluded, nearSchool, queryText: msg.trim() };
+}
+
+async function parseNeedAI(message: string): Promise<Need | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const base = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
+  if (!apiKey) return null;
+
+  const prompt = `Extract rental search filters from user query. Return strict JSON only with keys:
+city, suburb, maxPrice, furnished, billsIncluded, nearSchool, queryText.
+Use null when unknown. Query: ${message}`;
+
+  const res = await fetch(`${base}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0,
+      messages: [
+        { role: 'system', content: 'You are a strict JSON extractor.' },
+        { role: 'user', content: prompt }
+      ]
+    })
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text) return null;
+
+  try {
+    const j = JSON.parse(text);
+    return {
+      city: j.city || undefined,
+      suburb: j.suburb || undefined,
+      maxPrice: j.maxPrice ? Number(j.maxPrice) : undefined,
+      furnished: typeof j.furnished === 'boolean' ? j.furnished : undefined,
+      billsIncluded: typeof j.billsIncluded === 'boolean' ? j.billsIncluded : undefined,
+      nearSchool: j.nearSchool || undefined,
+      queryText: j.queryText || message
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -47,7 +104,11 @@ export async function POST(req: NextRequest) {
     }
 
     const { message } = await req.json();
-    const need = parseNeed(String(message || ''));
+    const userText = String(message || '').trim();
+
+    const aiNeed = await parseNeedAI(userText);
+    const need = aiNeed || parseNeedRuleBased(userText);
+
     const results = await searchListings(need);
 
     const detailBits: string[] = [];
@@ -58,11 +119,12 @@ export async function POST(req: NextRequest) {
     if (need.billsIncluded) detailBits.push('bills included');
     if (need.nearSchool) detailBits.push(`near ${need.nearSchool}`);
 
+    const mode = aiNeed ? 'AI-assisted' : 'rule-based';
     const reply = results.length
-      ? `Found ${results.length} matching options${detailBits.length ? ` (${detailBits.join(', ')})` : ''}.`
+      ? `Found ${results.length} matching options${detailBits.length ? ` (${detailBits.join(', ')})` : ''}. (${mode})`
       : 'No matching listings yet. Try increasing budget, expanding location, or removing one filter.';
 
-    return NextResponse.json({ reply, filters: need, results });
+    return NextResponse.json({ reply, filters: need, results, mode });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

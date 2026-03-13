@@ -92,6 +92,9 @@ VALUES
   - `FACEBOOK_CLIENT_ID`
   - `FACEBOOK_CLIENT_SECRET`
   - `ADMIN_EMAILS` (comma-separated admin emails for moderation page)
+  - `OPENAI_API_KEY` (optional, enables AI-assisted query parsing)
+  - `OPENAI_MODEL` (optional, default `gpt-4o-mini`)
+  - `OPENAI_BASE_URL` (optional for OpenRouter/compatible providers)
   - `CLOUDINARY_CLOUD_NAME`
   - `CLOUDINARY_API_KEY`
   - `CLOUDINARY_API_SECRET`
