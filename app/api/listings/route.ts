@@ -35,14 +35,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const imageUrlsFromArray = Array.isArray(body.image_urls)
+      ? body.image_urls.map((x: unknown) => String(x).trim()).filter(Boolean)
+      : [];
+    const imageUrlsFromText = typeof body.image_urls_text === 'string'
+      ? body.image_urls_text
+          .split(/\r?\n|,/) 
+          .map((x: string) => x.trim())
+          .filter(Boolean)
+      : [];
+    const imageUrlSingle = typeof body.image_url === 'string' && body.image_url.trim() ? [body.image_url.trim()] : [];
+
     const created = await createListing({
       title,
       city,
       source_url,
       price_nzd_week,
-      image_urls: Array.isArray(body.image_urls)
-        ? body.image_urls.map((x: unknown) => String(x)).filter(Boolean)
-        : [],
+      image_urls: [...imageUrlsFromArray, ...imageUrlsFromText, ...imageUrlSingle],
       description: body.description ? String(body.description).trim() : null,
       furnished: Boolean(body.furnished),
       bills_included: Boolean(body.bills_included),

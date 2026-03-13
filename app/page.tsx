@@ -2,6 +2,19 @@
 
 import { useState } from 'react';
 
+function normalizeImageUrls(input: unknown): string[] {
+  if (!input) return [];
+  if (Array.isArray(input)) return input.map(String).filter(Boolean);
+  if (typeof input === 'string') {
+    // support old comma/newline formats
+    return input
+      .split(/\r?\n|,/) 
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
 type Hit = {
   id: number;
   title: string;
@@ -121,9 +134,11 @@ export default function HomePage() {
           <section style={{ marginTop: 20 }}>
             <h3>Kết quả</h3>
             <ul style={{ padding: 0 }}>
-              {hits.map((h) => (
+              {hits.map((h) => {
+                const gallery = normalizeImageUrls(h.image_urls);
+                return (
                 <li key={h.id} style={{ marginBottom: 16, listStyle: 'none', border: '1px solid #eee', padding: 10, borderRadius: 8 }}>
-                  {h.image_urls && h.image_urls.length > 0 ? (
+                  {gallery.length > 0 ? (
                     <div
                       style={{
                         display: 'grid',
@@ -132,7 +147,7 @@ export default function HomePage() {
                         marginBottom: 10
                       }}
                     >
-                      {h.image_urls.map((url, idx) => (
+                      {gallery.map((url, idx) => (
                         <a key={`${h.id}-${idx}`} href={url} target="_blank" title={`image-${idx + 1}`}>
                           <img
                             src={url}
@@ -157,7 +172,8 @@ export default function HomePage() {
                     nguồn
                   </a>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </section>
         )}
