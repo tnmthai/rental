@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 
 function normalizeImageUrls(input: unknown): string[] {
@@ -15,6 +15,54 @@ function normalizeImageUrls(input: unknown): string[] {
   return [];
 }
 
+function extractKeywords(query: string): string[] {
+  const stop = new Set([
+    'room', 'house', 'flat', 'in', 'near', 'under', 'over', 'with', 'and', 'or',
+    'the', 'a', 'an', 'nzd', 'week', 'wk', 'per', 'for', 'included', 'include'
+  ]);
+  return Array.from(
+    new Set(
+      query
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .split(/\s+/)
+        .map((w) => w.trim())
+        .filter((w) => w.length >= 2 && !stop.has(w))
+    )
+  );
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightText(text: string, keywords: string[]) {
+  if (!text || keywords.length === 0) return text;
+  const pattern = keywords.map(escapeRegExp).join('|');
+  if (!pattern) return text;
+  const regex = new RegExp(`(${pattern})`, 'gi');
+  const parts = text.split(regex);
+  return parts.map((part, idx) => {
+    const hit = keywords.some((k) => part.toLowerCase() === k.toLowerCase());
+    if (!hit) return <span key={idx}>{part}</span>;
+    return (
+      <mark key={idx} style={{ background: '#fff59d', padding: '0 2px', borderRadius: 3 }}>
+        {part}
+      </mark>
+    );
+  });
+}
+
+function formatDescription(text: string): string[] {
+  return text
+    .replace(/\s*•\s*/g, '\n• ')
+    .replace(/\s+[-–—]\s+/g, '\n- ')
+    .replace(/\s*\|\s*/g, '\n')
+    .split(/\n+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
 type Hit = {
   id: number;
   title: string;
@@ -26,6 +74,7 @@ type Hit = {
   furnished?: boolean;
   bills_included?: boolean;
   near_school?: string | null;
+  available_date?: string | null;
 };
 
 export default function HomePage() {
@@ -37,6 +86,7 @@ export default function HomePage() {
   const [saveMsg, setSaveMsg] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
   const [newCount, setNewCount] = useState(0);
+  const keywords = useMemo(() => extractKeywords(query), [query]);
 
   async function run() {
     setLoading(true);
@@ -214,14 +264,34 @@ export default function HomePage() {
             const gallery = normalizeImageUrls(h.image_urls);
             return (
               <article key={h.id} style={{ borderTop: '1px solid #eee', padding: '18px 0' }}>
-                <h3 style={{ margin: 0, color: '#1a0dab', fontSize: 20 }}>{h.title}</h3>
-                <div style={{ color: '#006621', fontSize: 13, marginTop: 3 }}>{h.source_url}</div>
+                <h3 style={{ margin: 0, color: '#1a0dab', fontSize: 20 }}>{highlightText(h.title, keywords)}</h3>
+                <div style={{ color: '#006621', fontSize: 13, marginTop: 3 }}>{h.source_url || '(no source url)'}</div>
                 <div style={{ marginTop: 6, color: '#4d5156' }}>
-                  {h.city} · ${h.price_nzd_week}/week · {h.furnished ? 'furnished' : 'unfurnished'} ·{' '}
+                  {highlightText(h.city, keywords)} · ${h.price_nzd_week}/week · {h.furnished ? 'furnished' : 'unfurnished'} ·{' '}
                   {h.bills_included ? 'bills included' : 'bills separate'}
-                  {h.near_school ? ` · near ${h.near_school}` : ''}
+                  {h.near_school ? <> · near {highlightText(h.near_school, keywords)}</> : null}
+                  {h.available_date ? <> · available {new Date(h.available_date).toLocaleDateString()}</> : null}
                 </div>
-                {h.description ? <p style={{ margin: '8px 0 10px', color: '#4d5156' }}>{h.description}</p> : null}
+                {h.description ? (
+                  <div
+                    style={{
+                      margin: '8px 0 10px',
+                      color: '#4d5156',
+                      lineHeight: 1.55,
+                      padding: '10px 12px',
+                      background: '#fafafa',
+                      border: '1px solid #eee',
+                      borderRadius: 8
+                    }}
+                  >
+                    {formatDescription(h.description).map((line, idx) => (
+                      <p key={idx} style={{ margin: '0 0 6px' }}>
+                        {line.startsWith('•') || line.startsWith('-') ? <strong>{line.slice(0, 1)} </strong> : null}
+                        {highlightText(line.replace(/^[-•]\s*/, ''), keywords)}
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
 
                 {gallery.length > 0 ? (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, maxWidth: 650 }}>
