@@ -4,45 +4,10 @@ import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import SubNav from '@/app/components/SubNav';
+import { NZ_LOCATIONS, getSchools } from '@/lib/nz-data';
 import 'react-quill/dist/quill.snow.css';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-
-type NzLocation = {
-  region: string;
-  areas: Array<{ area: string; suburbs: string[] }>;
-};
-
-const NZ_LOCATIONS: NzLocation[] = [
-  {
-    region: 'Auckland',
-    areas: [
-      { area: 'Auckland City', suburbs: ['CBD', 'Mount Eden', 'Newmarket', 'Grafton'] },
-      { area: 'North Shore', suburbs: ['Takapuna', 'Albany', 'Birkenhead'] },
-      { area: 'Manukau', suburbs: ['Papatoetoe', 'Manurewa', 'Flat Bush'] }
-    ]
-  },
-  {
-    region: 'Canterbury',
-    areas: [
-      { area: 'Christchurch City', suburbs: ['Riccarton', 'Ilam', 'Sydenham'] },
-      { area: 'Selwyn District', suburbs: ['Lincoln', 'Rolleston'] }
-    ]
-  },
-  {
-    region: 'Wellington',
-    areas: [
-      { area: 'Wellington City', suburbs: ['Te Aro', 'Kelburn', 'Newtown'] },
-      { area: 'Lower Hutt', suburbs: ['Petone', 'Alicetown'] }
-    ]
-  }
-];
-
-const SCHOOLS_BY_REGION: Record<string, string[]> = {
-  Auckland: ['(None)', 'AUT', 'University of Auckland (UoA)', 'Massey University (Albany)'],
-  Canterbury: ['(None)', 'University of Canterbury (UC)', 'Lincoln University (LU)'],
-  Wellington: ['(None)', 'Victoria University of Wellington', 'Massey University (Wellington)']
-};
 
 const editorModules = {
   toolbar: [
@@ -102,8 +67,8 @@ export default function PostListingPage() {
   }, [areas, form.area]);
 
   const schools = useMemo(() => {
-    return SCHOOLS_BY_REGION[form.region] || ['(None)'];
-  }, [form.region]);
+    return getSchools(form.region, form.area);
+  }, [form.region, form.area]);
 
   async function onSubmit() {
     setSubmitting(true);
@@ -291,7 +256,7 @@ export default function PostListingPage() {
           </label>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Near School (Optional)</span>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Nearby University / Polytechnic (Optional)</span>
             <select style={inputStyle} value={form.near_school} onChange={(e) => setForm({ ...form, near_school: e.target.value })}>
               {schools.map((s) => (
                 <option key={s} value={s}>
