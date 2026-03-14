@@ -46,12 +46,24 @@ export async function searchListings(filters: ListingSearch) {
   const params: Array<string | number | boolean> = [];
   const where: string[] = ["status = 'approved'", '(expires_at IS NULL OR expires_at > now())'];
 
-  if (filters.city) {
-    params.push(`%${filters.city}%`);
+  const asNonEmptyString = (v: unknown): string | undefined => {
+    if (typeof v === 'string') {
+      const t = v.trim();
+      return t ? t : undefined;
+    }
+    return undefined;
+  };
+
+  const city = asNonEmptyString(filters.city);
+  const suburb = asNonEmptyString(filters.suburb);
+  const nearSchool = asNonEmptyString(filters.nearSchool);
+
+  if (city) {
+    params.push(`%${city}%`);
     where.push(`city ILIKE $${params.length}`);
   }
-  if (filters.suburb) {
-    params.push(`%${filters.suburb}%`);
+  if (suburb) {
+    params.push(`%${suburb}%`);
     where.push(`(title ILIKE $${params.length} OR description ILIKE $${params.length} OR city ILIKE $${params.length})`);
   }
   if (filters.maxPrice) {
@@ -66,13 +78,13 @@ export async function searchListings(filters: ListingSearch) {
   if (filters.billsIncluded === true) {
     where.push('bills_included = true');
   }
-  if (filters.nearSchool) {
-    params.push(`%${filters.nearSchool}%`);
+  if (nearSchool) {
+    params.push(`%${nearSchool}%`);
     where.push(`near_school ILIKE $${params.length}`);
   }
 
-  const rankNearSchool = filters.nearSchool ? `CASE WHEN near_school ILIKE '%${filters.nearSchool.replace(/'/g, "''") }%' THEN 0 ELSE 1 END,` : '';
-  const rankCity = filters.city ? `CASE WHEN city ILIKE '%${filters.city.replace(/'/g, "''") }%' THEN 0 ELSE 1 END,` : '';
+  const rankNearSchool = nearSchool ? `CASE WHEN near_school ILIKE '%${nearSchool.replace(/'/g, "''") }%' THEN 0 ELSE 1 END,` : '';
+  const rankCity = city ? `CASE WHEN city ILIKE '%${city.replace(/'/g, "''") }%' THEN 0 ELSE 1 END,` : '';
 
   const sql = `
     SELECT id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at
