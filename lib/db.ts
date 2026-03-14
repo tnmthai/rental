@@ -354,6 +354,39 @@ export async function getVisitCount() {
   return Number(rows[0]?.value || 0);
 }
 
+export async function touchOnlineSession(sessionId: string, windowMinutes = 5) {
+  const p = getPool();
+  await p.query(
+    `
+      CREATE TABLE IF NOT EXISTS app_online_presence (
+        session_id TEXT PRIMARY KEY,
+        last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `
+  );
+
+  await p.query(
+    `
+      INSERT INTO app_online_presence (session_id, last_seen)
+      VALUES ($1, NOW())
+      ON CONFLICT (session_id) DO UPDATE SET last_seen = NOW()
+    `,
+    [sessionId]
+  );
+
+  await p.query(
+    `DELETE FROM app_online_presence WHERE last_seen < NOW() - ($1::text || ' minutes')::interval`,
+    [String(Math.max(windowMinutes, 1))]
+  );
+
+  const { rows } = await p.query(
+    `SELECT COUNT(*)::int AS online FROM app_online_presence WHERE last_seen >= NOW() - ($1::text || ' minutes')::interval`,
+    [String(Math.max(windowMinutes, 1))]
+  );
+
+  return Number(rows[0]?.online || 0);
+}
+
 export async function listUsersAdmin(limit = 500) {
   const p = getPool();
   const { rows } = await p.query(

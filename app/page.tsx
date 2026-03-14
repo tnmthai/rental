@@ -97,6 +97,7 @@ export default function HomePage() {
   const [newCount, setNewCount] = useState(0);
   const [showAIDisclaimer, setShowAIDisclaimer] = useState(false);
   const [visitCount, setVisitCount] = useState<number | null>(null);
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const keywords = useMemo(() => extractKeywords(query), [query]);
 
   async function run() {
@@ -168,6 +169,34 @@ export default function HomePage() {
       }
     }
     trackVisit();
+  }, []);
+
+  useEffect(() => {
+    const storageKey = 'rf_online_session_id';
+    let sessionId = localStorage.getItem(storageKey);
+    if (!sessionId) {
+      sessionId = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
+      localStorage.setItem(storageKey, sessionId);
+    }
+
+    let timer: any;
+
+    async function trackOnline() {
+      const r = await fetch('/api/metrics/online', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (typeof j.online === 'number') setOnlineCount(j.online);
+    }
+
+    trackOnline();
+    timer = setInterval(trackOnline, 45000);
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, []);
 
   function markAdminSeen() {
@@ -285,12 +314,15 @@ export default function HomePage() {
       </header>
 
       <section style={{ textAlign: 'center', marginBottom: 26 }}>
-        <div
+        <a
+          href="/"
           style={{
+            display: 'inline-block',
             fontSize: 54,
             fontWeight: 800,
             letterSpacing: -1,
             marginBottom: 14,
+            textDecoration: 'none',
             background: 'linear-gradient(90deg, #ff0000 0%, #ff7f00 20%, #ffd600 40%, #1e88e5 60%, #00c853 80%, #ff0000 100%)',
             backgroundSize: '250% 100%',
             animation: 'rainbowShift 14s ease-in-out infinite',
@@ -298,9 +330,10 @@ export default function HomePage() {
             backgroundClip: 'text',
             color: 'transparent'
           }}
+          title="Back to home"
         >
           RentFinder
-        </div>
+        </a>
 
         <div
           style={{
@@ -339,7 +372,6 @@ export default function HomePage() {
 
         <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
           <a href="/post">Create listing</a> · <a href="/dashboard">My dashboard</a>
-          {typeof visitCount === 'number' ? <> · 👀 {visitCount.toLocaleString()} visits</> : null}
         </p>
         {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
       </section>
@@ -437,6 +469,22 @@ export default function HomePage() {
           </ul>
         </section>
       )}
+
+      <footer
+        style={{
+          marginTop: 28,
+          paddingTop: 14,
+          borderTop: '1px solid #eceff3',
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 14,
+          color: '#6b7280',
+          fontSize: 13
+        }}
+      >
+        {typeof visitCount === 'number' ? <span>👀 {visitCount.toLocaleString()} visits</span> : null}
+        {typeof onlineCount === 'number' ? <span>🟢 {onlineCount.toLocaleString()} online</span> : null}
+      </footer>
 
       <style jsx global>{`
         @keyframes rainbowShift {
