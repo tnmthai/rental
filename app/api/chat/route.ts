@@ -131,17 +131,50 @@ function safeDecode(input: string): string {
   }
 }
 
-function normalizeDuckUrl(raw: string): string {
-  if (!raw) return raw;
-  if (raw.startsWith('//')) return `https:${raw}`;
-  if (raw.startsWith('/l/?')) {
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
+function tryExtractUddg(urlOrPath: string): string | null {
+  const raw = decodeHtmlEntities(urlOrPath || '');
+
+  // Handle relative redirect path: /l/?uddg=...
+  if (raw.startsWith('/l/?') || raw.startsWith('/?')) {
     const q = raw.split('?')[1] || '';
     const usp = new URLSearchParams(q);
     const uddg = usp.get('uddg');
     if (uddg) return safeDecode(uddg);
-    return `https://duckduckgo.com${raw}`;
   }
-  return raw;
+
+  // Handle absolute duckduckgo redirect URL: https://duckduckgo.com/l/?uddg=...
+  try {
+    const u = new URL(raw.startsWith('//') ? `https:${raw}` : raw);
+    if (u.hostname.includes('duckduckgo.com')) {
+      const uddg = u.searchParams.get('uddg');
+      if (uddg) return safeDecode(uddg);
+    }
+  } catch {
+    // ignore
+  }
+
+  return null;
+}
+
+function normalizeDuckUrl(raw: string): string {
+  if (!raw) return raw;
+  const decoded = decodeHtmlEntities(raw.trim());
+
+  const extracted = tryExtractUddg(decoded);
+  if (extracted && /^https?:\/\//i.test(extracted)) return extracted;
+
+  if (decoded.startsWith('//')) return `https:${decoded}`;
+  if (decoded.startsWith('/')) return `https://duckduckgo.com${decoded}`;
+  return decoded;
 }
 
 async function searchExternalWeb(message: string, need: Need): Promise<ExternalHit[]> {
@@ -176,6 +209,12 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
         .trim();
       if (!url || !title) continue;
       if (!/^https?:\/\//i.test(url)) continue;
+      try {
+        const host = new URL(url).hostname.toLowerCase();
+        if (host.includes('duckduckgo.com')) continue;
+      } catch {
+        continue;
+      }
       out.push({ title, url, source: 'web' });
     }
 
