@@ -66,7 +66,7 @@ export default function ModerationPage() {
       <header style={{ marginBottom: 18 }}>
         <h1 style={{ margin: 0 }}>Moderation Queue</h1>
         <p style={{ color: '#667085', margin: '8px 0 0' }}>Admin only · Review pending listings, browse old posts, and delete posts</p>
-        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
             onClick={() => setScope('pending')}
             style={{
@@ -91,6 +91,19 @@ export default function ModerationPage() {
           >
             All posts (including old)
           </button>
+          <a
+            href="/admin/users"
+            style={{
+              border: '1px solid #d0d5dd',
+              background: '#fff',
+              color: '#111827',
+              borderRadius: 8,
+              padding: '7px 11px',
+              textDecoration: 'none'
+            }}
+          >
+            Manage users
+          </a>
         </div>
       </header>
 

@@ -332,3 +332,47 @@ export async function listSavedSearches(userId: number) {
   );
   return rows;
 }
+
+export async function incrementVisitCount() {
+  const p = getPool();
+  await p.query(`CREATE TABLE IF NOT EXISTS app_metrics (key TEXT PRIMARY KEY, value BIGINT NOT NULL DEFAULT 0)`);
+  const { rows } = await p.query(
+    `
+      INSERT INTO app_metrics (key, value)
+      VALUES ('visits_total', 1)
+      ON CONFLICT (key) DO UPDATE SET value = app_metrics.value + 1
+      RETURNING value
+    `
+  );
+  return Number(rows[0]?.value || 0);
+}
+
+export async function getVisitCount() {
+  const p = getPool();
+  await p.query(`CREATE TABLE IF NOT EXISTS app_metrics (key TEXT PRIMARY KEY, value BIGINT NOT NULL DEFAULT 0)`);
+  const { rows } = await p.query(`SELECT value FROM app_metrics WHERE key='visits_total' LIMIT 1`);
+  return Number(rows[0]?.value || 0);
+}
+
+export async function listUsersAdmin(limit = 500) {
+  const p = getPool();
+  const { rows } = await p.query(
+    `
+      SELECT id, name, email, provider, provider_id, created_at
+      FROM users
+      ORDER BY created_at DESC
+      LIMIT $1
+    `,
+    [Math.min(Math.max(limit, 1), 5000)]
+  );
+  return rows;
+}
+
+export async function deleteUserById(userId: number) {
+  const p = getPool();
+  const { rows } = await p.query(
+    `DELETE FROM users WHERE id=$1 RETURNING id, email, name`,
+    [userId]
+  );
+  return rows[0] || null;
+}

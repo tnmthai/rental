@@ -88,6 +88,7 @@ export default function HomePage() {
   const [pendingCount, setPendingCount] = useState(0);
   const [newCount, setNewCount] = useState(0);
   const [showAIDisclaimer, setShowAIDisclaimer] = useState(false);
+  const [visitCount, setVisitCount] = useState<number | null>(null);
   const keywords = useMemo(() => extractKeywords(query), [query]);
 
   async function run() {
@@ -141,6 +142,23 @@ export default function HomePage() {
       if (timer) clearInterval(timer);
     };
   }, [session?.user]);
+
+  useEffect(() => {
+    async function trackVisit() {
+      const key = 'rf_visit_counted';
+      if (!sessionStorage.getItem(key)) {
+        const r = await fetch('/api/metrics/visits', { method: 'POST' });
+        const j = await r.json().catch(() => ({}));
+        if (typeof j.total === 'number') setVisitCount(j.total);
+        sessionStorage.setItem(key, '1');
+      } else {
+        const r = await fetch('/api/metrics/visits');
+        const j = await r.json().catch(() => ({}));
+        if (typeof j.total === 'number') setVisitCount(j.total);
+      }
+    }
+    trackVisit();
+  }, []);
 
   function markAdminSeen() {
     localStorage.setItem('admin_last_seen_pending_count', String(pendingCount));
@@ -311,6 +329,7 @@ export default function HomePage() {
 
         <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
           <a href="/post">Create listing</a> · <a href="/dashboard">My dashboard</a>
+          {typeof visitCount === 'number' ? <> · 👀 {visitCount.toLocaleString()} visits</> : null}
         </p>
         {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
       </section>
