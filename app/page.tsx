@@ -82,6 +82,7 @@ export default function HomePage() {
   const [query, setQuery] = useState('Room under 250 NZD/week near LU in Lincoln, furnished, bills included');
   const [loading, setLoading] = useState(false);
   const [reply, setReply] = useState('');
+  const [aiOverview, setAiOverview] = useState('');
   const [hits, setHits] = useState<Hit[]>([]);
   const [saveMsg, setSaveMsg] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
@@ -92,6 +93,7 @@ export default function HomePage() {
   async function run() {
     setLoading(true);
     setReply('');
+    setAiOverview('');
     setHits([]);
     const res = await fetch('/api/chat', {
       method: 'POST',
@@ -100,6 +102,7 @@ export default function HomePage() {
     });
     const data = await res.json();
     setReply(data.reply || data.error || 'No reply');
+    setAiOverview(data.aiOverview || '');
     setHits(data.results || []);
     setLoading(false);
   }
@@ -312,9 +315,19 @@ export default function HomePage() {
         {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
       </section>
 
-      {reply && (
-        <section style={{ marginBottom: 18, color: '#3c4043', fontSize: 15 }}>
-          <strong>Assistant:</strong> {reply}
+      {(aiOverview || reply) && (
+        <section
+          style={{
+            marginBottom: 18,
+            color: '#3c4043',
+            fontSize: 15,
+            border: '1px solid #e5e7eb',
+            background: '#f8fafc',
+            borderRadius: 10,
+            padding: '10px 12px'
+          }}
+        >
+          <strong>AI Overview:</strong> {aiOverview || reply}
         </section>
       )}
 

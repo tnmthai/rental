@@ -100,6 +100,46 @@ Use null when unknown. Query: ${message}`;
   }
 }
 
+async function buildAIOverview(message: string, need: Need, results: any[]): Promise<string | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const base = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
+  if (!apiKey) return null;
+
+  const compact = results.slice(0, 5).map((r) => ({
+    title: r?.title,
+    city: r?.city,
+    price_nzd_week: r?.price_nzd_week,
+    furnished: r?.furnished,
+    bills_included: r?.bills_included,
+    near_school: r?.near_school,
+    available_date: r?.available_date
+  }));
+
+  const prompt = `User query: ${message}\nParsed filters: ${JSON.stringify(need)}\nTop results: ${JSON.stringify(compact)}\n\nWrite a short AI overview in plain English (2-4 sentences):\n- answer the user's intent directly\n- mention the best match quality\n- if no results, suggest what to relax first\nNo markdown.`;
+
+  const res = await fetch(`${base}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.2,
+      messages: [
+        { role: 'system', content: 'You are an assistant that writes concise AI overview summaries for rental search.' },
+        { role: 'user', content: prompt }
+      ]
+    })
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content;
+  return text ? String(text).trim() : null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -132,7 +172,13 @@ export async function POST(req: NextRequest) {
       ? `Found ${results.length} matching options${detailBits.length ? ` (${detailBits.join(', ')})` : ''}. (${mode})`
       : 'No matching listings yet. Try increasing budget, expanding location, or removing one filter.';
 
-    return NextResponse.json({ reply, filters: need, results, mode });
+    const aiOverview =
+      (await buildAIOverview(userText, need, results)) ||
+      (results.length
+        ? `I found ${results.length} relevant listings and ranked the strongest matches first. The top cards should fit your request best, while lower cards may miss one or more conditions.`
+        : 'I could not find matching listings right now. Try relaxing price, location, or one optional condition to see more results.');
+
+    return NextResponse.json({ reply, aiOverview, filters: need, results, mode });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
