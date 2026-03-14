@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { deleteListingById, listAllListingsAdmin, listPendingListings, updateListingStatus } from '@/lib/db';
+import { deleteListingById, findUserByEmail, listAllListingsAdmin, listPendingListings, trackEvent, updateListingStatus } from '@/lib/db';
 
 function isAdmin(email?: string | null) {
   if (!email) return false;
@@ -28,6 +28,17 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'listing_id and action required' }, { status: 400 });
   }
   const item = await updateListingStatus(listingId, action === 'approve' ? 'approved' : 'rejected');
+
+  if (action === 'approve' && item?.id) {
+    const adminUser = session?.user?.email ? await findUserByEmail(session.user.email) : null;
+    await trackEvent({
+      event_name: 'listing_published',
+      user_id: adminUser?.id ? Number(adminUser.id) : null,
+      listing_id: Number(item.id),
+      meta: { source: 'admin_moderation' }
+    });
+  }
+
   return NextResponse.json({ item });
 }
 

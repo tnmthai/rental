@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { createListing, findUserByEmail, listRecentListings } from '@/lib/db';
+import { createListing, findUserByEmail, listRecentListings, trackEvent } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 function sanitizeRichText(html: string) {
@@ -81,6 +81,13 @@ export async function POST(req: NextRequest) {
       near_school: body.near_school ? String(body.near_school).trim() : null,
       duration_days: Number(body.duration_days || 30),
       available_date: body.available_date ? String(body.available_date).trim() : null
+    });
+
+    await trackEvent({
+      event_name: 'listing_created',
+      user_id: Number(user.id),
+      listing_id: Number(created.id),
+      meta: { status: created.status || 'pending' }
     });
 
     return NextResponse.json({ item: created }, { status: 201 });

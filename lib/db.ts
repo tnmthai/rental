@@ -387,6 +387,133 @@ export async function touchOnlineSession(sessionId: string, windowMinutes = 5) {
   return Number(rows[0]?.online || 0);
 }
 
+export async function trackEvent(input: {
+  event_name: 'listing_created' | 'listing_published' | 'contact_click' | 'share_click' | 'renew_click';
+  user_id?: number | null;
+  listing_id?: number | null;
+  meta?: Record<string, unknown> | null;
+}) {
+  const p = getPool();
+  await p.query(
+    `
+      CREATE TABLE IF NOT EXISTS app_events (
+        id BIGSERIAL PRIMARY KEY,
+        event_name TEXT NOT NULL,
+        user_id BIGINT NULL,
+        listing_id BIGINT NULL,
+        meta JSONB NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `
+  );
+
+  await p.query(
+    `
+      INSERT INTO app_events (event_name, user_id, listing_id, meta)
+      VALUES ($1, $2, $3, $4::jsonb)
+    `,
+    [input.event_name, input.user_id || null, input.listing_id || null, JSON.stringify(input.meta || null)]
+  );
+}
+
+export async function getGrowthMetrics(days = 14) {
+  const p = getPool();
+  const safeDays = Math.min(Math.max(Number(days) || 14, 1), 60);
+
+  await p.query(
+    `
+      CREATE TABLE IF NOT EXISTS app_events (
+        id BIGSERIAL PRIMARY KEY,
+        event_name TEXT NOT NULL,
+        user_id BIGINT NULL,
+        listing_id BIGINT NULL,
+        meta JSONB NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `
+  );
+
+  const { rows: dailyRows } = await p.query(
+    `
+      SELECT DATE(created_at) AS day, COUNT(*)::int AS listings_new
+      FROM listings
+      WHERE created_at >= NOW() - ($1::text || ' days')::interval
+      GROUP BY 1
+      ORDER BY 1 DESC
+    `,
+    [String(safeDays)]
+  );
+
+  const { rows: imageRows } = await p.query(
+    `
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE COALESCE(array_length(image_urls, 1), 0) > 0)::int AS with_images
+      FROM listings
+      WHERE created_at >= NOW() - ($1::text || ' days')::interval
+    `,
+    [String(safeDays)]
+  );
+
+  const { rows: contactRows } = await p.query(
+    `
+      SELECT
+        (SELECT COUNT(*)::int FROM listings WHERE created_at >= NOW() - ($1::text || ' days')::interval) AS total_listings,
+        (SELECT COUNT(DISTINCT listing_id)::int FROM app_events WHERE event_name='contact_click' AND listing_id IS NOT NULL AND created_at >= NOW() - ($1::text || ' days')::interval) AS listings_with_contact_click
+    `,
+    [String(safeDays)]
+  );
+
+  const { rows: repeatRows } = await p.query(
+    `
+      WITH poster_counts AS (
+        SELECT user_id, COUNT(*)::int AS c
+        FROM listings
+        WHERE created_at >= NOW() - ($1::text || ' days')::interval
+        GROUP BY user_id
+      )
+      SELECT
+        COUNT(*)::int AS unique_posters,
+        COUNT(*) FILTER (WHERE c >= 2)::int AS repeat_posters
+      FROM poster_counts
+    `,
+    [String(safeDays)]
+  );
+
+  const { rows: eventRows } = await p.query(
+    `
+      SELECT event_name, COUNT(*)::int AS count
+      FROM app_events
+      WHERE created_at >= NOW() - ($1::text || ' days')::interval
+      GROUP BY event_name
+      ORDER BY event_name ASC
+    `,
+    [String(safeDays)]
+  );
+
+  const daily = dailyRows.map((r) => ({ day: String(r.day), listings_new: Number(r.listings_new || 0) }));
+  const baselinePerDay = daily.length ? daily.reduce((s, x) => s + x.listings_new, 0) / daily.length : 0;
+  const targetPerDay = Math.round((baselinePerDay || 0) * 10);
+
+  const totalListings = Number(contactRows[0]?.total_listings || 0);
+  const listingsWithContactClick = Number(contactRows[0]?.listings_with_contact_click || 0);
+  const withImages = Number(imageRows[0]?.with_images || 0);
+  const imageTotal = Number(imageRows[0]?.total || 0);
+  const uniquePosters = Number(repeatRows[0]?.unique_posters || 0);
+  const repeatPosters = Number(repeatRows[0]?.repeat_posters || 0);
+
+  return {
+    windowDays: safeDays,
+    daily,
+    baselinePerDay,
+    targetPerDay,
+    listingWithImagePct: imageTotal > 0 ? (withImages / imageTotal) * 100 : 0,
+    listingWithContactClickPct: totalListings > 0 ? (listingsWithContactClick / totalListings) * 100 : 0,
+    repeatPosterPct: uniquePosters > 0 ? (repeatPosters / uniquePosters) * 100 : 0,
+    eventCounts: eventRows.map((r) => ({ event_name: String(r.event_name), count: Number(r.count || 0) }))
+  };
+}
+
 export async function listUsersAdmin(limit = 500) {
   const p = getPool();
   const { rows } = await p.query(

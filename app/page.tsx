@@ -97,6 +97,16 @@ type ExternalHit = {
   source: 'web';
 };
 
+async function trackClientEvent(event_name: 'contact_click' | 'share_click', listing_id?: number) {
+  try {
+    await fetch('/api/events', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ event_name, listing_id: listing_id || null })
+    });
+  } catch {}
+}
+
 export default function HomePage() {
   const { data: session } = useSession();
   const [query, setQuery] = useState('Room under 250 NZD/week near LU in Lincoln, furnished, bills included');
@@ -428,12 +438,43 @@ export default function HomePage() {
             return (
               <article key={h.id} style={{ borderTop: '1px solid #eee', padding: '18px 0' }}>
                 <h3 style={{ margin: 0, color: '#1a0dab', fontSize: 20 }}>{highlightText(h.title, keywords)}</h3>
-                <div style={{ color: '#006621', fontSize: 13, marginTop: 3 }}>{h.source_url || '(no source url)'}</div>
+                <div style={{ color: '#006621', fontSize: 13, marginTop: 3 }}>
+                  {h.source_url ? (
+                    <a
+                      href={h.source_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => trackClientEvent('contact_click', h.id)}
+                      style={{ color: '#006621', textDecoration: 'none' }}
+                    >
+                      {h.source_url}
+                    </a>
+                  ) : (
+                    '(no source url)'
+                  )}
+                </div>
                 <div style={{ marginTop: 6, color: '#4d5156' }}>
                   {highlightText(h.city, keywords)} · ${h.price_nzd_week}/week · {h.furnished ? 'furnished' : 'unfurnished'} ·{' '}
                   {h.bills_included ? 'bills included' : 'bills separate'}
                   {h.near_school ? <> · near {highlightText(h.near_school, keywords)}</> : null}
                   {h.available_date ? <> · available {new Date(h.available_date).toLocaleDateString()}</> : null}
+                </div>
+                <div style={{ marginTop: 8, display: 'flex', gap: 12, fontSize: 13 }}>
+                  <a href={`/listing/${h.id}`}>View detail</a>
+                  <button
+                    onClick={async () => {
+                      const url = `${window.location.origin}/listing/${h.id}`;
+                      if (navigator.share) {
+                        await navigator.share({ title: h.title, url }).catch(() => {});
+                      } else {
+                        await navigator.clipboard.writeText(url).catch(() => {});
+                      }
+                      trackClientEvent('share_click', h.id);
+                    }}
+                    style={{ border: 'none', background: 'transparent', color: '#1a73e8', padding: 0, cursor: 'pointer' }}
+                  >
+                    Share
+                  </button>
                 </div>
                 {h.description ? (
                   <div

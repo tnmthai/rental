@@ -1,3 +1,4 @@
+import Script from 'next/script';
 import { getListingById } from '@/lib/db';
 import SubNav from '@/app/components/SubNav';
 
@@ -44,12 +45,23 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
       <SubNav />
 
       <h1 style={{ marginBottom: 4 }}>{item.title}</h1>
-      <div style={{ color: '#006621', fontSize: 14 }}>{item.source_url}</div>
+      <div style={{ color: '#006621', fontSize: 14 }}>
+        {item.source_url ? (
+          <a data-track-contact="1" data-listing-id={item.id} href={item.source_url} target="_blank" rel="noreferrer" style={{ color: '#006621', textDecoration: 'none' }}>
+            {item.source_url}
+          </a>
+        ) : null}
+      </div>
       <p style={{ color: '#4d5156' }}>
         {item.city} · ${item.price_nzd_week}/week · {item.furnished ? 'furnished' : 'unfurnished'} ·{' '}
         {item.bills_included ? 'bills included' : 'bills separate'}
         {item.near_school ? ` · near ${item.near_school}` : ''}
       </p>
+      <div style={{ margin: '8px 0 12px' }}>
+        <button data-share-btn="1" data-listing-id={item.id} data-share-title={item.title} style={{ border: 'none', background: 'transparent', color: '#1a73e8', padding: 0, cursor: 'pointer' }}>
+          Share listing
+        </button>
+      </div>
       <p style={{ color: '#4d5156', fontSize: 14 }}>
         Posted by: {item.user_name || 'Unknown'} {item.user_email ? `(${item.user_email})` : ''} · Posted at:{' '}
         {new Date(item.created_at).toLocaleString()}
@@ -93,6 +105,40 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
           ))}
         </div>
       ) : null}
+
+      <Script id="listing-event-track" strategy="afterInteractive">{`
+        (() => {
+          const postEvent = async (eventName, listingId) => {
+            try {
+              await fetch('/api/events', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ event_name: eventName, listing_id: listingId })
+              });
+            } catch (_) {}
+          };
+
+          document.querySelectorAll('[data-track-contact="1"]').forEach((el) => {
+            el.addEventListener('click', () => {
+              postEvent('contact_click', Number(el.getAttribute('data-listing-id') || 0));
+            });
+          });
+
+          document.querySelectorAll('[data-share-btn="1"]').forEach((el) => {
+            el.addEventListener('click', async () => {
+              const listingId = Number(el.getAttribute('data-listing-id') || 0);
+              const title = el.getAttribute('data-share-title') || 'Listing';
+              const url = window.location.href;
+              if (navigator.share) {
+                await navigator.share({ title, url }).catch(() => {});
+              } else if (navigator.clipboard) {
+                await navigator.clipboard.writeText(url).catch(() => {});
+              }
+              postEvent('share_click', listingId);
+            });
+          });
+        })();
+      `}</Script>
     </main>
   );
 }

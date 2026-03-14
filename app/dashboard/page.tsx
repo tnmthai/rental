@@ -15,19 +15,36 @@ type Listing = {
 };
 
 type SavedSearch = { id: number; name: string; query: string; created_at: string };
+type GrowthData = {
+  windowDays: number;
+  daily: Array<{ day: string; listings_new: number }>;
+  baselinePerDay: number;
+  targetPerDay: number;
+  listingWithImagePct: number;
+  listingWithContactClickPct: number;
+  repeatPosterPct: number;
+  eventCounts: Array<{ event_name: string; count: number }>;
+};
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const [listings, setListings] = useState<Listing[]>([]);
   const [saved, setSaved] = useState<SavedSearch[]>([]);
+  const [growth, setGrowth] = useState<GrowthData | null>(null);
   const [msg, setMsg] = useState('');
 
   async function load() {
-    const [a, b] = await Promise.all([fetch('/api/my/listings'), fetch('/api/my/saved-searches')]);
+    const [a, b, c] = await Promise.all([
+      fetch('/api/my/listings'),
+      fetch('/api/my/saved-searches'),
+      fetch('/api/admin/growth-metrics?days=14')
+    ]);
     const aj = await a.json();
     const bj = await b.json();
+    const cj = await c.json().catch(() => ({}));
     setListings(aj.items || []);
     setSaved(bj.items || []);
+    if (c.ok) setGrowth(cj.data || null);
   }
 
   useEffect(() => {
@@ -92,6 +109,35 @@ export default function DashboardPage() {
           ))}
         </ul>
       </section>
+
+      {growth ? (
+        <section style={{ marginTop: 20, border: '1px solid #eee', borderRadius: 10, padding: 14 }}>
+          <h2 style={{ marginTop: 0 }}>Growth Baseline (Last {growth.windowDays} days)</h2>
+          <p style={{ marginTop: 0 }}>
+            Baseline: <b>{growth.baselinePerDay.toFixed(2)}</b> listings/day → Target (10x): <b>{growth.targetPerDay}</b> listings/day
+          </p>
+          <ul>
+            <li>Listing mới/ngày (avg): <b>{growth.baselinePerDay.toFixed(2)}</b></li>
+            <li>% listing có ảnh: <b>{growth.listingWithImagePct.toFixed(1)}%</b></li>
+            <li>% listing có contact click: <b>{growth.listingWithContactClickPct.toFixed(1)}%</b></li>
+            <li>Repeat poster: <b>{growth.repeatPosterPct.toFixed(1)}%</b></li>
+          </ul>
+
+          <h3 style={{ marginBottom: 6 }}>Daily listings</h3>
+          <ul>
+            {growth.daily.map((d) => (
+              <li key={d.day}>{d.day}: {d.listings_new}</li>
+            ))}
+          </ul>
+
+          <h3 style={{ marginBottom: 6 }}>Tracked events</h3>
+          <ul>
+            {growth.eventCounts.map((e) => (
+              <li key={e.event_name}>{e.event_name}: {e.count}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section style={{ marginTop: 20 }}>
         <h2>Moderation</h2>
