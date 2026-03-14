@@ -83,14 +83,22 @@ export async function searchListings(filters: ListingSearch) {
     where.push(`near_school ILIKE $${params.length}`);
   }
 
-  const rankNearSchool = nearSchool ? `CASE WHEN near_school ILIKE '%${nearSchool.replace(/'/g, "''") }%' THEN 0 ELSE 1 END,` : '';
-  const rankCity = city ? `CASE WHEN city ILIKE '%${city.replace(/'/g, "''") }%' THEN 0 ELSE 1 END,` : '';
+  const orderBy: string[] = [];
+  if (nearSchool) {
+    params.push(`%${nearSchool}%`);
+    orderBy.push(`CASE WHEN near_school ILIKE $${params.length} THEN 0 ELSE 1 END`);
+  }
+  if (city) {
+    params.push(`%${city}%`);
+    orderBy.push(`CASE WHEN city ILIKE $${params.length} THEN 0 ELSE 1 END`);
+  }
+  orderBy.push('price_nzd_week ASC');
 
   const sql = `
     SELECT id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at
     FROM listings
     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-    ORDER BY ${rankNearSchool} ${rankCity} price_nzd_week ASC
+    ORDER BY ${orderBy.join(', ')}
     LIMIT 12
   `;
 
