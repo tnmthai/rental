@@ -204,7 +204,9 @@ export default function HomePage() {
             fontWeight: 800,
             letterSpacing: -1,
             marginBottom: 14,
-            background: 'linear-gradient(90deg, #ff0000, #ff7f00, #ffdd00, #00c853, #00b0ff, #2962ff, #aa00ff)',
+            background: 'linear-gradient(90deg, #ff0000 0%, #ff7f00 20%, #ffd600 40%, #1e88e5 60%, #00c853 80%, #ff0000 100%)',
+            backgroundSize: '250% 100%',
+            animation: 'rainbowShift 14s ease-in-out infinite',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             color: 'transparent'
@@ -317,6 +319,14 @@ export default function HomePage() {
           })}
         </section>
       )}
+
+      <style jsx global>{`
+        @keyframes rainbowShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
     </main>
   );
 }
