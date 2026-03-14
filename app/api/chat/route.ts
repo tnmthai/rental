@@ -12,6 +12,13 @@ type Need = {
   queryText?: string;
 };
 
+type ExternalHit = {
+  title: string;
+  url: string;
+  snippet?: string;
+  source: 'web';
+};
+
 function parseNeedRuleBased(msg: string): Need {
   const lower = msg.toLowerCase();
   const city = lower.includes('auckland')
@@ -116,6 +123,72 @@ function shortQuerySuggestion(message: string): string {
   return `Your query "${topic}" is a bit short, so results can be inaccurate. Try a clearer format like: "Room in Lincoln under 250 NZD/week, furnished, bills included, near LU". Include at least city, budget, and 1-2 preferences for better matches.`;
 }
 
+function safeDecode(input: string): string {
+  try {
+    return decodeURIComponent(input);
+  } catch {
+    return input;
+  }
+}
+
+function normalizeDuckUrl(raw: string): string {
+  if (!raw) return raw;
+  if (raw.startsWith('//')) return `https:${raw}`;
+  if (raw.startsWith('/l/?')) {
+    const q = raw.split('?')[1] || '';
+    const usp = new URLSearchParams(q);
+    const uddg = usp.get('uddg');
+    if (uddg) return safeDecode(uddg);
+    return `https://duckduckgo.com${raw}`;
+  }
+  return raw;
+}
+
+async function searchExternalWeb(message: string, need: Need): Promise<ExternalHit[]> {
+  const locationPart = [need.suburb, need.city].filter(Boolean).join(' ');
+  const budgetPart = need.maxPrice ? `under ${need.maxPrice} NZD/week` : '';
+  const query = `${message} ${locationPart} ${budgetPart} site:trademe.co.nz OR site:realestate.co.nz OR site:myrent.co.nz OR site:oneroof.co.nz`
+    .trim()
+    .replace(/\s+/g, ' ');
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 7000);
+  try {
+    const res = await fetch(`https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+      headers: {
+        'user-agent': 'Mozilla/5.0',
+        accept: 'text/html'
+      },
+      signal: controller.signal
+    });
+
+    if (!res.ok) return [];
+    const html = await res.text();
+
+    const out: ExternalHit[] = [];
+    const anchorRe = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = anchorRe.exec(html)) && out.length < 8) {
+      const url = normalizeDuckUrl(m[1] || '');
+      const title = String(m[2] || '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!url || !title) continue;
+      if (!/^https?:\/\//i.test(url)) continue;
+      out.push({ title, url, source: 'web' });
+    }
+
+    const dedup = new Map<string, ExternalHit>();
+    for (const x of out) dedup.set(x.url, x);
+    return Array.from(dedup.values()).slice(0, 6);
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function buildAIOverview(message: string, need: Need, results: any[]): Promise<string | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -192,14 +265,18 @@ export async function POST(req: NextRequest) {
       ? shortQuerySuggestion(userText)
       : null;
 
+    const externalResults = results.length < 3 ? await searchExternalWeb(userText, need) : [];
+
     const aiOverview =
       shortNoResultHint ||
       (await buildAIOverview(userText, need, results)) ||
       (results.length
-        ? `I found ${results.length} relevant listings and ranked the strongest matches first. The top cards should fit your request best, while lower cards may miss one or more conditions.`
-        : 'I could not find matching listings right now. Try relaxing price, location, or one optional condition to see more results.');
+        ? `I found ${results.length} relevant internal listings and ranked the strongest matches first. ${externalResults.length ? `I also found ${externalResults.length} external web suggestions.` : ''}`
+        : externalResults.length
+          ? `No internal listings matched right now, but I found ${externalResults.length} external web suggestions you can check.`
+          : 'I could not find matching listings right now. Try relaxing price, location, or one optional condition to see more results.');
 
-    return NextResponse.json({ reply, aiOverview, filters: need, results, mode });
+    return NextResponse.json({ reply, aiOverview, filters: need, results, externalResults, mode });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

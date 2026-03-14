@@ -77,6 +77,13 @@ type Hit = {
   available_date?: string | null;
 };
 
+type ExternalHit = {
+  title: string;
+  url: string;
+  snippet?: string;
+  source: 'web';
+};
+
 export default function HomePage() {
   const { data: session } = useSession();
   const [query, setQuery] = useState('Room under 250 NZD/week near LU in Lincoln, furnished, bills included');
@@ -84,6 +91,7 @@ export default function HomePage() {
   const [reply, setReply] = useState('');
   const [aiOverview, setAiOverview] = useState('');
   const [hits, setHits] = useState<Hit[]>([]);
+  const [externalHits, setExternalHits] = useState<ExternalHit[]>([]);
   const [saveMsg, setSaveMsg] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
   const [newCount, setNewCount] = useState(0);
@@ -96,6 +104,7 @@ export default function HomePage() {
     setReply('');
     setAiOverview('');
     setHits([]);
+    setExternalHits([]);
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -105,6 +114,7 @@ export default function HomePage() {
     setReply(data.reply || data.error || 'No reply');
     setAiOverview(data.aiOverview || '');
     setHits(data.results || []);
+    setExternalHits(data.externalResults || []);
     setLoading(false);
   }
 
@@ -352,6 +362,7 @@ export default function HomePage() {
 
       {hits.length > 0 && (
         <section>
+          <h3 style={{ margin: '0 0 8px', color: '#111827' }}>Internal listings</h3>
           {hits.map((h) => {
             const gallery = normalizeImageUrls(h.image_urls);
             return (
@@ -405,6 +416,25 @@ export default function HomePage() {
               </article>
             );
           })}
+        </section>
+      )}
+
+      {externalHits.length > 0 && (
+        <section style={{ marginTop: 18 }}>
+          <h3 style={{ margin: '0 0 8px', color: '#111827' }}>External web suggestions</h3>
+          <p style={{ margin: '0 0 10px', color: '#6b7280', fontSize: 13 }}>
+            These are web results outside your internal database.
+          </p>
+          <ul style={{ padding: 0, margin: 0 }}>
+            {externalHits.map((x, idx) => (
+              <li key={`${x.url}-${idx}`} style={{ listStyle: 'none', borderTop: '1px solid #eee', padding: '10px 0' }}>
+                <a href={x.url} target="_blank" style={{ color: '#1a0dab', textDecoration: 'none', fontWeight: 600 }}>
+                  {x.title}
+                </a>
+                <div style={{ color: '#006621', fontSize: 13 }}>{x.url}</div>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
