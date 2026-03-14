@@ -1,6 +1,16 @@
 import { getListingById } from '@/lib/db';
 import SubNav from '@/app/components/SubNav';
 
+function formatDescription(text: string): string[] {
+  return text
+    .replace(/\s*•\s*/g, '\n• ')
+    .replace(/\s+[-–—]\s+/g, '\n- ')
+    .replace(/\s*\|\s*/g, '\n')
+    .split(/\n+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
 export default async function ListingDetailPage({ params }: { params: { id: string } }) {
   const id = Number(params.id || 0);
   const item = Number.isFinite(id) ? await getListingById(id) : null;
@@ -32,7 +42,26 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
         {new Date(item.created_at).toLocaleString()}
       </p>
 
-      {item.description ? <p style={{ lineHeight: 1.6 }}>{item.description}</p> : null}
+      {item.description ? (
+        <div
+          style={{
+            margin: '8px 0 10px',
+            color: '#4d5156',
+            lineHeight: 1.55,
+            padding: '10px 12px',
+            background: '#fafafa',
+            border: '1px solid #eee',
+            borderRadius: 8
+          }}
+        >
+          {formatDescription(item.description).map((line, idx) => (
+            <p key={idx} style={{ margin: '0 0 6px' }}>
+              {line.startsWith('•') || line.startsWith('-') ? <strong>{line.slice(0, 1)} </strong> : null}
+              {line.replace(/^[-•]\s*/, '')}
+            </p>
+          ))}
+        </div>
+      ) : null}
 
       {images.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, maxWidth: 780 }}>
