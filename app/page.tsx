@@ -218,8 +218,8 @@ export default function HomePage() {
   }
 
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: '24px 16px 80px' }}>
-      <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 24, gap: 12 }}>
+    <main style={{ maxWidth: 980, margin: '0 auto', padding: '16px 16px 80px' }}>
+      <header className="home-topbar" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 110, gap: 12 }}>
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowAIDisclaimer((v) => !v)}
@@ -508,6 +508,12 @@ export default function HomePage() {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
+        }
+
+        @media (max-width: 768px) {
+          .home-topbar {
+            margin-bottom: 34px !important;
+          }
         }
       `}</style>
     </main>
