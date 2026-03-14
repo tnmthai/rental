@@ -362,7 +362,7 @@ export default function HomePage() {
 
       {hits.length > 0 && (
         <section>
-          <h3 style={{ margin: '0 0 8px', color: '#111827' }}>Internal listings</h3>
+          <h3 style={{ margin: '0 0 8px', color: '#111827' }}>Our internal listings</h3>
           {hits.map((h) => {
             const gallery = normalizeImageUrls(h.image_urls);
             return (
@@ -423,7 +423,7 @@ export default function HomePage() {
         <section style={{ marginTop: 18 }}>
           <h3 style={{ margin: '0 0 8px', color: '#111827' }}>External web suggestions</h3>
           <p style={{ margin: '0 0 10px', color: '#6b7280', fontSize: 13 }}>
-            These are web results outside your internal database.
+            These are web results outside our internal database.
           </p>
           <ul style={{ padding: 0, margin: 0 }}>
             {externalHits.map((x, idx) => (
