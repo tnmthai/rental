@@ -1,8 +1,45 @@
+import type { Metadata } from 'next';
 import Providers from './providers';
 
-export const metadata = {
-  title: 'Student Rental NZ MVP',
-  description: 'Chat-first rental finder MVP'
+export const metadata: Metadata = {
+  title: 'RentFinder NZ — AI Rental Search for Rooms & Flats in New Zealand',
+  description:
+    'Find rooms, flats, and rental homes across New Zealand with AI-powered search. Compare listings by city, suburb, budget, furnished options, bills included, and nearby universities.',
+  keywords: [
+    'New Zealand rentals',
+    'NZ rental search',
+    'RentFinder NZ',
+    'rooms for rent New Zealand',
+    'flats for rent NZ',
+    'apartments for rent New Zealand',
+    'student accommodation NZ',
+    'Auckland rentals',
+    'Christchurch rentals',
+    'Wellington rentals',
+    'Canterbury rentals',
+    'Lincoln rentals',
+    'rental near university NZ',
+    'furnished room NZ',
+    'bills included rental NZ'
+  ],
+  openGraph: {
+    title: 'RentFinder NZ — AI Rental Search for Rooms & Flats in New Zealand',
+    description:
+      'AI-powered rental search for New Zealand. Discover rooms and flats by location, price, amenities, and proximity to universities.',
+    type: 'website',
+    locale: 'en_NZ',
+    siteName: 'RentFinder'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RentFinder NZ — AI Rental Search for Rooms & Flats in New Zealand',
+    description:
+      'Search rentals across New Zealand with AI: rooms, flats, price filters, furnished options, and more.'
+  },
+  robots: {
+    index: true,
+    follow: true
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
