@@ -323,6 +323,15 @@ function pickRelevantInternalResults(rows: any[]): any[] {
   return rows.filter((r) => Number(r?.match_score || 0) >= minScore);
 }
 
+function isVietnamLikeListing(row: any): boolean {
+  const text = `${row?.city || ''} ${row?.title || ''} ${row?.description || ''}`.toLowerCase();
+  const vnHints = [
+    'việt', 'viet', 'vietnam', 'hà nội', 'ha noi', 'hanoi', 'hồ chí minh', 'ho chi minh',
+    'sài gòn', 'sai gon', 'hcm', 'tp.hcm', 'đà nẵng', 'da nang', 'cần thơ', 'can tho', 'quận', 'phường'
+  ];
+  return vnHints.some((k) => text.includes(k));
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -339,9 +348,11 @@ export async function POST(req: NextRequest) {
 
     const aiNeed = await parseNeedAI(userText);
     const need = aiNeed || parseNeedRuleBased(userText);
+    const region = detectSearchRegion(userText, need);
 
     const rawResults = await searchListings(need);
-    const results = pickRelevantInternalResults(rawResults);
+    const relevant = pickRelevantInternalResults(rawResults);
+    const results = region === 'vn' ? relevant.filter(isVietnamLikeListing) : relevant;
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
