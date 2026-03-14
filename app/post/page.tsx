@@ -40,6 +40,16 @@ const SCHOOLS_BY_REGION: Record<string, string[]> = {
   Wellington: ['(None)', 'Victoria University of Wellington', 'Massey University (Wellington)']
 };
 
+function formatDescriptionDraft(input: string): string {
+  return input
+    .replace(/\r\n/g, '\n')
+    .replace(/^\s*\*\s+/gm, '• ')
+    .replace(/^\s*[-–—]\s+/gm, '- ')
+    .replace(/[ \t]+$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export default function PostListingPage() {
   const { data: session, status } = useSession();
   const [form, setForm] = useState({
@@ -100,7 +110,7 @@ export default function PostListingPage() {
           price_nzd_week: form.price_nzd_week,
           source_url: form.source_url,
           image_urls: imageUrls,
-          description: form.description,
+          description: formatDescriptionDraft(form.description),
           furnished: form.furnished,
           bills_included: form.bills_included,
           near_school: form.near_school === '(None)' ? null : form.near_school,
@@ -300,8 +310,12 @@ export default function PostListingPage() {
               style={{ ...inputStyle, minHeight: 110, resize: 'vertical' }}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Include details like move-in date, bond, flatmates, and transport."
+              onBlur={(e) => setForm({ ...form, description: formatDescriptionDraft(e.target.value) })}
+              placeholder={`Include details like move-in date, bond, flatmates, and transport.\n- Private room\n- 2 weeks bond\n• 5 mins to bus stop`}
             />
+            <small style={{ color: '#6b7280' }}>
+              Basic format supported: line break, <code>-</code> / <code>*</code> / <code>•</code> bullet list.
+            </small>
           </label>
 
           <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
