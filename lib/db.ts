@@ -214,7 +214,7 @@ export async function listPendingListings() {
   const p = getPool();
   const { rows } = await p.query(
     `
-      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.created_at,
+      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.created_at, l.status,
              u.name AS user_name, u.email AS user_email
       FROM listings l
       LEFT JOIN users u ON u.id = l.user_id
@@ -224,6 +224,31 @@ export async function listPendingListings() {
     `
   );
   return rows;
+}
+
+export async function listAllListingsAdmin(limit = 300) {
+  const p = getPool();
+  const { rows } = await p.query(
+    `
+      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.created_at, l.status,
+             u.name AS user_name, u.email AS user_email
+      FROM listings l
+      LEFT JOIN users u ON u.id = l.user_id
+      ORDER BY l.created_at DESC
+      LIMIT $1
+    `,
+    [Math.min(Math.max(limit, 1), 1000)]
+  );
+  return rows;
+}
+
+export async function deleteListingById(listingId: number) {
+  const p = getPool();
+  const { rows } = await p.query(
+    `DELETE FROM listings WHERE id=$1 RETURNING id, title, status`,
+    [listingId]
+  );
+  return rows[0] || null;
 }
 
 export async function getListingById(listingId: number) {

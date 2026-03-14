@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import SubNav from '@/app/components/SubNav';
 
-type Pending = {
+type ListingItem = {
   id: number;
   user_id: number;
   user_name?: string | null;
@@ -13,14 +13,16 @@ type Pending = {
   price_nzd_week: number;
   source_url?: string | null;
   created_at: string;
+  status: 'pending' | 'approved' | 'rejected' | 'paused';
 };
 
 export default function ModerationPage() {
-  const [items, setItems] = useState<Pending[]>([]);
+  const [items, setItems] = useState<ListingItem[]>([]);
   const [msg, setMsg] = useState('');
+  const [scope, setScope] = useState<'pending' | 'all'>('pending');
 
-  async function load() {
-    const res = await fetch('/api/admin/moderation');
+  async function load(nextScope = scope) {
+    const res = await fetch(`/api/admin/moderation?scope=${nextScope}`);
     const data = await res.json();
     if (!res.ok) {
       setMsg(data.error || 'Forbidden');
@@ -40,16 +42,56 @@ export default function ModerationPage() {
     await load();
   }
 
+  async function removeListing(id: number) {
+    const ok = window.confirm(`Delete listing #${id}? This cannot be undone.`);
+    if (!ok) return;
+
+    const res = await fetch('/api/admin/moderation', {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ listing_id: id })
+    });
+    const data = await res.json();
+    setMsg(res.ok ? `deleted #${id}` : data.error || 'failed');
+    await load();
+  }
+
   useEffect(() => {
-    load();
-  }, []);
+    load(scope);
+  }, [scope]);
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
       <SubNav />
       <header style={{ marginBottom: 18 }}>
         <h1 style={{ margin: 0 }}>Moderation Queue</h1>
-        <p style={{ color: '#667085', margin: '8px 0 0' }}>Admin only · Review pending listings before publish</p>
+        <p style={{ color: '#667085', margin: '8px 0 0' }}>Admin only · Review pending listings, browse old posts, and delete posts</p>
+        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setScope('pending')}
+            style={{
+              border: '1px solid #d0d5dd',
+              background: scope === 'pending' ? '#111827' : '#fff',
+              color: scope === 'pending' ? '#fff' : '#111827',
+              borderRadius: 8,
+              padding: '7px 11px'
+            }}
+          >
+            Pending only
+          </button>
+          <button
+            onClick={() => setScope('all')}
+            style={{
+              border: '1px solid #d0d5dd',
+              background: scope === 'all' ? '#111827' : '#fff',
+              color: scope === 'all' ? '#fff' : '#111827',
+              borderRadius: 8,
+              padding: '7px 11px'
+            }}
+          >
+            All posts (including old)
+          </button>
+        </div>
       </header>
 
       {msg ? (
@@ -58,7 +100,7 @@ export default function ModerationPage() {
         </div>
       ) : null}
 
-      {items.length === 0 ? <p style={{ color: '#667085' }}>No pending listings.</p> : null}
+      {items.length === 0 ? <p style={{ color: '#667085' }}>{scope === 'pending' ? 'No pending listings.' : 'No listings found.'}</p> : null}
 
       <ul style={{ padding: 0, margin: 0 }}>
         {items.map((i) => (
@@ -87,6 +129,7 @@ export default function ModerationPage() {
                 <div style={{ marginTop: 2, fontSize: 13, color: '#667085' }}>
                   Posted at: {new Date(i.created_at).toLocaleString()}
                 </div>
+                <div style={{ marginTop: 2, fontSize: 13, color: '#667085' }}>Status: {i.status}</div>
                 <div style={{ marginTop: 6, fontSize: 13, display: 'flex', gap: 10 }}>
                   <a href={`/listing/${i.id}`} style={{ color: '#1a73e8' }}>
                     View full post
@@ -100,17 +143,27 @@ export default function ModerationPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
+                {i.status === 'pending' ? (
+                  <>
+                    <button
+                      onClick={() => act(i.id, 'approve')}
+                      style={{ border: '1px solid #16a34a', background: '#16a34a', color: '#fff', borderRadius: 8, padding: '8px 12px' }}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => act(i.id, 'reject')}
+                      style={{ border: '1px solid #dc2626', background: '#fff', color: '#dc2626', borderRadius: 8, padding: '8px 12px' }}
+                    >
+                      Reject
+                    </button>
+                  </>
+                ) : null}
                 <button
-                  onClick={() => act(i.id, 'approve')}
-                  style={{ border: '1px solid #16a34a', background: '#16a34a', color: '#fff', borderRadius: 8, padding: '8px 12px' }}
+                  onClick={() => removeListing(i.id)}
+                  style={{ border: '1px solid #dc2626', background: '#dc2626', color: '#fff', borderRadius: 8, padding: '8px 12px' }}
                 >
-                  Approve
-                </button>
-                <button
-                  onClick={() => act(i.id, 'reject')}
-                  style={{ border: '1px solid #dc2626', background: '#fff', color: '#dc2626', borderRadius: 8, padding: '8px 12px' }}
-                >
-                  Reject
+                  Delete
                 </button>
               </div>
             </div>
