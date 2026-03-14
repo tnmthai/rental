@@ -310,6 +310,19 @@ async function buildAIOverview(message: string, need: Need, results: any[]): Pro
   return text ? String(text).trim() : null;
 }
 
+function pickRelevantInternalResults(rows: any[]): any[] {
+  if (!Array.isArray(rows) || rows.length === 0) return [];
+
+  const conditionCount = Number(rows[0]?.condition_count || 0);
+  if (!Number.isFinite(conditionCount) || conditionCount <= 0) {
+    // If we cannot infer meaningful filters from query, don't force internal results.
+    return [];
+  }
+
+  const minScore = Math.max(1, Math.ceil(conditionCount * 0.5));
+  return rows.filter((r) => Number(r?.match_score || 0) >= minScore);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -327,7 +340,8 @@ export async function POST(req: NextRequest) {
     const aiNeed = await parseNeedAI(userText);
     const need = aiNeed || parseNeedRuleBased(userText);
 
-    const results = await searchListings(need);
+    const rawResults = await searchListings(need);
+    const results = pickRelevantInternalResults(rawResults);
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
