@@ -189,12 +189,12 @@ export default function HomePage() {
         </div>
 
         {session?.user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#3c4043' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: '#3c4043' }}>
             {(pendingCount > 0 || newCount > 0) ? (
               <a
                 href="/admin/moderation"
                 onClick={markAdminSeen}
-                style={{ position: 'relative', textDecoration: 'none', fontSize: 18, lineHeight: 1 }}
+                style={{ position: 'relative', textDecoration: 'none', fontSize: 18, lineHeight: 1, marginTop: 7 }}
                 title="Moderation notifications"
               >
                 🔔
@@ -220,15 +220,29 @@ export default function HomePage() {
                 </span>
               </a>
             ) : null}
-            <span>
-              Hello {session.user.name || session.user.email?.split('@')[0] || 'there'}
-            </span>
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', background: '#fff' }}
-            >
-              Sign out
-            </button>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', background: '#fff' }}
+              >
+                Sign out
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#5f6368' }}>
+                {session.user.image ? (
+                  <img
+                    src={session.user.image}
+                    alt="profile"
+                    style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid #e5e7eb' }}
+                  />
+                ) : null}
+                <div style={{ textAlign: 'right', lineHeight: 1.2 }}>
+                  <div style={{ color: '#3c4043', fontWeight: 600 }}>{session.user.name || 'Google user'}</div>
+                  <div>{session.user.email || ''}</div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 8 }}>
