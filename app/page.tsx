@@ -198,17 +198,19 @@ export default function HomePage() {
       </header>
 
       <section style={{ textAlign: 'center', marginBottom: 26 }}>
-        <div style={{ fontSize: 54, fontWeight: 700, letterSpacing: -1, marginBottom: 14 }}>
-          <span style={{ color: '#4285F4' }}>R</span>
-          <span style={{ color: '#EA4335' }}>e</span>
-          <span style={{ color: '#FBBC05' }}>n</span>
-          <span style={{ color: '#4285F4' }}>t</span>
-          <span style={{ color: '#34A853' }}>F</span>
-          <span style={{ color: '#EA4335' }}>i</span>
-          <span style={{ color: '#4285F4' }}>n</span>
-          <span style={{ color: '#34A853' }}>d</span>
-          <span style={{ color: '#FBBC05' }}>e</span>
-          <span style={{ color: '#EA4335' }}>r</span>
+        <div
+          style={{
+            fontSize: 54,
+            fontWeight: 800,
+            letterSpacing: -1,
+            marginBottom: 14,
+            background: 'linear-gradient(90deg, #ff0000, #ff7f00, #ffdd00, #00c853, #00b0ff, #2962ff, #aa00ff)',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent'
+          }}
+        >
+          RentFinder
         </div>
 
         <div
