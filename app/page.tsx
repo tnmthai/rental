@@ -257,17 +257,21 @@ export default function HomePage() {
       </header>
 
       <section style={{ textAlign: 'center', marginBottom: 26 }}>
-        <div style={{ fontSize: 54, fontWeight: 800, letterSpacing: -1, marginBottom: 14 }}>
-          <span className="rf rf0">R</span>
-          <span className="rf rf1">e</span>
-          <span className="rf rf2">n</span>
-          <span className="rf rf3">t</span>
-          <span className="rf rf0">F</span>
-          <span className="rf rf1">i</span>
-          <span className="rf rf2">n</span>
-          <span className="rf rf3">d</span>
-          <span className="rf rf0">e</span>
-          <span className="rf rf0">r</span>
+        <div
+          style={{
+            fontSize: 54,
+            fontWeight: 800,
+            letterSpacing: -1,
+            marginBottom: 14,
+            background: 'linear-gradient(90deg, #ff0000 0%, #ff7f00 20%, #ffd600 40%, #1e88e5 60%, #00c853 80%, #ff0000 100%)',
+            backgroundSize: '250% 100%',
+            animation: 'rainbowShift 14s ease-in-out infinite',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent'
+          }}
+        >
+          RentFinder
         </div>
 
         <div
@@ -386,21 +390,10 @@ export default function HomePage() {
       )}
 
       <style jsx global>{`
-        .rf {
-          display: inline-block;
-          animation: rfCycle 8s linear infinite;
-        }
-        .rf0 { animation-delay: 0s; }
-        .rf1 { animation-delay: -2s; }
-        .rf2 { animation-delay: -4s; }
-        .rf3 { animation-delay: -6s; }
-
-        @keyframes rfCycle {
-          0% { color: #ff0000; }   /* red */
-          25% { color: #ff7f00; }  /* orange */
-          50% { color: #ffd600; }  /* yellow */
-          75% { color: #1e88e5; }  /* blue */
-          100% { color: #ff0000; } /* red */
+        @keyframes rainbowShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
       `}</style>
     </main>
