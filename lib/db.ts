@@ -100,6 +100,10 @@ export async function searchListings(filters: ListingSearch) {
     where.push(`(${scoreExpr}) >= 1`);
   }
 
+  const orderBy = conditionCount > 0
+    ? `(${scoreExpr}) DESC, price_nzd_week ASC, created_at DESC`
+    : `price_nzd_week ASC, created_at DESC`;
+
   const sql = `
     SELECT
       id, user_id, title, city, price_nzd_week, source_url, image_urls, description,
@@ -108,10 +112,7 @@ export async function searchListings(filters: ListingSearch) {
       ${conditionCount}::int AS condition_count
     FROM listings
     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-    ORDER BY
-      (${scoreExpr}) DESC,
-      price_nzd_week ASC,
-      created_at DESC
+    ORDER BY ${orderBy}
     LIMIT 30
   `;
 

@@ -100,6 +100,22 @@ Use null when unknown. Query: ${message}`;
   }
 }
 
+function hasAnyStructuredFilter(need: Need): boolean {
+  return Boolean(
+    need.city || need.suburb || need.maxPrice || need.furnished || need.billsIncluded || need.nearSchool
+  );
+}
+
+function isShortQuery(message: string): boolean {
+  const words = message.trim().split(/\s+/).filter(Boolean);
+  return words.length > 0 && words.length <= 3;
+}
+
+function shortQuerySuggestion(message: string): string {
+  const topic = message.trim() || 'room for rent';
+  return `Your query "${topic}" is a bit short, so results can be inaccurate. Try a clearer format like: "Room in Lincoln under 250 NZD/week, furnished, bills included, near LU". Include at least city, budget, and 1-2 preferences for better matches.`;
+}
+
 async function buildAIOverview(message: string, need: Need, results: any[]): Promise<string | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -172,7 +188,12 @@ export async function POST(req: NextRequest) {
       ? `Found ${results.length} matching options${detailBits.length ? ` (${detailBits.join(', ')})` : ''}. (${mode})`
       : 'No matching listings yet. Try increasing budget, expanding location, or removing one filter.';
 
+    const shortNoResultHint = !results.length && isShortQuery(userText) && !hasAnyStructuredFilter(need)
+      ? shortQuerySuggestion(userText)
+      : null;
+
     const aiOverview =
+      shortNoResultHint ||
       (await buildAIOverview(userText, need, results)) ||
       (results.length
         ? `I found ${results.length} relevant listings and ranked the strongest matches first. The top cards should fit your request best, while lower cards may miss one or more conditions.`
