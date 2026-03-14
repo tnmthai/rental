@@ -83,21 +83,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Please provide a valid Facebook URL.' }, { status: 400 });
     }
 
-    const response = await fetch(sourceUrl, {
-      method: 'GET',
-      headers: {
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-        accept: 'text/html,application/xhtml+xml'
-      },
-      redirect: 'follow'
-    });
+    const userAgents = [
+      'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+      'curl/8.4.0',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+    ];
 
-    if (!response.ok) {
-      return NextResponse.json({ error: `Cannot fetch URL (${response.status})` }, { status: 400 });
+    let html = '';
+    let lastStatus = 0;
+    for (const ua of userAgents) {
+      const response = await fetch(sourceUrl, {
+        method: 'GET',
+        headers: {
+          'user-agent': ua,
+          accept: 'text/html,application/xhtml+xml'
+        },
+        redirect: 'follow'
+      });
+      lastStatus = response.status;
+      if (!response.ok) continue;
+      html = await response.text();
+      if (html) break;
     }
 
-    const html = await response.text();
+    if (!html) {
+      return NextResponse.json({ error: `Cannot fetch URL (${lastStatus || 400})` }, { status: 400 });
+    }
 
     const ogTitle = getMeta(html, 'og:title');
     const ogDescription = getMeta(html, 'og:description');
