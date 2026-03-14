@@ -177,14 +177,48 @@ function normalizeDuckUrl(raw: string): string {
   return decoded;
 }
 
+function detectSearchRegion(message: string, need: Need): 'vn' | 'nz' | 'auto' {
+  const t = `${message} ${need.city || ''} ${need.suburb || ''}`.toLowerCase();
+
+  const vnHints = [
+    'việt', 'viet', 'vietnam', 'hà nội', 'ha noi', 'hanoi', 'hồ chí minh', 'ho chi minh',
+    'sài gòn', 'sai gon', 'hcm', 'tp.hcm', 'đà nẵng', 'da nang', 'cần thơ', 'can tho', 'quận', 'phường'
+  ];
+  if (vnHints.some((k) => t.includes(k))) return 'vn';
+
+  const nzHints = [
+    'new zealand', 'nz', 'auckland', 'wellington', 'christchurch', 'lincoln', 'hamilton', 'dunedin'
+  ];
+  if (nzHints.some((k) => t.includes(k))) return 'nz';
+
+  return 'auto';
+}
+
 async function searchExternalWeb(message: string, need: Need): Promise<ExternalHit[]> {
   const locationPart = [need.suburb, need.city].filter(Boolean).join(' ');
-  const budgetPart = need.maxPrice ? `under ${need.maxPrice} NZD/week` : '';
+  const budgetPart = need.maxPrice ? `under ${need.maxPrice}` : '';
+  const region = detectSearchRegion(message, need);
 
-  const strictQuery = `${message} ${locationPart} ${budgetPart} site:trademe.co.nz OR site:realestate.co.nz OR site:myrent.co.nz OR site:oneroof.co.nz`
+  const nzSites = 'site:trademe.co.nz OR site:realestate.co.nz OR site:myrent.co.nz OR site:oneroof.co.nz';
+  const vnSites = 'site:chotot.com OR site:batdongsan.com.vn OR site:alonhadat.com.vn OR site:mogi.vn';
+
+  const strictQuery = (
+    region === 'vn'
+      ? `${message} ${locationPart} ${budgetPart} thuê trọ ${vnSites}`
+      : region === 'nz'
+        ? `${message} ${locationPart} ${budgetPart} rent ${nzSites}`
+        : `${message} ${locationPart} ${budgetPart} rent OR thuê trọ ${nzSites} OR ${vnSites}`
+  )
     .trim()
     .replace(/\s+/g, ' ');
-  const broadQuery = `${message} ${locationPart} ${budgetPart} new zealand rent`.trim().replace(/\s+/g, ' ');
+
+  const broadQuery = (
+    region === 'vn'
+      ? `${message} ${locationPart} ${budgetPart} thuê nhà phòng trọ việt nam`
+      : region === 'nz'
+        ? `${message} ${locationPart} ${budgetPart} new zealand rent`
+        : `${message} ${locationPart} ${budgetPart} room for rent`
+  ).trim().replace(/\s+/g, ' ');
 
   const run = async (query: string): Promise<ExternalHit[]> => {
     const controller = new AbortController();
