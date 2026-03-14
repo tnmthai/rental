@@ -24,7 +24,7 @@ export type NewListing = {
   title: string;
   city: string;
   price_nzd_week: number;
-  source_url: string;
+  source_url?: string;
   image_urls?: string[];
   description?: string | null;
   furnished?: boolean;
@@ -119,7 +119,7 @@ export async function createListing(input: NewListing) {
       input.title,
       input.city,
       input.price_nzd_week,
-      input.source_url,
+      input.source_url || '',
       input.image_urls || [],
       input.description || null,
       Boolean(input.furnished),

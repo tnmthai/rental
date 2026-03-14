@@ -57,9 +57,7 @@ export default function PostListingPage() {
   });
 
   const [images, setImages] = useState<FileList | null>(null);
-  const [importedImageUrls, setImportedImageUrls] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [importing, setImporting] = useState(false);
   const [msg, setMsg] = useState('');
 
   const areas = useMemo(() => {
@@ -74,42 +72,11 @@ export default function PostListingPage() {
     return SCHOOLS_BY_REGION[form.region] || ['(None)'];
   }, [form.region]);
 
-  async function importFromFacebookUrl() {
-    setImporting(true);
-    setMsg('');
-    try {
-      const sourceUrl = String(form.source_url || '').trim();
-      if (!sourceUrl) throw new Error('Please enter a Facebook URL first.');
-
-      const res = await fetch('/api/import/facebook-url', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ source_url: sourceUrl })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Import failed');
-
-      const item = data.item || {};
-      setForm((prev) => ({
-        ...prev,
-        title: item.title || prev.title,
-        description: item.description || prev.description,
-        price_nzd_week: item.price_nzd_week || prev.price_nzd_week
-      }));
-      setImportedImageUrls(Array.isArray(item.image_urls) ? item.image_urls : []);
-      setMsg('✅ Imported metadata from Facebook URL. Please review fields before publishing.');
-    } catch (e: any) {
-      setMsg(`❌ ${e.message || 'Import failed'}`);
-    } finally {
-      setImporting(false);
-    }
-  }
-
   async function onSubmit() {
     setSubmitting(true);
     setMsg('');
     try {
-      let imageUrls: string[] = [...importedImageUrls];
+      let imageUrls: string[] = [];
 
       if (images && images.length > 0) {
         const fd = new FormData();
@@ -145,7 +112,6 @@ export default function PostListingPage() {
       setMsg(`✅ Listing #${data.item.id} posted with ${imageUrls.length} image(s)`);
       setForm({ ...form, title: '', source_url: '', description: '', duration_days: 30 });
       setImages(null);
-      setImportedImageUrls([]);
     } catch (e: any) {
       setMsg(`❌ ${e.message || 'Something went wrong'}`);
     } finally {
@@ -307,33 +273,13 @@ export default function PostListingPage() {
           </div>
 
           <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Source URL</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                style={{ ...inputStyle, flex: 1 }}
-                value={form.source_url}
-                onChange={(e) => setForm({ ...form, source_url: e.target.value })}
-                placeholder="Facebook / TradeMe / etc"
-              />
-              <button
-                type="button"
-                onClick={importFromFacebookUrl}
-                disabled={importing}
-                style={{
-                  padding: '0 12px',
-                  borderRadius: 10,
-                  border: '1px solid #dbe3ef',
-                  background: '#f8fafc',
-                  color: '#1f2937',
-                  fontWeight: 600
-                }}
-              >
-                {importing ? 'Importing...' : 'Import from Facebook URL'}
-              </button>
-            </div>
-            {importedImageUrls.length > 0 ? (
-              <small style={{ color: '#6b7280' }}>Imported {importedImageUrls.length} image URL(s) from metadata.</small>
-            ) : null}
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Source URL (Optional)</span>
+            <input
+              style={inputStyle}
+              value={form.source_url}
+              onChange={(e) => setForm({ ...form, source_url: e.target.value })}
+              placeholder="Facebook / TradeMe / etc"
+            />
           </label>
 
           <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>

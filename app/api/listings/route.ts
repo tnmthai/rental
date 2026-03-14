@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
     const source_url = String(body.source_url || '').trim();
     const price_nzd_week = Number(body.price_nzd_week || 0);
 
-    if (!title || !city || !source_url || !price_nzd_week) {
+    if (!title || !city || !price_nzd_week) {
       return NextResponse.json(
-        { error: 'title, city, source_url, price_nzd_week are required' },
+        { error: 'title, city, price_nzd_week are required' },
         { status: 400 }
       );
     }
