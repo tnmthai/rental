@@ -86,7 +86,6 @@ export default function HomePage() {
   const [saveMsg, setSaveMsg] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
   const [newCount, setNewCount] = useState(0);
-  const [showAIDisclaimer, setShowAIDisclaimer] = useState(false);
   const keywords = useMemo(() => extractKeywords(query), [query]);
 
   async function run() {
@@ -146,47 +145,7 @@ export default function HomePage() {
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: '24px 16px 80px' }}>
-      <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 24, gap: 12 }}>
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowAIDisclaimer((v) => !v)}
-            style={{
-              border: '1px solid #d0d5dd',
-              borderRadius: 999,
-              padding: '6px 12px',
-              background: '#fff',
-              color: '#344054',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            AI Note
-          </button>
-          {showAIDisclaimer ? (
-            <div
-              style={{
-                position: 'absolute',
-                top: '110%',
-                right: 0,
-                zIndex: 20,
-                width: 340,
-                maxWidth: '85vw',
-                border: '1px solid #e5e7eb',
-                borderRadius: 10,
-                background: '#fffef7',
-                color: '#444',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                padding: '10px 12px',
-                fontSize: 12,
-                lineHeight: 1.45
-              }}
-            >
-              This app is made by AI so you might see some weird highlights or something else, so ignore the bugs.
-            </div>
-          ) : null}
-        </div>
-
+      <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 24 }}>
         {session?.user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#3c4043' }}>
             {(pendingCount > 0 || newCount > 0) ? (
