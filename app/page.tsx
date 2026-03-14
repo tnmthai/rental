@@ -183,7 +183,7 @@ export default function HomePage() {
                 whiteSpace: 'pre-line'
               }}
             >
-              {`this app is made by AI so you might see some weird highlights or something else so ignore the bugs\n\n\nThanks for understanding.`}
+              {`This app is made with AI, so you might see weird highlights or other small issues. Please ignore the bugs.\n\n\nThanks for understanding.`}
             </div>
           ) : null}
         </div>
