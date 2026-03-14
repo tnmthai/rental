@@ -51,6 +51,7 @@ export default function PostListingPage() {
     source_url: '',
     description: '',
     duration_days: 30,
+    available_date: '',
     furnished: true,
     bills_included: false,
     near_school: '(None)'
@@ -103,14 +104,15 @@ export default function PostListingPage() {
           furnished: form.furnished,
           bills_included: form.bills_included,
           near_school: form.near_school === '(None)' ? null : form.near_school,
-          duration_days: form.duration_days
+          duration_days: form.duration_days,
+          available_date: form.available_date || null
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save listing');
 
       setMsg(`✅ Listing #${data.item.id} posted with ${imageUrls.length} image(s)`);
-      setForm({ ...form, title: '', source_url: '', description: '', duration_days: 30 });
+      setForm({ ...form, title: '', source_url: '', description: '', duration_days: 30, available_date: '' });
       setImages(null);
     } catch (e: any) {
       setMsg(`❌ ${e.message || 'Something went wrong'}`);
@@ -243,6 +245,16 @@ export default function PostListingPage() {
               max={180}
               value={form.duration_days}
               onChange={(e) => setForm({ ...form, duration_days: Number(e.target.value) })}
+            />
+          </label>
+
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Available date</span>
+            <input
+              style={inputStyle}
+              type="date"
+              value={form.available_date}
+              onChange={(e) => setForm({ ...form, available_date: e.target.value })}
             />
           </label>
 

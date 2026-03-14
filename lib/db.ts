@@ -31,6 +31,7 @@ export type NewListing = {
   bills_included?: boolean;
   near_school?: string | null;
   duration_days?: number;
+  available_date?: string | null;
 };
 
 export function getPool() {
@@ -108,27 +109,56 @@ export async function searchListings(filters: ListingSearch) {
 
 export async function createListing(input: NewListing) {
   const p = getPool();
-  const { rows } = await p.query(
-    `
-      INSERT INTO listings (user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, expires_at, status)
-      VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9, $10, now() + make_interval(days => $11), 'pending')
-      RETURNING id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at, status
-    `,
-    [
-      input.user_id,
-      input.title,
-      input.city,
-      input.price_nzd_week,
-      input.source_url || '',
-      input.image_urls || [],
-      input.description || null,
-      Boolean(input.furnished),
-      Boolean(input.bills_included),
-      input.near_school || null,
-      Math.min(Math.max(Number(input.duration_days || 30), 1), 180)
-    ]
-  );
-  return rows[0];
+  const durationDays = Math.min(Math.max(Number(input.duration_days || 30), 1), 180);
+
+  try {
+    const { rows } = await p.query(
+      `
+        INSERT INTO listings (user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, available_date, expires_at, status)
+        VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9, $10, $11::date, now() + make_interval(days => $12), 'pending')
+        RETURNING id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, available_date, created_at, expires_at, status
+      `,
+      [
+        input.user_id,
+        input.title,
+        input.city,
+        input.price_nzd_week,
+        input.source_url || '',
+        input.image_urls || [],
+        input.description || null,
+        Boolean(input.furnished),
+        Boolean(input.bills_included),
+        input.near_school || null,
+        input.available_date || null,
+        durationDays
+      ]
+    );
+    return rows[0];
+  } catch (e: any) {
+    if (!String(e?.message || '').toLowerCase().includes('available_date')) throw e;
+
+    const { rows } = await p.query(
+      `
+        INSERT INTO listings (user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, expires_at, status)
+        VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9, $10, now() + make_interval(days => $11), 'pending')
+        RETURNING id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at, status
+      `,
+      [
+        input.user_id,
+        input.title,
+        input.city,
+        input.price_nzd_week,
+        input.source_url || '',
+        input.image_urls || [],
+        input.description || null,
+        Boolean(input.furnished),
+        Boolean(input.bills_included),
+        input.near_school || null,
+        durationDays
+      ]
+    );
+    return rows[0];
+  }
 }
 
 export async function listRecentListings(limit = 20) {

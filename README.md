@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS listings (
   furnished BOOLEAN NOT NULL DEFAULT false,
   bills_included BOOLEAN NOT NULL DEFAULT false,
   near_school TEXT,
+  available_date DATE,
   created_at TIMESTAMPTZ DEFAULT now(),
   expires_at TIMESTAMPTZ
 );
@@ -39,6 +40,7 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS furnished BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS bills_included BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS near_school TEXT;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS available_date DATE;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
 

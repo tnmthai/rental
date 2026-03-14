@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
       furnished: Boolean(body.furnished),
       bills_included: Boolean(body.bills_included),
       near_school: body.near_school ? String(body.near_school).trim() : null,
-      duration_days: Number(body.duration_days || 30)
+      duration_days: Number(body.duration_days || 30),
+      available_date: body.available_date ? String(body.available_date).trim() : null
     });
 
     return NextResponse.json({ item: created }, { status: 201 });
