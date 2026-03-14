@@ -107,6 +107,79 @@ async function trackClientEvent(event_name: 'contact_click' | 'share_click', lis
   } catch {}
 }
 
+const I18N = {
+  en: {
+    aiNote: 'AI Note',
+    signOut: 'Sign out',
+    logIn: 'Log in',
+    searchPlaceholder: 'Search rentals in natural language...',
+    searching: 'Searching...',
+    search: 'Search',
+    save: 'Save',
+    createListing: 'Create listing',
+    myDashboard: 'My dashboard',
+    aiOverview: 'AI Overview',
+    internalListings: 'Our internal listings',
+    viewDetail: 'View detail',
+    share: 'Share',
+    readMore: 'Read more',
+    readLess: 'Read less',
+    externalSuggestions: 'External web suggestions',
+    externalHint: 'These are web results outside our internal database.',
+    visits: 'visits',
+    online: 'online',
+    language: 'Language',
+    english: 'English',
+    vietnamese: 'Vietnamese',
+    saveNeedLogin: 'Please log in first.',
+    saveOk: 'Saved search created.',
+    saveFail: 'Failed to save',
+    noSource: '(no source url)',
+    furnished: 'furnished',
+    unfurnished: 'unfurnished',
+    billsIncluded: 'bills included',
+    billsSeparate: 'bills separate',
+    near: 'near',
+    available: 'available'
+  },
+  vi: {
+    aiNote: 'Ghi chú AI',
+    signOut: 'Đăng xuất',
+    logIn: 'Đăng nhập',
+    searchPlaceholder: 'Tìm nhà thuê bằng ngôn ngữ tự nhiên...',
+    searching: 'Đang tìm...',
+    search: 'Tìm',
+    save: 'Lưu',
+    createListing: 'Đăng tin',
+    myDashboard: 'Bảng điều khiển',
+    aiOverview: 'Tóm tắt AI',
+    internalListings: 'Danh sách nội bộ',
+    viewDetail: 'Xem chi tiết',
+    share: 'Chia sẻ',
+    readMore: 'Xem thêm',
+    readLess: 'Thu gọn',
+    externalSuggestions: 'Gợi ý từ web bên ngoài',
+    externalHint: 'Đây là kết quả ngoài cơ sở dữ liệu nội bộ.',
+    visits: 'lượt truy cập',
+    online: 'đang online',
+    language: 'Ngôn ngữ',
+    english: 'English',
+    vietnamese: 'Tiếng Việt',
+    saveNeedLogin: 'Vui lòng đăng nhập trước.',
+    saveOk: 'Đã lưu tìm kiếm.',
+    saveFail: 'Lưu thất bại',
+    noSource: '(không có nguồn)',
+    furnished: 'đầy đủ nội thất',
+    unfurnished: 'không nội thất',
+    billsIncluded: 'đã gồm hóa đơn',
+    billsSeparate: 'chưa gồm hóa đơn',
+    near: 'gần',
+    available: 'có thể ở từ'
+  }
+} as const;
+
+type Lang = keyof typeof I18N;
+
 export default function HomePage() {
   const { data: session } = useSession();
   const [query, setQuery] = useState('Room under 250 NZD/week near LU in Lincoln, furnished, bills included');
@@ -121,7 +194,10 @@ export default function HomePage() {
   const [showAIDisclaimer, setShowAIDisclaimer] = useState(false);
   const [visitCount, setVisitCount] = useState<number | null>(null);
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
+  const [lang, setLang] = useState<Lang>('en');
+  const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
   const keywords = useMemo(() => extractKeywords(query), [query]);
+  const t = I18N[lang];
 
   async function run() {
     setLoading(true);
@@ -144,7 +220,7 @@ export default function HomePage() {
 
   async function saveSearch() {
     if (!session?.user) {
-      setSaveMsg('Please log in first.');
+      setSaveMsg(t.saveNeedLogin);
       return;
     }
     const res = await fetch('/api/my/saved-searches', {
@@ -153,7 +229,7 @@ export default function HomePage() {
       body: JSON.stringify({ name: 'Quick saved search', query })
     });
     const data = await res.json();
-    setSaveMsg(res.ok ? 'Saved search created.' : data.error || 'Failed to save');
+    setSaveMsg(res.ok ? t.saveOk : data.error || t.saveFail);
   }
 
   useEffect(() => {
@@ -195,6 +271,15 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    const saved = localStorage.getItem('rf_lang');
+    if (saved === 'en' || saved === 'vi') setLang(saved);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('rf_lang', lang);
+  }, [lang]);
+
+  useEffect(() => {
     const storageKey = 'rf_online_session_id';
     let sessionId = localStorage.getItem(storageKey);
     if (!sessionId) {
@@ -228,14 +313,14 @@ export default function HomePage() {
   }
 
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: '16px 16px 80px' }}>
+    <main style={{ maxWidth: 980, margin: '0 auto', padding: '8px 16px 80px' }}>
       <header
         className="home-topbar"
         style={{
           display: 'flex',
           justifyContent: 'flex-end',
           alignItems: 'center',
-          marginBottom: 110,
+          marginBottom: 82,
           gap: 12,
           width: '100vw',
           position: 'relative',
@@ -259,7 +344,7 @@ export default function HomePage() {
               cursor: 'pointer'
             }}
           >
-            AI Note
+            {t.aiNote}
           </button>
           {showAIDisclaimer ? (
             <div
@@ -324,7 +409,7 @@ export default function HomePage() {
                 onClick={() => signOut({ callbackUrl: '/' })}
                 style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', background: '#fff' }}
               >
-                Sign out
+                {t.signOut}
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#5f6368' }}>
@@ -345,7 +430,7 @@ export default function HomePage() {
         ) : (
           <div style={{ display: 'flex', gap: 8 }}>
             <a href="/login" style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', textDecoration: 'none', color: '#1a73e8' }}>
-              Log in
+              {t.logIn}
             </a>
           </div>
         )}
@@ -387,7 +472,7 @@ export default function HomePage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search rentals in natural language..."
+            placeholder={t.searchPlaceholder}
             style={{ flex: 1, border: 'none', outline: 'none', fontSize: 16, padding: '8px 10px' }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') run();
@@ -398,18 +483,18 @@ export default function HomePage() {
             disabled={loading}
             style={{ border: 'none', borderRadius: 999, padding: '10px 18px', background: '#1a73e8', color: '#fff' }}
           >
-            {loading ? 'Searching...' : 'Search'}
+            {loading ? t.searching : t.search}
           </button>
           <button
             onClick={saveSearch}
             style={{ border: '1px solid #dfe1e5', borderRadius: 999, padding: '10px 14px', background: '#fff' }}
           >
-            Save
+            {t.save}
           </button>
         </div>
 
         <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
-          <a href="/post">Create listing</a> · <a href="/dashboard">My dashboard</a>
+          <a href="/post">{t.createListing}</a> · <a href="/dashboard">{t.myDashboard}</a>
         </p>
         {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
       </section>
@@ -426,19 +511,46 @@ export default function HomePage() {
             padding: '10px 12px'
           }}
         >
-          <strong>AI Overview:</strong> {aiOverview || reply}
+          <strong>{t.aiOverview}:</strong> {aiOverview || reply}
         </section>
       )}
 
       {hits.length > 0 && (
         <section>
-          <h3 style={{ margin: '0 0 8px', color: '#111827' }}>Our internal listings</h3>
+          <h3 style={{ margin: '0 0 10px', color: '#111827' }}>{t.internalListings}</h3>
           {hits.map((h) => {
             const gallery = normalizeImageUrls(h.image_urls);
             return (
-              <article key={h.id} style={{ borderTop: '1px solid #eee', padding: '18px 0' }}>
-                <h3 style={{ margin: 0, color: '#1a0dab', fontSize: 20 }}>{highlightText(h.title, keywords)}</h3>
-                <div style={{ color: '#006621', fontSize: 13, marginTop: 3 }}>
+              <article
+                key={h.id}
+                style={{
+                  border: '1px solid #e8ecf4',
+                  borderRadius: 14,
+                  padding: '14px 14px 12px',
+                  marginBottom: 12,
+                  background: '#fff',
+                  boxShadow: '0 4px 16px rgba(15, 23, 42, 0.04)'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+                  <h3 style={{ margin: 0, color: '#1a0dab', fontSize: 22 }}>{highlightText(h.title, keywords)}</h3>
+                  <span
+                    style={{
+                      whiteSpace: 'nowrap',
+                      fontWeight: 700,
+                      color: '#0f172a',
+                      background: '#eaf2ff',
+                      border: '1px solid #cfe1ff',
+                      borderRadius: 999,
+                      padding: '4px 10px',
+                      fontSize: 14
+                    }}
+                  >
+                    ${h.price_nzd_week}/week
+                  </span>
+                </div>
+
+                <div style={{ color: '#006621', fontSize: 13, marginTop: 4 }}>
                   {h.source_url ? (
                     <a
                       href={h.source_url}
@@ -450,17 +562,16 @@ export default function HomePage() {
                       {h.source_url}
                     </a>
                   ) : (
-                    '(no source url)'
+                    t.noSource
                   )}
                 </div>
-                <div style={{ marginTop: 6, color: '#4d5156' }}>
-                  {highlightText(h.city, keywords)} · ${h.price_nzd_week}/week · {h.furnished ? 'furnished' : 'unfurnished'} ·{' '}
-                  {h.bills_included ? 'bills included' : 'bills separate'}
-                  {h.near_school ? <> · near {highlightText(h.near_school, keywords)}</> : null}
-                  {h.available_date ? <> · available {new Date(h.available_date).toLocaleDateString()}</> : null}
+                <div style={{ marginTop: 8, color: '#4d5156', fontSize: 14 }}>
+                  {highlightText(h.city, keywords)} · {h.furnished ? t.furnished : t.unfurnished} · {h.bills_included ? t.billsIncluded : t.billsSeparate}
+                  {h.near_school ? <> · {t.near} {highlightText(h.near_school, keywords)}</> : null}
+                  {h.available_date ? <> · {t.available} {new Date(h.available_date).toLocaleDateString()}</> : null}
                 </div>
                 <div style={{ marginTop: 8, display: 'flex', gap: 12, fontSize: 13 }}>
-                  <a href={`/listing/${h.id}`}>View detail</a>
+                  <a href={`/listing/${h.id}`}>{t.viewDetail}</a>
                   <button
                     onClick={async () => {
                       const url = `${window.location.origin}/listing/${h.id}`;
@@ -473,31 +584,42 @@ export default function HomePage() {
                     }}
                     style={{ border: 'none', background: 'transparent', color: '#1a73e8', padding: 0, cursor: 'pointer' }}
                   >
-                    Share
+                    {t.share}
                   </button>
                 </div>
                 {h.description ? (
                   <div
                     style={{
-                      margin: '8px 0 10px',
+                      margin: '10px 0 10px',
                       color: '#4d5156',
                       lineHeight: 1.55,
                       padding: '10px 12px',
-                      background: '#fafafa',
-                      border: '1px solid #eee',
-                      borderRadius: 8
+                      background: '#f8fafc',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 10
                     }}
                   >
                     {hasHtmlTags(h.description) ? (
-                      <div dangerouslySetInnerHTML={{ __html: sanitizeDescriptionHtml(h.description) }} />
+                      <div
+                        className={!expandedDesc[h.id] ? 'descClamp' : undefined}
+                        dangerouslySetInnerHTML={{ __html: sanitizeDescriptionHtml(h.description) }}
+                      />
                     ) : (
-                      formatDescription(h.description).map((line, idx) => (
-                        <p key={idx} style={{ margin: '0 0 6px' }}>
-                          {line.startsWith('•') || line.startsWith('-') ? <strong>{line.slice(0, 1)} </strong> : null}
-                          {highlightText(line.replace(/^[-•]\s*/, ''), keywords)}
-                        </p>
-                      ))
+                      <div className={!expandedDesc[h.id] ? 'descClamp' : undefined}>
+                        {formatDescription(h.description).map((line, idx) => (
+                          <p key={idx} style={{ margin: '0 0 6px' }}>
+                            {line.startsWith('•') || line.startsWith('-') ? <strong>{line.slice(0, 1)} </strong> : null}
+                            {highlightText(line.replace(/^[-•]\s*/, ''), keywords)}
+                          </p>
+                        ))}
+                      </div>
                     )}
+                    <button
+                      onClick={() => setExpandedDesc((prev) => ({ ...prev, [h.id]: !prev[h.id] }))}
+                      style={{ border: 'none', background: 'transparent', color: '#1a73e8', padding: 0, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                    >
+                      {expandedDesc[h.id] ? t.readLess : t.readMore}
+                    </button>
                   </div>
                 ) : null}
 
@@ -526,9 +648,9 @@ export default function HomePage() {
 
       {externalHits.length > 0 && (
         <section style={{ marginTop: 18 }}>
-          <h3 style={{ margin: '0 0 8px', color: '#111827' }}>External web suggestions</h3>
+          <h3 style={{ margin: '0 0 8px', color: '#111827' }}>{t.externalSuggestions}</h3>
           <p style={{ margin: '0 0 10px', color: '#6b7280', fontSize: 13 }}>
-            These are web results outside our internal database.
+            {t.externalHint}
           </p>
           <ul style={{ padding: 0, margin: 0 }}>
             {externalHits.map((x, idx) => (
@@ -550,13 +672,28 @@ export default function HomePage() {
           borderTop: '1px solid #eceff3',
           display: 'flex',
           justifyContent: 'center',
+          alignItems: 'center',
+          flexWrap: 'wrap',
           gap: 14,
           color: '#6b7280',
           fontSize: 13
         }}
       >
-        {typeof visitCount === 'number' ? <span>👀 {visitCount.toLocaleString()} visits</span> : null}
-        {typeof onlineCount === 'number' ? <span>🟢 {onlineCount.toLocaleString()} online</span> : null}
+        {typeof visitCount === 'number' ? <span>👀 {visitCount.toLocaleString()} {t.visits}</span> : null}
+        {typeof onlineCount === 'number' ? <span>🟢 {onlineCount.toLocaleString()} {t.online}</span> : null}
+        <span>🌐 {t.language}</span>
+        <button
+          onClick={() => setLang('en')}
+          style={{ border: '1px solid #d0d5dd', borderRadius: 999, padding: '4px 10px', background: lang === 'en' ? '#111827' : '#fff', color: lang === 'en' ? '#fff' : '#111827' }}
+        >
+          {t.english}
+        </button>
+        <button
+          onClick={() => setLang('vi')}
+          style={{ border: '1px solid #d0d5dd', borderRadius: 999, padding: '4px 10px', background: lang === 'vi' ? '#111827' : '#fff', color: lang === 'vi' ? '#fff' : '#111827' }}
+        >
+          {t.vietnamese}
+        </button>
       </footer>
 
       <style jsx global>{`
@@ -566,9 +703,16 @@ export default function HomePage() {
           100% { background-position: 0% 50%; }
         }
 
+        .descClamp {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
         @media (max-width: 768px) {
           .home-topbar {
-            margin-bottom: 34px !important;
+            margin-bottom: 24px !important;
             padding: 0 14px !important;
           }
         }
