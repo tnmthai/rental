@@ -180,16 +180,20 @@ function normalizeDuckUrl(raw: string): string {
 function detectSearchRegion(message: string, need: Need): 'vn' | 'nz' | 'auto' {
   const t = `${message} ${need.city || ''} ${need.suburb || ''}`.toLowerCase();
 
-  const vnHints = [
-    'việt', 'viet', 'vietnam', 'hà nội', 'ha noi', 'hanoi', 'hồ chí minh', 'ho chi minh',
-    'sài gòn', 'sai gon', 'hcm', 'tp.hcm', 'đà nẵng', 'da nang', 'cần thơ', 'can tho', 'quận', 'phường'
+  // Prefer geography/currency intent over language.
+  const vnGeoHints = [
+    'vietnam', 'việt nam', 'hanoi', 'ha noi', 'ho chi minh', 'hcm', 'sai gon', 'saigon',
+    'da nang', 'can tho', 'quận', 'phường', 'district '
   ];
-  if (vnHints.some((k) => t.includes(k))) return 'vn';
+  const nzGeoHints = [
+    'new zealand', 'auckland', 'wellington', 'christchurch', 'hamilton', 'dunedin', 'palmerston north'
+  ];
 
-  const nzHints = [
-    'new zealand', 'nz', 'auckland', 'wellington', 'christchurch', 'lincoln', 'hamilton', 'dunedin'
-  ];
-  if (nzHints.some((k) => t.includes(k))) return 'nz';
+  const vnCurrencyHints = ['vnd', 'vnđ', 'đ/tháng', 'trieu', 'triệu', 'million vnd'];
+  const nzCurrencyHints = ['nzd', 'nz$', '$/week', 'per week'];
+
+  if (vnGeoHints.some((k) => t.includes(k)) || vnCurrencyHints.some((k) => t.includes(k))) return 'vn';
+  if (nzGeoHints.some((k) => t.includes(k)) || nzCurrencyHints.some((k) => t.includes(k))) return 'nz';
 
   return 'auto';
 }
@@ -352,7 +356,11 @@ export async function POST(req: NextRequest) {
 
     const rawResults = await searchListings(need);
     const relevant = pickRelevantInternalResults(rawResults);
-    const results = region === 'vn' ? relevant.filter(isVietnamLikeListing) : relevant;
+    const results = region === 'vn'
+      ? relevant.filter(isVietnamLikeListing)
+      : region === 'nz'
+        ? relevant
+        : [];
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
