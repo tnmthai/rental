@@ -11,6 +11,19 @@ function formatDescription(text: string): string[] {
     .filter(Boolean);
 }
 
+function sanitizeDescriptionHtml(raw: string): string {
+  return raw
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
+    .replace(/\son\w+\s*=\s*[^\s>]+/gi, '')
+    .replace(/javascript:/gi, '');
+}
+
+function hasHtmlTags(text: string): boolean {
+  return /<\/?[a-z][\s\S]*>/i.test(text);
+}
+
 export default async function ListingDetailPage({ params }: { params: { id: string } }) {
   const id = Number(params.id || 0);
   const item = Number.isFinite(id) ? await getListingById(id) : null;
@@ -54,12 +67,16 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
             borderRadius: 8
           }}
         >
-          {formatDescription(item.description).map((line, idx) => (
-            <p key={idx} style={{ margin: '0 0 6px' }}>
-              {line.startsWith('•') || line.startsWith('-') ? <strong>{line.slice(0, 1)} </strong> : null}
-              {line.replace(/^[-•]\s*/, '')}
-            </p>
-          ))}
+          {hasHtmlTags(item.description) ? (
+            <div dangerouslySetInnerHTML={{ __html: sanitizeDescriptionHtml(item.description) }} />
+          ) : (
+            formatDescription(item.description).map((line, idx) => (
+              <p key={idx} style={{ margin: '0 0 6px' }}>
+                {line.startsWith('•') || line.startsWith('-') ? <strong>{line.slice(0, 1)} </strong> : null}
+                {line.replace(/^[-•]\s*/, '')}
+              </p>
+            ))
+          )}
         </div>
       ) : null}
 

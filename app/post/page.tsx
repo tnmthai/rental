@@ -1,8 +1,12 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import SubNav from '@/app/components/SubNav';
+import 'react-quill/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 type NzLocation = {
   region: string;
@@ -40,15 +44,33 @@ const SCHOOLS_BY_REGION: Record<string, string[]> = {
   Wellington: ['(None)', 'Victoria University of Wellington', 'Massey University (Wellington)']
 };
 
-function formatDescriptionDraft(input: string): string {
-  return input
-    .replace(/\r\n/g, '\n')
-    .replace(/^\s*\*\s+/gm, '• ')
-    .replace(/^\s*[-–—]\s+/gm, '- ')
-    .replace(/[ \t]+$/gm, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
+const editorModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ color: [] }, { background: [] }],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    [{ align: [] }, { indent: '-1' }, { indent: '+1' }],
+    ['blockquote', 'code-block'],
+    ['clean']
+  ]
+};
+
+const editorFormats = [
+  'header',
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'color',
+  'background',
+  'list',
+  'bullet',
+  'align',
+  'indent',
+  'blockquote',
+  'code-block'
+];
 
 export default function PostListingPage() {
   const { data: session, status } = useSession();
@@ -110,7 +132,7 @@ export default function PostListingPage() {
           price_nzd_week: form.price_nzd_week,
           source_url: form.source_url,
           image_urls: imageUrls,
-          description: formatDescriptionDraft(form.description),
+          description: form.description,
           furnished: form.furnished,
           bills_included: form.bills_included,
           near_school: form.near_school === '(None)' ? null : form.near_school,
@@ -306,15 +328,19 @@ export default function PostListingPage() {
 
           <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
             <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Description</span>
-            <textarea
-              style={{ ...inputStyle, minHeight: 110, resize: 'vertical' }}
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              onBlur={(e) => setForm({ ...form, description: formatDescriptionDraft(e.target.value) })}
-              placeholder={`Include details like move-in date, bond, flatmates, and transport.\n- Private room\n- 2 weeks bond\n• 5 mins to bus stop`}
-            />
+            <div style={{ border: '1px solid #dbe3ef', borderRadius: 10, overflow: 'hidden' }}>
+              <ReactQuill
+                theme="snow"
+                value={form.description}
+                onChange={(value) => setForm({ ...form, description: value })}
+                modules={editorModules}
+                formats={editorFormats}
+                placeholder="Write listing details with rich formatting..."
+                style={{ background: '#fff' }}
+              />
+            </div>
             <small style={{ color: '#6b7280' }}>
-              Basic format supported: line break, <code>-</code> / <code>*</code> / <code>•</code> bullet list.
+              Supports bold, italic, underline, alignment, indent/tab, bullet/number list, and text color.
             </small>
           </label>
 
@@ -343,6 +369,13 @@ export default function PostListingPage() {
           {msg ? <p style={{ marginTop: 10 }}>{msg}</p> : null}
         </div>
       </section>
+
+      <style jsx global>{`
+        .ql-editor {
+          min-height: 180px;
+          font-size: 14px;
+        }
+      `}</style>
     </main>
   );
 }

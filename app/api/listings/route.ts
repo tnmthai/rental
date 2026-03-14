@@ -4,6 +4,16 @@ import { authOptions } from '@/lib/auth';
 import { createListing, findUserByEmail, listRecentListings } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limit';
 
+function sanitizeRichText(html: string) {
+  return html
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
+    .replace(/\son\w+\s*=\s*[^\s>]+/gi, '')
+    .replace(/javascript:/gi, '')
+    .trim();
+}
+
 export async function GET() {
   try {
     const items = await listRecentListings(50);
@@ -65,7 +75,7 @@ export async function POST(req: NextRequest) {
       source_url,
       price_nzd_week,
       image_urls: [...imageUrlsFromArray, ...imageUrlsFromText, ...imageUrlSingle],
-      description: body.description ? String(body.description).trim() : null,
+      description: body.description ? sanitizeRichText(String(body.description)) : null,
       furnished: Boolean(body.furnished),
       bills_included: Boolean(body.bills_included),
       near_school: body.near_school ? String(body.near_school).trim() : null,

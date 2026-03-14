@@ -63,6 +63,19 @@ function formatDescription(text: string): string[] {
     .filter(Boolean);
 }
 
+function sanitizeDescriptionHtml(raw: string): string {
+  return raw
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
+    .replace(/\son\w+\s*=\s*[^\s>]+/gi, '')
+    .replace(/javascript:/gi, '');
+}
+
+function hasHtmlTags(text: string): boolean {
+  return /<\/?[a-z][\s\S]*>/i.test(text);
+}
+
 type Hit = {
   id: number;
   title: string;
@@ -419,12 +432,16 @@ export default function HomePage() {
                       borderRadius: 8
                     }}
                   >
-                    {formatDescription(h.description).map((line, idx) => (
-                      <p key={idx} style={{ margin: '0 0 6px' }}>
-                        {line.startsWith('•') || line.startsWith('-') ? <strong>{line.slice(0, 1)} </strong> : null}
-                        {highlightText(line.replace(/^[-•]\s*/, ''), keywords)}
-                      </p>
-                    ))}
+                    {hasHtmlTags(h.description) ? (
+                      <div dangerouslySetInnerHTML={{ __html: sanitizeDescriptionHtml(h.description) }} />
+                    ) : (
+                      formatDescription(h.description).map((line, idx) => (
+                        <p key={idx} style={{ margin: '0 0 6px' }}>
+                          {line.startsWith('•') || line.startsWith('-') ? <strong>{line.slice(0, 1)} </strong> : null}
+                          {highlightText(line.replace(/^[-•]\s*/, ''), keywords)}
+                        </p>
+                      ))
+                    )}
                   </div>
                 ) : null}
 
