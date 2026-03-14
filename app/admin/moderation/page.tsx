@@ -104,6 +104,19 @@ export default function ModerationPage() {
           >
             Manage users
           </a>
+          <a
+            href="/admin/growth"
+            style={{
+              border: '1px solid #d0d5dd',
+              background: '#fff',
+              color: '#111827',
+              borderRadius: 8,
+              padding: '7px 11px',
+              textDecoration: 'none'
+            }}
+          >
+            Growth dashboard
+          </a>
         </div>
       </header>
 

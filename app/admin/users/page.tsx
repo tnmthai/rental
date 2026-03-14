@@ -58,8 +58,9 @@ export default function AdminUsersPage() {
         </div>
       ) : null}
 
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 12, display: 'flex', gap: 12 }}>
         <a href="/admin/moderation" style={{ color: '#1a73e8' }}>← Back to Moderation</a>
+        <a href="/admin/growth" style={{ color: '#1a73e8' }}>Open Growth dashboard</a>
       </div>
 
       {items.length === 0 ? <p style={{ color: '#667085' }}>No users found.</p> : null}
