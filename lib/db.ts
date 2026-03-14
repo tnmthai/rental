@@ -58,49 +58,61 @@ export async function searchListings(filters: ListingSearch) {
   const city = asNonEmptyString(filters.city);
   const suburb = asNonEmptyString(filters.suburb);
   const nearSchool = asNonEmptyString(filters.nearSchool);
+  const maxPrice = Number.isFinite(Number(filters.maxPrice)) && Number(filters.maxPrice) > 0 ? Number(filters.maxPrice) : undefined;
+
+  // Build condition score from requested filters.
+  // Full matches (score = conditionCount) are ranked first, then partial matches.
+  const scoreParts: string[] = [];
 
   if (city) {
     params.push(`%${city}%`);
-    where.push(`city ILIKE $${params.length}`);
+    scoreParts.push(`CASE WHEN city ILIKE $${params.length} THEN 1 ELSE 0 END`);
   }
+
   if (suburb) {
     params.push(`%${suburb}%`);
-    where.push(`(title ILIKE $${params.length} OR description ILIKE $${params.length} OR city ILIKE $${params.length})`);
-  }
-  if (filters.maxPrice) {
-    params.push(filters.maxPrice);
-    where.push(`price_nzd_week <= $${params.length}`);
-  }
-  // NOTE: do not hard-filter by full natural-language queryText;
-  // it can be too strict and return zero rows. queryText is kept for future ranking/semantic use.
-  if (filters.furnished === true) {
-    where.push('furnished = true');
-  }
-  if (filters.billsIncluded === true) {
-    where.push('bills_included = true');
-  }
-  if (nearSchool) {
-    params.push(`%${nearSchool}%`);
-    where.push(`near_school ILIKE $${params.length}`);
+    scoreParts.push(`CASE WHEN (title ILIKE $${params.length} OR description ILIKE $${params.length} OR city ILIKE $${params.length}) THEN 1 ELSE 0 END`);
   }
 
-  const orderBy: string[] = [];
+  if (maxPrice) {
+    params.push(maxPrice);
+    scoreParts.push(`CASE WHEN price_nzd_week <= $${params.length} THEN 1 ELSE 0 END`);
+  }
+
+  if (filters.furnished === true) {
+    scoreParts.push('CASE WHEN furnished = true THEN 1 ELSE 0 END');
+  }
+
+  if (filters.billsIncluded === true) {
+    scoreParts.push('CASE WHEN bills_included = true THEN 1 ELSE 0 END');
+  }
+
   if (nearSchool) {
     params.push(`%${nearSchool}%`);
-    orderBy.push(`CASE WHEN near_school ILIKE $${params.length} THEN 0 ELSE 1 END`);
+    scoreParts.push(`CASE WHEN near_school ILIKE $${params.length} THEN 1 ELSE 0 END`);
   }
-  if (city) {
-    params.push(`%${city}%`);
-    orderBy.push(`CASE WHEN city ILIKE $${params.length} THEN 0 ELSE 1 END`);
+
+  const conditionCount = scoreParts.length;
+  const scoreExpr = conditionCount > 0 ? scoreParts.join(' + ') : '0';
+
+  // If user gave at least one condition, only show rows that satisfy >= 1 condition.
+  if (conditionCount > 0) {
+    where.push(`(${scoreExpr}) >= 1`);
   }
-  orderBy.push('price_nzd_week ASC');
 
   const sql = `
-    SELECT id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at
+    SELECT
+      id, user_id, title, city, price_nzd_week, source_url, image_urls, description,
+      furnished, bills_included, near_school, created_at, expires_at,
+      (${scoreExpr})::int AS match_score,
+      ${conditionCount}::int AS condition_count
     FROM listings
     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-    ORDER BY ${orderBy.join(', ')}
-    LIMIT 12
+    ORDER BY
+      (${scoreExpr}) DESC,
+      price_nzd_week ASC,
+      created_at DESC
+    LIMIT 30
   `;
 
   const { rows } = await p.query(sql, params);
