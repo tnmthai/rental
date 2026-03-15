@@ -12,7 +12,7 @@ const NZ_COORDS: Record<string, [number, number]> = {
   hamilton: [-37.787, 175.2793],
   dunedin: [-45.8788, 170.5028],
   nelson: [-41.2706, 173.284],
-  lincoln: [-43.6458, 172.4704],
+  lincoln: [-43.63950666667498, 172.48711644204522],
   rolleston: [-43.5947, 172.3822],
   palmerston_north: [-40.3564, 175.6111],
   tauranga: [-37.6878, 176.1651],
