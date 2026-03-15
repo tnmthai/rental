@@ -313,7 +313,16 @@ export default function HomePage() {
   }
 
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: '8px 16px 80px' }}>
+    <main
+      style={{
+        maxWidth: 980,
+        margin: '0 auto',
+        padding: '8px 16px 80px',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       <header
         className="home-topbar"
         style={{
@@ -667,7 +676,7 @@ export default function HomePage() {
 
       <footer
         style={{
-          marginTop: 28,
+          marginTop: 'auto',
           paddingTop: 14,
           borderTop: '1px solid #eceff3',
           display: 'flex',
