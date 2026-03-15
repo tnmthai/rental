@@ -134,6 +134,9 @@ const I18N = {
     saveNeedLogin: 'Please log in first.',
     saveOk: 'Saved search created.',
     saveFail: 'Failed to save',
+    searchingOverview1: 'Reading your request and extracting filters…',
+    searchingOverview2: 'Checking internal listings and ranking best matches…',
+    searchingOverview3: 'Almost done — preparing summary and suggestions…',
     noSource: '(no source url)',
     furnished: 'furnished',
     unfurnished: 'unfurnished',
@@ -168,6 +171,9 @@ const I18N = {
     saveNeedLogin: 'Vui lòng đăng nhập trước.',
     saveOk: 'Đã lưu tìm kiếm.',
     saveFail: 'Lưu thất bại',
+    searchingOverview1: 'Đang đọc yêu cầu và tách bộ lọc…',
+    searchingOverview2: 'Đang kiểm tra dữ liệu nội bộ và xếp hạng kết quả…',
+    searchingOverview3: 'Sắp xong — đang chuẩn bị tóm tắt và gợi ý…',
     noSource: '(không có nguồn)',
     furnished: 'đầy đủ nội thất',
     unfurnished: 'không nội thất',
@@ -202,20 +208,35 @@ export default function HomePage() {
   async function run() {
     setLoading(true);
     setReply('');
-    setAiOverview('');
     setHits([]);
     setExternalHits([]);
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ message: query })
-    });
-    const data = await res.json();
-    setReply(data.reply || data.error || 'No reply');
-    setAiOverview(data.aiOverview || '');
-    setHits(data.results || []);
-    setExternalHits(data.externalResults || []);
-    setLoading(false);
+
+    const loadingSteps = [t.searchingOverview1, t.searchingOverview2, t.searchingOverview3];
+    let step = 0;
+    setAiOverview(loadingSteps[step]);
+    const timer = setInterval(() => {
+      step = Math.min(step + 1, loadingSteps.length - 1);
+      setAiOverview(loadingSteps[step]);
+    }, 900);
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ message: query })
+      });
+      const data = await res.json();
+      setReply(data.reply || data.error || 'No reply');
+      setAiOverview(data.aiOverview || '');
+      setHits(data.results || []);
+      setExternalHits(data.externalResults || []);
+    } catch {
+      setReply('Search failed. Please try again.');
+      setAiOverview('');
+    } finally {
+      clearInterval(timer);
+      setLoading(false);
+    }
   }
 
   async function saveSearch() {

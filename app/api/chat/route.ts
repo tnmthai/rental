@@ -27,9 +27,11 @@ function parseNeedRuleBased(msg: string): Need {
       ? 'Christchurch'
       : lower.includes('wellington')
         ? 'Wellington'
-        : lower.includes('lincoln')
-          ? 'Lincoln'
-          : undefined;
+        : lower.includes('nelson')
+          ? 'Nelson'
+          : lower.includes('lincoln')
+            ? 'Lincoln'
+            : undefined;
 
   const m = lower.match(/(\d{2,4})\s*(nzd|\$)?\/?\s*(week|wk|tuần)?/);
   const maxPrice = m ? Number(m[1]) : undefined;
@@ -370,6 +372,85 @@ function isVietnamLikeListing(row: any): boolean {
   return vnHints.some((k) => text.includes(k));
 }
 
+const NZ_COORDS: Record<string, [number, number]> = {
+  auckland: [-36.8485, 174.7633],
+  wellington: [-41.2866, 174.7756],
+  christchurch: [-43.5321, 172.6362],
+  hamilton: [-37.7870, 175.2793],
+  dunedin: [-45.8788, 170.5028],
+  nelson: [-41.2706, 173.2840],
+  lincoln: [-43.6458, 172.4704],
+  canterbury: [-43.5, 171.5],
+  selwyn: [-43.65, 172.25],
+  palmerston_north: [-40.3564, 175.6111],
+  tauranga: [-37.6878, 176.1651],
+  rotorua: [-38.1368, 176.2497],
+  napier: [-39.4928, 176.9120],
+  hastings: [-39.6381, 176.8495],
+  new_plymouth: [-39.0556, 174.0752],
+  whangarei: [-35.7251, 174.3237],
+  invercargill: [-46.4132, 168.3538],
+  queenstown: [-45.0312, 168.6626]
+};
+
+function normalizePlaceKey(s?: string | null): string | null {
+  if (!s) return null;
+  const t = s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return t || null;
+}
+
+function findCoordFromText(input?: string | null): [number, number] | null {
+  const key = normalizePlaceKey(input);
+  if (!key) return null;
+
+  if (NZ_COORDS[key]) return NZ_COORDS[key];
+
+  const parts = key.split(/\s|,/).filter(Boolean);
+  for (const p of parts) {
+    if (NZ_COORDS[p]) return NZ_COORDS[p];
+  }
+
+  // Handle two-word keys like "palmerston north" / "new plymouth"
+  for (let i = 0; i < parts.length - 1; i++) {
+    const two = `${parts[i]}_${parts[i + 1]}`;
+    if (NZ_COORDS[two]) return NZ_COORDS[two];
+  }
+
+  return null;
+}
+
+function distanceKm(a: [number, number], b: [number, number]): number {
+  const [lat1, lon1] = a;
+  const [lat2, lon2] = b;
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const x =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  return R * c;
+}
+
+function applyDistanceFilter(results: any[], need: Need, maxKm = 50): any[] {
+  const anchorText = need.city || need.suburb || null;
+  const anchor = findCoordFromText(anchorText);
+  if (!anchor) return results;
+
+  return results.filter((row) => {
+    const target = findCoordFromText(row?.city || row?.near_school || row?.title || '');
+    if (!target) return true; // unknown location: keep for now
+    return distanceKm(anchor, target) <= maxKm;
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -390,11 +471,12 @@ export async function POST(req: NextRequest) {
 
     const rawResults = await searchListings(need);
     const relevant = pickRelevantInternalResults(rawResults);
-    const results = region === 'vn'
+    const regionResults = region === 'vn'
       ? relevant.filter(isVietnamLikeListing)
       : region === 'nz'
         ? relevant
         : [];
+    const results = applyDistanceFilter(regionResults, need, 50);
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
