@@ -230,7 +230,7 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
 
   const run = async (query: string): Promise<ExternalHit[]> => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4500);
+    const timer = setTimeout(() => controller.abort(), 6500);
     try {
       const endpoints = [
         `https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
@@ -254,23 +254,30 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
       if (!html) return [];
 
       const out: ExternalHit[] = [];
-      const anchorRe = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-      let m: RegExpExecArray | null;
-      while ((m = anchorRe.exec(html)) && out.length < 10) {
-        const url = normalizeDuckUrl(m[1] || '');
-        const title = String(m[2] || '')
-          .replace(/<[^>]+>/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-        if (!url || !title) continue;
-        if (!/^https?:\/\//i.test(url)) continue;
-        try {
-          const host = new URL(url).hostname.toLowerCase();
-          if (host.includes('duckduckgo.com')) continue;
-        } catch {
-          continue;
+      const patterns = [
+        /<a[^>]*class=["'][^"']*result__a[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
+        /<a[^>]*class=["'][^"']*result-link[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
+        /<a[^>]*href=["']([^"']*uddg=[^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi
+      ];
+
+      for (const anchorRe of patterns) {
+        let m: RegExpExecArray | null;
+        while ((m = anchorRe.exec(html)) && out.length < 12) {
+          const url = normalizeDuckUrl(m[1] || '');
+          const title = String(m[2] || '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (!url || !title) continue;
+          if (!/^https?:\/\//i.test(url)) continue;
+          try {
+            const host = new URL(url).hostname.toLowerCase();
+            if (host.includes('duckduckgo.com')) continue;
+          } catch {
+            continue;
+          }
+          out.push({ title, url, source: 'web' });
         }
-        out.push({ title, url, source: 'web' });
       }
 
       const dedup = new Map<string, ExternalHit>();
@@ -288,7 +295,9 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
 
   const broad = await run(broadQuery);
   if (broad.length > 0) return broad;
-  return [];
+
+  const fallbackQuery = `${message} ${locationPart} room for rent`.trim().replace(/\s+/g, ' ');
+  return run(fallbackQuery);
 }
 
 async function buildAIOverview(message: string, need: Need, results: any[]): Promise<string | null> {
