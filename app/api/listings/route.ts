@@ -157,11 +157,24 @@ export async function POST(req: NextRequest) {
 
     const parsedLat = Number(body.latitude);
     const parsedLng = Number(body.longitude);
-    const hasManualCoords = Number.isFinite(parsedLat) && Number.isFinite(parsedLng);
+
+    const hasRawManualCoords = Number.isFinite(parsedLat) && Number.isFinite(parsedLng);
+    const normalizedManual = hasRawManualCoords
+      ? (Math.abs(parsedLat) > 90 && Math.abs(parsedLng) <= 90
+          ? { latitude: parsedLng, longitude: parsedLat }
+          : { latitude: parsedLat, longitude: parsedLng })
+      : null;
+
+    const hasManualCoords = Boolean(
+      normalizedManual &&
+      Math.abs(normalizedManual.latitude) <= 90 &&
+      Math.abs(normalizedManual.longitude) <= 180
+    );
+
     const inferred = hasManualCoords ? null : inferCoordsFromCity(city);
 
-    const latitude = hasManualCoords ? parsedLat : (inferred?.[0] ?? null);
-    const longitude = hasManualCoords ? parsedLng : (inferred?.[1] ?? null);
+    const latitude = hasManualCoords ? normalizedManual!.latitude : (inferred?.[0] ?? null);
+    const longitude = hasManualCoords ? normalizedManual!.longitude : (inferred?.[1] ?? null);
 
     const imageUrlsFromArray = Array.isArray(body.image_urls)
       ? body.image_urls.map((x: unknown) => String(x).trim()).filter(Boolean)

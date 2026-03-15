@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useSession, signOut } from 'next-auth/react';
 
 function normalizeImageUrls(input: unknown): string[] {
@@ -76,16 +77,18 @@ function hasHtmlTags(text: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(text);
 }
 
-function buildMapEmbedUrl(lat?: number | null, lng?: number | null): string | null {
-  if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return null;
+function normalizeCoords(lat?: number | null, lng?: number | null): { lat: number; lng: number } | null {
   const la = Number(lat);
   const lo = Number(lng);
-  const delta = 0.015;
-  const left = lo - delta;
-  const right = lo + delta;
-  const top = la + delta;
-  const bottom = la - delta;
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${la}%2C${lo}`;
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+
+  // Auto-fix swapped input: lat should be [-90, 90], lng should be [-180, 180].
+  if (Math.abs(la) > 90 && Math.abs(lo) <= 90) {
+    return { lat: lo, lng: la };
+  }
+
+  if (Math.abs(la) > 90 || Math.abs(lo) > 180) return null;
+  return { lat: la, lng: lo };
 }
 
 type Hit = {
@@ -198,6 +201,8 @@ const I18N = {
   }
 } as const;
 
+const ListingMap = dynamic(() => import('./components/ListingMap'), { ssr: false });
+
 type Lang = keyof typeof I18N;
 
 export default function HomePage() {
@@ -218,6 +223,24 @@ export default function HomePage() {
   const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
   const keywords = useMemo(() => extractKeywords(query), [query]);
   const t = I18N[lang];
+  const mapPoints = useMemo(
+    () =>
+      hits
+        .map((h) => {
+          const c = normalizeCoords(h.latitude, h.longitude);
+          if (!c) return null;
+          return {
+            id: h.id,
+            title: h.title,
+            city: h.city,
+            price_nzd_week: h.price_nzd_week,
+            lat: c.lat,
+            lng: c.lng
+          };
+        })
+        .filter(Boolean) as Array<{ id: number; title: string; city: string; price_nzd_week: number; lat: number; lng: number }>,
+    [hits]
+  );
 
   async function run() {
     setLoading(true);
@@ -561,6 +584,7 @@ export default function HomePage() {
 
       {hits.length > 0 && (
         <section>
+          {mapPoints.length > 0 ? <ListingMap points={mapPoints} /> : null}
           <h3 style={{ margin: '0 0 10px', color: '#111827' }}>{t.internalListings}</h3>
           {hits.map((h) => {
             const gallery = normalizeImageUrls(h.image_urls);
@@ -614,14 +638,6 @@ export default function HomePage() {
                   {h.near_school ? <> · {t.near} {highlightText(h.near_school, keywords)}</> : null}
                   {h.available_date ? <> · {t.available} {new Date(h.available_date).toLocaleDateString()}</> : null}
                 </div>
-                {buildMapEmbedUrl(h.latitude, h.longitude) ? (
-                  <iframe
-                    title={`map-${h.id}`}
-                    src={buildMapEmbedUrl(h.latitude, h.longitude) || undefined}
-                    style={{ marginTop: 8, width: '100%', maxWidth: 650, height: 180, border: '1px solid #e5e7eb', borderRadius: 8 }}
-                    loading="lazy"
-                  />
-                ) : null}
                 <div style={{ marginTop: 8, display: 'flex', gap: 12, fontSize: 13 }}>
                   <a href={`/listing/${h.id}`}>{t.viewDetail}</a>
                   <button

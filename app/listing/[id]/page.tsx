@@ -25,10 +25,22 @@ function hasHtmlTags(text: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(text);
 }
 
-function buildMapEmbedUrl(lat?: number | null, lng?: number | null): string | null {
-  if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return null;
+function normalizeCoords(lat?: number | null, lng?: number | null): { lat: number; lng: number } | null {
   const la = Number(lat);
   const lo = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+  if (Math.abs(la) > 90 && Math.abs(lo) <= 90) {
+    return { lat: lo, lng: la };
+  }
+  if (Math.abs(la) > 90 || Math.abs(lo) > 180) return null;
+  return { lat: la, lng: lo };
+}
+
+function buildMapEmbedUrl(lat?: number | null, lng?: number | null): string | null {
+  const c = normalizeCoords(lat, lng);
+  if (!c) return null;
+  const la = c.lat;
+  const lo = c.lng;
   const delta = 0.02;
   const left = lo - delta;
   const right = lo + delta;
