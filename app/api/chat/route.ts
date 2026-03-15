@@ -63,6 +63,8 @@ city, suburb, maxPrice, furnished, billsIncluded, nearSchool, queryText.
 Use null when unknown. Query: ${message}`;
 
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
     const res = await fetch(`${base}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -77,8 +79,10 @@ Use null when unknown. Query: ${message}`;
           { role: 'system', content: 'You are a strict JSON extractor. Output JSON only.' },
           { role: 'user', content: prompt }
         ]
-      })
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timer);
 
     if (!res.ok) {
       return null;
@@ -226,7 +230,7 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
 
   const run = async (query: string): Promise<ExternalHit[]> => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12000);
+    const timer = setTimeout(() => controller.abort(), 4500);
     try {
       const endpoints = [
         `https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
@@ -284,9 +288,7 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
 
   const broad = await run(broadQuery);
   if (broad.length > 0) return broad;
-
-  const ultraBroadQuery = `${message} ${locationPart} room rent apartment`.trim().replace(/\s+/g, ' ');
-  return run(ultraBroadQuery);
+  return [];
 }
 
 async function buildAIOverview(message: string, need: Need, results: any[]): Promise<string | null> {
@@ -308,6 +310,8 @@ async function buildAIOverview(message: string, need: Need, results: any[]): Pro
   const prompt = `User query: ${message}\nParsed filters: ${JSON.stringify(need)}\nTop results: ${JSON.stringify(compact)}\n\nWrite a short AI overview in plain English (2-4 sentences):\n- answer the user's intent directly\n- mention the best match quality\n- if no results, suggest what to relax first\nNo markdown.`;
 
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
     const res = await fetch(`${base}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -321,8 +325,10 @@ async function buildAIOverview(message: string, need: Need, results: any[]): Pro
           { role: 'system', content: 'You are an assistant that writes concise AI overview summaries for rental search.' },
           { role: 'user', content: prompt }
         ]
-      })
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timer);
 
     if (!res.ok) return null;
     const data = await res.json();
@@ -398,7 +404,9 @@ export async function POST(req: NextRequest) {
       ? shortQuerySuggestion(userText)
       : null;
 
-    const externalResults = await searchExternalWeb(userText, need);
+    const wantsExternal = /(\bexternal\b|\bweb\b|ngoài|outside)/i.test(userText);
+    const shouldFetchExternal = results.length === 0 || wantsExternal;
+    const externalResults = shouldFetchExternal ? await searchExternalWeb(userText, need) : [];
 
     const aiOverview =
       shortNoResultHint ||
