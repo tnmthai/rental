@@ -62,31 +62,31 @@ async function parseNeedAI(message: string): Promise<Need | null> {
 city, suburb, maxPrice, furnished, billsIncluded, nearSchool, queryText.
 Use null when unknown. Query: ${message}`;
 
-  const res = await fetch(`${base}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: 'You are a strict JSON extractor. Output JSON only.' },
-        { role: 'user', content: prompt }
-      ]
-    })
-  });
-
-  if (!res.ok) {
-    return null;
-  }
-  const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content;
-  if (!text) return null;
-
   try {
+    const res = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: 'You are a strict JSON extractor. Output JSON only.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text) return null;
+
     const normalized = String(text).trim();
     const candidate = normalized.startsWith('{')
       ? normalized
@@ -292,26 +292,30 @@ async function buildAIOverview(message: string, need: Need, results: any[]): Pro
 
   const prompt = `User query: ${message}\nParsed filters: ${JSON.stringify(need)}\nTop results: ${JSON.stringify(compact)}\n\nWrite a short AI overview in plain English (2-4 sentences):\n- answer the user's intent directly\n- mention the best match quality\n- if no results, suggest what to relax first\nNo markdown.`;
 
-  const res = await fetch(`${base}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      messages: [
-        { role: 'system', content: 'You are an assistant that writes concise AI overview summaries for rental search.' },
-        { role: 'user', content: prompt }
-      ]
-    })
-  });
+  try {
+    const res = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.2,
+        messages: [
+          { role: 'system', content: 'You are an assistant that writes concise AI overview summaries for rental search.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
 
-  if (!res.ok) return null;
-  const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content;
-  return text ? String(text).trim() : null;
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content;
+    return text ? String(text).trim() : null;
+  } catch {
+    return null;
+  }
 }
 
 function pickRelevantInternalResults(rows: any[]): any[] {
