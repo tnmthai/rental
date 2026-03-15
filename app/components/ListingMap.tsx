@@ -51,7 +51,7 @@ export default function ListingMap({ points }: { points: Point[] }) {
               pathOptions={{ color: '#1a73e8', fillColor: '#1a73e8', fillOpacity: 0.8 }}
             >
               <Tooltip direction='top' offset={[0, -8]} opacity={1} permanent>
-                ${p.price_nzd_week}
+                {`${p.price_nzd_week}$/w`}
               </Tooltip>
               <Popup>
                 <div style={{ fontWeight: 700 }}>{p.title}</div>
