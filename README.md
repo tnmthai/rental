@@ -87,7 +87,7 @@ VALUES
 - Set env vars:
   - `DATABASE_URL` (from Railway Postgres)
   - `NODE_ENV=production`
-  - `NEXTAUTH_URL` (e.g. `https://your-app.up.railway.app`)
+  - `NEXTAUTH_URL` (e.g. `https://www.rentfinder.nz`)
   - `NEXTAUTH_SECRET` (random long string)
   - `GOOGLE_CLIENT_ID`
   - `GOOGLE_CLIENT_SECRET`

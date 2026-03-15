@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import Providers from './providers';
 
+const SITE_URL = 'https://www.rentfinder.nz';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'RentFinder NZ — AI Rental Search for Rooms & Flats in New Zealand',
   description:
     'Find rooms, flats, and rental homes across New Zealand with AI-powered search. Compare listings by city, suburb, budget, furnished options, bills included, and nearby universities.',
@@ -26,6 +29,7 @@ export const metadata: Metadata = {
     title: 'RentFinder NZ — AI Rental Search for Rooms & Flats in New Zealand',
     description:
       'AI-powered rental search for New Zealand. Discover rooms and flats by location, price, amenities, and proximity to universities.',
+    url: SITE_URL,
     type: 'website',
     locale: 'en_NZ',
     siteName: 'RentFinder'
@@ -35,6 +39,9 @@ export const metadata: Metadata = {
     title: 'RentFinder NZ — AI Rental Search for Rooms & Flats in New Zealand',
     description:
       'Search rentals across New Zealand with AI: rooms, flats, price filters, furnished options, and more.'
+  },
+  alternates: {
+    canonical: '/'
   },
   robots: {
     index: true,
