@@ -77,17 +77,38 @@ function hasHtmlTags(text: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(text);
 }
 
-function normalizeCoords(lat?: number | null, lng?: number | null): { lat: number; lng: number } | null {
+const NZ_COORDS: Record<string, [number, number]> = {
+  lincoln: [-43.640065697016475, 172.48548578309143],
+  auckland: [-36.8485, 174.7633],
+  christchurch: [-43.5321, 172.6362],
+  wellington: [-41.2866, 174.7756],
+  nelson: [-41.2706, 173.284],
+  rolleston: [-43.5947, 172.3822]
+};
+
+function inferCoordsFromCity(city?: string | null): { lat: number; lng: number } | null {
+  const t = (city || '').toLowerCase();
+  for (const [k, v] of Object.entries(NZ_COORDS)) {
+    if (t.includes(k)) return { lat: v[0], lng: v[1] };
+  }
+  return null;
+}
+
+function normalizeCoords(lat?: number | string | null, lng?: number | string | null, city?: string | null): { lat: number; lng: number } | null {
+  if (lat === null || lat === undefined || lng === null || lng === undefined || lat === '' || lng === '') {
+    return inferCoordsFromCity(city);
+  }
+
   const la = Number(lat);
   const lo = Number(lng);
-  if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return inferCoordsFromCity(city);
 
   // Auto-fix swapped input: lat should be [-90, 90], lng should be [-180, 180].
   if (Math.abs(la) > 90 && Math.abs(lo) <= 90) {
     return { lat: lo, lng: la };
   }
 
-  if (Math.abs(la) > 90 || Math.abs(lo) > 180) return null;
+  if (Math.abs(la) > 90 || Math.abs(lo) > 180) return inferCoordsFromCity(city);
   return { lat: la, lng: lo };
 }
 
@@ -227,7 +248,7 @@ export default function HomePage() {
     () =>
       hits
         .map((h) => {
-          const c = normalizeCoords(h.latitude, h.longitude);
+          const c = normalizeCoords(h.latitude, h.longitude, h.city);
           if (!c) return null;
           return {
             id: h.id,
