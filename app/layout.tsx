@@ -39,6 +39,11 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true
+  },
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg'
   }
 };
 

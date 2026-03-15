@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RentFinder icon">
+  <defs>
+    <linearGradient id="googleColors" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4285F4" />
+      <stop offset="33%" stop-color="#EA4335" />
+      <stop offset="66%" stop-color="#FBBC05" />
+      <stop offset="100%" stop-color="#34A853" />
+    </linearGradient>
+  </defs>
+
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#ffffff" />
+
+  <path d="M20 14V50" fill="none" stroke="#4285F4" stroke-width="8" stroke-linecap="round" />
+  <path
+    d="M20 14H34C42 14 48 20 48 28C48 36 42 42 34 42H20"
+    fill="none"
+    stroke="url(#googleColors)"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path d="M34 42L49 50" fill="none" stroke="#EA4335" stroke-width="8" stroke-linecap="round" />
+</svg>
