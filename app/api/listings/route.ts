@@ -86,7 +86,7 @@ function inferCoordsFromCity(city: string): [number, number] | null {
   const parts = normalized.split(',').map((x) => x.trim()).filter(Boolean);
 
   // Prefer town/suburb first (left-most), then area, then region.
-  const orderedCandidates = parts.length ? [...parts, ...[...parts].reverse()] : [normalized];
+  const orderedCandidates = parts.length ? parts : [normalized];
 
   for (const c of orderedCandidates) {
     const keys = toLookupKeys(c);
@@ -99,7 +99,7 @@ function inferCoordsFromCity(city: string): [number, number] | null {
     if (NZ_COORDS[key]) return NZ_COORDS[key];
   }
 
-  return NZ_COORDS.new_zealand;
+  return null;
 }
 
 function sanitizeRichText(html: string) {
