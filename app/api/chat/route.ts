@@ -284,7 +284,7 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
 
       const dedup = new Map<string, ExternalHit>();
       for (const x of out) dedup.set(x.url, x);
-      return Array.from(dedup.values()).slice(0, 6);
+      return Array.from(dedup.values()).slice(0, 5);
     } catch {
       return [];
     } finally {
@@ -496,7 +496,7 @@ export async function POST(req: NextRequest) {
       : null;
 
     const wantsExternal = /(\bexternal\b|\bweb\b|ngoài|outside)/i.test(userText);
-    const shouldFetchExternal = results.length === 0 || wantsExternal;
+    const shouldFetchExternal = results.length < 5 || wantsExternal;
     const externalResults = shouldFetchExternal ? await searchExternalWeb(userText, need) : [];
 
     const aiOverview =
