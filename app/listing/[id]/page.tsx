@@ -25,6 +25,18 @@ function hasHtmlTags(text: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(text);
 }
 
+function buildMapEmbedUrl(lat?: number | null, lng?: number | null): string | null {
+  if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return null;
+  const la = Number(lat);
+  const lo = Number(lng);
+  const delta = 0.02;
+  const left = lo - delta;
+  const right = lo + delta;
+  const top = la + delta;
+  const bottom = la - delta;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${la}%2C${lo}`;
+}
+
 export default async function ListingDetailPage({ params }: { params: { id: string } }) {
   const id = Number(params.id || 0);
   const item = Number.isFinite(id) ? await getListingById(id) : null;
@@ -39,6 +51,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
   }
 
   const images: string[] = Array.isArray(item.image_urls) ? item.image_urls : [];
+  const mapUrl = buildMapEmbedUrl(item.latitude, item.longitude);
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
@@ -66,6 +79,18 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
         Posted by: {item.user_name || 'Unknown'} {item.user_email ? `(${item.user_email})` : ''} · Posted at:{' '}
         {new Date(item.created_at).toLocaleString()}
       </p>
+
+      {mapUrl ? (
+        <section style={{ margin: '10px 0 14px' }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>Location map</h3>
+          <iframe
+            title="listing-map"
+            src={mapUrl}
+            style={{ width: '100%', maxWidth: 780, height: 260, border: '1px solid #e5e7eb', borderRadius: 8 }}
+            loading="lazy"
+          />
+        </section>
+      ) : null}
 
       {item.description ? (
         <div

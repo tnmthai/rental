@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 
 let pool: Pool | null = null;
+let listingGeoColumnsEnsured = false;
 
 export type ListingSearch = {
   city?: string;
@@ -32,6 +33,8 @@ export type NewListing = {
   near_school?: string | null;
   duration_days?: number;
   available_date?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export function getPool() {
@@ -42,8 +45,17 @@ export function getPool() {
   return pool;
 }
 
+async function ensureListingGeoColumns() {
+  if (listingGeoColumnsEnsured) return;
+  const p = getPool();
+  await p.query(`ALTER TABLE listings ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION`);
+  await p.query(`ALTER TABLE listings ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION`);
+  listingGeoColumnsEnsured = true;
+}
+
 export async function searchListings(filters: ListingSearch) {
   const p = getPool();
+  await ensureListingGeoColumns();
   const params: Array<string | number | boolean> = [];
   const where: string[] = ["status = 'approved'", '(expires_at IS NULL OR expires_at > now())'];
 
@@ -109,7 +121,7 @@ export async function searchListings(filters: ListingSearch) {
   const sql = `
     SELECT
       id, user_id, title, city, price_nzd_week, source_url, image_urls, description,
-      furnished, bills_included, near_school, created_at, expires_at,
+      furnished, bills_included, near_school, latitude, longitude, created_at, expires_at,
       (${scoreExpr})::int AS match_score,
       ${conditionCount}::int AS condition_count
     FROM listings
@@ -124,14 +136,15 @@ export async function searchListings(filters: ListingSearch) {
 
 export async function createListing(input: NewListing) {
   const p = getPool();
+  await ensureListingGeoColumns();
   const durationDays = Math.min(Math.max(Number(input.duration_days || 30), 1), 180);
 
   try {
     const { rows } = await p.query(
       `
-        INSERT INTO listings (user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, available_date, expires_at, status)
-        VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9, $10, $11::date, now() + make_interval(days => $12), 'pending')
-        RETURNING id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, available_date, created_at, expires_at, status
+        INSERT INTO listings (user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, latitude, longitude, available_date, expires_at, status)
+        VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9, $10, $11, $12, $13::date, now() + make_interval(days => $14), 'pending')
+        RETURNING id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, latitude, longitude, available_date, created_at, expires_at, status
       `,
       [
         input.user_id,
@@ -144,6 +157,8 @@ export async function createListing(input: NewListing) {
         Boolean(input.furnished),
         Boolean(input.bills_included),
         input.near_school || null,
+        input.latitude ?? null,
+        input.longitude ?? null,
         input.available_date || null,
         durationDays
       ]
@@ -154,9 +169,9 @@ export async function createListing(input: NewListing) {
 
     const { rows } = await p.query(
       `
-        INSERT INTO listings (user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, expires_at, status)
-        VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9, $10, now() + make_interval(days => $11), 'pending')
-        RETURNING id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at, status
+        INSERT INTO listings (user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, latitude, longitude, expires_at, status)
+        VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9, $10, $11, $12, now() + make_interval(days => $13), 'pending')
+        RETURNING id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, latitude, longitude, created_at, expires_at, status
       `,
       [
         input.user_id,
@@ -169,6 +184,8 @@ export async function createListing(input: NewListing) {
         Boolean(input.furnished),
         Boolean(input.bills_included),
         input.near_school || null,
+        input.latitude ?? null,
+        input.longitude ?? null,
         durationDays
       ]
     );
@@ -178,9 +195,10 @@ export async function createListing(input: NewListing) {
 
 export async function listRecentListings(limit = 20) {
   const p = getPool();
+  await ensureListingGeoColumns();
   const { rows } = await p.query(
     `
-      SELECT id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, created_at, expires_at, status
+      SELECT id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, latitude, longitude, created_at, expires_at, status
       FROM listings
       ORDER BY created_at DESC
       LIMIT $1
@@ -298,10 +316,11 @@ export async function deleteListingById(listingId: number) {
 
 export async function getListingById(listingId: number) {
   const p = getPool();
+  await ensureListingGeoColumns();
   const { rows } = await p.query(
     `
       SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.image_urls, l.description,
-             l.furnished, l.bills_included, l.near_school, l.status, l.created_at, l.expires_at,
+             l.furnished, l.bills_included, l.near_school, l.latitude, l.longitude, l.status, l.created_at, l.expires_at,
              u.name AS user_name, u.email AS user_email
       FROM listings l
       LEFT JOIN users u ON u.id = l.user_id

@@ -51,7 +51,9 @@ export default function PostListingPage() {
     available_date: '',
     furnished: true,
     bills_included: false,
-    near_school: '(None)'
+    near_school: '(None)',
+    latitude: '',
+    longitude: ''
   });
 
   const [images, setImages] = useState<FileList | null>(null);
@@ -102,14 +104,16 @@ export default function PostListingPage() {
           bills_included: form.bills_included,
           near_school: form.near_school === '(None)' ? null : form.near_school,
           duration_days: form.duration_days,
-          available_date: form.available_date || null
+          available_date: form.available_date || null,
+          latitude: form.latitude ? Number(form.latitude) : null,
+          longitude: form.longitude ? Number(form.longitude) : null
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save listing');
 
       setMsg(`✅ Listing #${data.item.id} posted with ${imageUrls.length} image(s)`);
-      setForm({ ...form, title: '', source_url: '', description: '', duration_days: 30, available_date: '' });
+      setForm({ ...form, title: '', source_url: '', description: '', duration_days: 30, available_date: '', latitude: '', longitude: '' });
       setImages(null);
     } catch (e: any) {
       setMsg(`❌ ${e.message || 'Something went wrong'}`);
@@ -264,6 +268,30 @@ export default function PostListingPage() {
                 </option>
               ))}
             </select>
+          </label>
+
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Latitude (Optional)</span>
+            <input
+              style={inputStyle}
+              type="number"
+              step="any"
+              value={form.latitude}
+              onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+              placeholder="e.g. -36.8485"
+            />
+          </label>
+
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Longitude (Optional)</span>
+            <input
+              style={inputStyle}
+              type="number"
+              step="any"
+              value={form.longitude}
+              onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+              placeholder="e.g. 174.7633"
+            />
           </label>
 
           <div style={{ display: 'flex', gap: 18, alignItems: 'end' }}>

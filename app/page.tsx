@@ -76,6 +76,18 @@ function hasHtmlTags(text: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(text);
 }
 
+function buildMapEmbedUrl(lat?: number | null, lng?: number | null): string | null {
+  if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return null;
+  const la = Number(lat);
+  const lo = Number(lng);
+  const delta = 0.015;
+  const left = lo - delta;
+  const right = lo + delta;
+  const top = la + delta;
+  const bottom = la - delta;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${la}%2C${lo}`;
+}
+
 type Hit = {
   id: number;
   title: string;
@@ -88,6 +100,8 @@ type Hit = {
   bills_included?: boolean;
   near_school?: string | null;
   available_date?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type ExternalHit = {
@@ -600,6 +614,14 @@ export default function HomePage() {
                   {h.near_school ? <> · {t.near} {highlightText(h.near_school, keywords)}</> : null}
                   {h.available_date ? <> · {t.available} {new Date(h.available_date).toLocaleDateString()}</> : null}
                 </div>
+                {buildMapEmbedUrl(h.latitude, h.longitude) ? (
+                  <iframe
+                    title={`map-${h.id}`}
+                    src={buildMapEmbedUrl(h.latitude, h.longitude) || undefined}
+                    style={{ marginTop: 8, width: '100%', maxWidth: 650, height: 180, border: '1px solid #e5e7eb', borderRadius: 8 }}
+                    loading="lazy"
+                  />
+                ) : null}
                 <div style={{ marginTop: 8, display: 'flex', gap: 12, fontSize: 13 }}>
                   <a href={`/listing/${h.id}`}>{t.viewDetail}</a>
                   <button
