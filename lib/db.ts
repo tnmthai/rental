@@ -305,6 +305,68 @@ export async function listAllListingsAdmin(limit = 300) {
   return rows;
 }
 
+export async function updateListingByAdmin(
+  listingId: number,
+  input: {
+    title?: string;
+    city?: string;
+    price_nzd_week?: number;
+    source_url?: string;
+    status?: 'pending' | 'approved' | 'rejected' | 'paused';
+  }
+) {
+  const p = getPool();
+
+  const sets: string[] = [];
+  const params: Array<string | number> = [];
+
+  if (typeof input.title === 'string') {
+    const v = input.title.trim();
+    if (v) {
+      params.push(v);
+      sets.push(`title=$${params.length}`);
+    }
+  }
+
+  if (typeof input.city === 'string') {
+    const v = input.city.trim();
+    if (v) {
+      params.push(v);
+      sets.push(`city=$${params.length}`);
+    }
+  }
+
+  if (Number.isFinite(Number(input.price_nzd_week)) && Number(input.price_nzd_week) > 0) {
+    params.push(Number(input.price_nzd_week));
+    sets.push(`price_nzd_week=$${params.length}`);
+  }
+
+  if (typeof input.source_url === 'string') {
+    params.push(input.source_url.trim());
+    sets.push(`source_url=$${params.length}`);
+  }
+
+  if (input.status && ['pending', 'approved', 'rejected', 'paused'].includes(input.status)) {
+    params.push(input.status);
+    sets.push(`status=$${params.length}`);
+  }
+
+  if (sets.length === 0) return null;
+
+  params.push(listingId);
+  const { rows } = await p.query(
+    `
+      UPDATE listings
+      SET ${sets.join(', ')}
+      WHERE id=$${params.length}
+      RETURNING id, title, city, price_nzd_week, source_url, status
+    `,
+    params
+  );
+
+  return rows[0] || null;
+}
+
 export async function deleteListingById(listingId: number) {
   const p = getPool();
   const { rows } = await p.query(

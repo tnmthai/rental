@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { deleteListingById, findUserByEmail, listAllListingsAdmin, listPendingListings, trackEvent, updateListingStatus } from '@/lib/db';
+import { deleteListingById, findUserByEmail, listAllListingsAdmin, listPendingListings, trackEvent, updateListingByAdmin, updateListingStatus } from '@/lib/db';
 
 function isAdmin(email?: string | null) {
   if (!email) return false;
@@ -24,9 +24,28 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const listingId = Number(body.listing_id || 0);
   const action = String(body.action || '');
-  if (!listingId || !['approve', 'reject'].includes(action)) {
-    return NextResponse.json({ error: 'listing_id and action required' }, { status: 400 });
+
+  if (!listingId) {
+    return NextResponse.json({ error: 'listing_id required' }, { status: 400 });
   }
+
+  if (action === 'update') {
+    const item = await updateListingByAdmin(listingId, {
+      title: typeof body.title === 'string' ? body.title : undefined,
+      city: typeof body.city === 'string' ? body.city : undefined,
+      price_nzd_week: body.price_nzd_week,
+      source_url: typeof body.source_url === 'string' ? body.source_url : undefined,
+      status: typeof body.status === 'string' ? body.status : undefined
+    });
+
+    if (!item) return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+    return NextResponse.json({ item });
+  }
+
+  if (!['approve', 'reject'].includes(action)) {
+    return NextResponse.json({ error: 'action must be approve, reject, or update' }, { status: 400 });
+  }
+
   const item = await updateListingStatus(listingId, action === 'approve' ? 'approved' : 'rejected');
 
   if (action === 'approve' && item?.id) {

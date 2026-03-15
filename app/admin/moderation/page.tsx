@@ -20,6 +20,8 @@ export default function ModerationPage() {
   const [items, setItems] = useState<ListingItem[]>([]);
   const [msg, setMsg] = useState('');
   const [scope, setScope] = useState<'pending' | 'all'>('pending');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [draft, setDraft] = useState<Partial<ListingItem>>({});
 
   async function load(nextScope = scope) {
     const res = await fetch(`/api/admin/moderation?scope=${nextScope}`);
@@ -54,6 +56,32 @@ export default function ModerationPage() {
     const data = await res.json();
     setMsg(res.ok ? `deleted #${id}` : data.error || 'failed');
     await load();
+  }
+
+  function beginEdit(item: ListingItem) {
+    setEditingId(item.id);
+    setDraft({
+      title: item.title,
+      city: item.city,
+      price_nzd_week: item.price_nzd_week,
+      source_url: item.source_url || '',
+      status: item.status
+    });
+  }
+
+  async function saveEdit(id: number) {
+    const res = await fetch('/api/admin/moderation', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ listing_id: id, action: 'update', ...draft })
+    });
+    const data = await res.json();
+    setMsg(res.ok ? `updated #${id}` : data.error || 'failed');
+    if (res.ok) {
+      setEditingId(null);
+      setDraft({});
+      await load();
+    }
   }
 
   useEffect(() => {
@@ -143,11 +171,53 @@ export default function ModerationPage() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start' }}>
-              <div>
-                <h3 style={{ margin: '0 0 6px', fontSize: 18 }}>{i.title}</h3>
-                <div style={{ color: '#475467' }}>
-                  {i.city} · ${i.price_nzd_week}/week
-                </div>
+              <div style={{ flex: 1 }}>
+                {editingId === i.id ? (
+                  <div style={{ display: 'grid', gap: 8, marginBottom: 8, maxWidth: 560 }}>
+                    <input
+                      value={String(draft.title ?? '')}
+                      onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+                      placeholder="Title"
+                      style={{ border: '1px solid #d0d5dd', borderRadius: 8, padding: '8px 10px' }}
+                    />
+                    <input
+                      value={String(draft.city ?? '')}
+                      onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
+                      placeholder="City"
+                      style={{ border: '1px solid #d0d5dd', borderRadius: 8, padding: '8px 10px' }}
+                    />
+                    <input
+                      type="number"
+                      value={Number(draft.price_nzd_week ?? 0)}
+                      onChange={(e) => setDraft((d) => ({ ...d, price_nzd_week: Number(e.target.value) }))}
+                      placeholder="Price / week"
+                      style={{ border: '1px solid #d0d5dd', borderRadius: 8, padding: '8px 10px' }}
+                    />
+                    <input
+                      value={String(draft.source_url ?? '')}
+                      onChange={(e) => setDraft((d) => ({ ...d, source_url: e.target.value }))}
+                      placeholder="Source URL"
+                      style={{ border: '1px solid #d0d5dd', borderRadius: 8, padding: '8px 10px' }}
+                    />
+                    <select
+                      value={String(draft.status ?? i.status)}
+                      onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as ListingItem['status'] }))}
+                      style={{ border: '1px solid #d0d5dd', borderRadius: 8, padding: '8px 10px', width: 180 }}
+                    >
+                      <option value="pending">pending</option>
+                      <option value="approved">approved</option>
+                      <option value="rejected">rejected</option>
+                      <option value="paused">paused</option>
+                    </select>
+                  </div>
+                ) : (
+                  <>
+                    <h3 style={{ margin: '0 0 6px', fontSize: 18 }}>{i.title}</h3>
+                    <div style={{ color: '#475467' }}>
+                      {i.city} · ${i.price_nzd_week}/week
+                    </div>
+                  </>
+                )}
                 <div style={{ marginTop: 8, fontSize: 13, color: '#667085' }}>
                   Posted by: <b>{i.user_name || 'Unknown'}</b>
                   {i.user_email ? ` (${i.user_email})` : ''}
@@ -168,7 +238,34 @@ export default function ModerationPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {editingId === i.id ? (
+                  <>
+                    <button
+                      onClick={() => saveEdit(i.id)}
+                      style={{ border: '1px solid #2563eb', background: '#2563eb', color: '#fff', borderRadius: 8, padding: '8px 12px' }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingId(null);
+                        setDraft({});
+                      }}
+                      style={{ border: '1px solid #d0d5dd', background: '#fff', color: '#111827', borderRadius: 8, padding: '8px 12px' }}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => beginEdit(i)}
+                    style={{ border: '1px solid #2563eb', background: '#fff', color: '#2563eb', borderRadius: 8, padding: '8px 12px' }}
+                  >
+                    Edit
+                  </button>
+                )}
+
                 {i.status === 'pending' ? (
                   <>
                     <button
