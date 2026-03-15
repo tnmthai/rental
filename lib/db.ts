@@ -66,11 +66,13 @@ export async function searchListings(filters: ListingSearch) {
 
   if (city) {
     params.push(`%${city}%`);
+    where.push(`city ILIKE $${params.length}`);
     scoreParts.push(`CASE WHEN city ILIKE $${params.length} THEN 1 ELSE 0 END`);
   }
 
   if (suburb) {
     params.push(`%${suburb}%`);
+    where.push(`(title ILIKE $${params.length} OR description ILIKE $${params.length} OR city ILIKE $${params.length})`);
     scoreParts.push(`CASE WHEN (title ILIKE $${params.length} OR description ILIKE $${params.length} OR city ILIKE $${params.length}) THEN 1 ELSE 0 END`);
   }
 

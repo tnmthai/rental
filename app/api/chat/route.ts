@@ -226,18 +226,28 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
 
   const run = async (query: string): Promise<ExternalHit[]> => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 7000);
+    const timer = setTimeout(() => controller.abort(), 12000);
     try {
-      const res = await fetch(`https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
-        headers: {
-          'user-agent': 'Mozilla/5.0',
-          accept: 'text/html'
-        },
-        signal: controller.signal
-      });
+      const endpoints = [
+        `https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
+        `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`
+      ];
 
-      if (!res.ok) return [];
-      const html = await res.text();
+      let html = '';
+      for (const endpoint of endpoints) {
+        const res = await fetch(endpoint, {
+          headers: {
+            'user-agent': 'Mozilla/5.0',
+            accept: 'text/html'
+          },
+          signal: controller.signal
+        });
+        if (!res.ok) continue;
+        html = await res.text();
+        if (html && html.length > 1000) break;
+      }
+
+      if (!html) return [];
 
       const out: ExternalHit[] = [];
       const anchorRe = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
@@ -271,7 +281,12 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
 
   const strict = await run(strictQuery);
   if (strict.length > 0) return strict;
-  return run(broadQuery);
+
+  const broad = await run(broadQuery);
+  if (broad.length > 0) return broad;
+
+  const ultraBroadQuery = `${message} ${locationPart} room rent apartment`.trim().replace(/\s+/g, ' ');
+  return run(ultraBroadQuery);
 }
 
 async function buildAIOverview(message: string, need: Need, results: any[]): Promise<string | null> {
