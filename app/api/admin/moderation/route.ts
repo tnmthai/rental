@@ -35,6 +35,8 @@ export async function PATCH(req: NextRequest) {
       city: typeof body.city === 'string' ? body.city : undefined,
       price_nzd_week: body.price_nzd_week,
       source_url: typeof body.source_url === 'string' ? body.source_url : undefined,
+      latitude: body.latitude === null || body.latitude === '' ? null : body.latitude,
+      longitude: body.longitude === null || body.longitude === '' ? null : body.longitude,
       status: typeof body.status === 'string' ? body.status : undefined
     });
 

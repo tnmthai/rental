@@ -277,7 +277,7 @@ export async function listPendingListings() {
   const p = getPool();
   const { rows } = await p.query(
     `
-      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.created_at, l.status,
+      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.latitude, l.longitude, l.created_at, l.status,
              u.name AS user_name, u.email AS user_email
       FROM listings l
       LEFT JOIN users u ON u.id = l.user_id
@@ -293,7 +293,7 @@ export async function listAllListingsAdmin(limit = 300) {
   const p = getPool();
   const { rows } = await p.query(
     `
-      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.created_at, l.status,
+      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.latitude, l.longitude, l.created_at, l.status,
              u.name AS user_name, u.email AS user_email
       FROM listings l
       LEFT JOIN users u ON u.id = l.user_id
@@ -312,13 +312,15 @@ export async function updateListingByAdmin(
     city?: string;
     price_nzd_week?: number;
     source_url?: string;
+    latitude?: number | null;
+    longitude?: number | null;
     status?: 'pending' | 'approved' | 'rejected' | 'paused';
   }
 ) {
   const p = getPool();
 
   const sets: string[] = [];
-  const params: Array<string | number> = [];
+  const params: Array<string | number | null> = [];
 
   if (typeof input.title === 'string') {
     const v = input.title.trim();
@@ -346,6 +348,22 @@ export async function updateListingByAdmin(
     sets.push(`source_url=$${params.length}`);
   }
 
+  if (input.latitude === null) {
+    params.push(null);
+    sets.push(`latitude=$${params.length}`);
+  } else if (Number.isFinite(Number(input.latitude))) {
+    params.push(Number(input.latitude));
+    sets.push(`latitude=$${params.length}`);
+  }
+
+  if (input.longitude === null) {
+    params.push(null);
+    sets.push(`longitude=$${params.length}`);
+  } else if (Number.isFinite(Number(input.longitude))) {
+    params.push(Number(input.longitude));
+    sets.push(`longitude=$${params.length}`);
+  }
+
   if (input.status && ['pending', 'approved', 'rejected', 'paused'].includes(input.status)) {
     params.push(input.status);
     sets.push(`status=$${params.length}`);
@@ -359,7 +377,7 @@ export async function updateListingByAdmin(
       UPDATE listings
       SET ${sets.join(', ')}
       WHERE id=$${params.length}
-      RETURNING id, title, city, price_nzd_week, source_url, status
+      RETURNING id, title, city, price_nzd_week, source_url, latitude, longitude, status
     `,
     params
   );

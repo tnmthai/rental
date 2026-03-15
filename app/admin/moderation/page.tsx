@@ -12,6 +12,8 @@ type ListingItem = {
   city: string;
   price_nzd_week: number;
   source_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   created_at: string;
   status: 'pending' | 'approved' | 'rejected' | 'paused';
 };
@@ -21,7 +23,15 @@ export default function ModerationPage() {
   const [msg, setMsg] = useState('');
   const [scope, setScope] = useState<'pending' | 'all'>('pending');
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [draft, setDraft] = useState<Partial<ListingItem>>({});
+  const [draft, setDraft] = useState<{
+    title?: string;
+    city?: string;
+    price_nzd_week?: number;
+    source_url?: string;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
+    status?: ListingItem['status'];
+  }>({});
 
   async function load(nextScope = scope) {
     const res = await fetch(`/api/admin/moderation?scope=${nextScope}`);
@@ -65,6 +75,8 @@ export default function ModerationPage() {
       city: item.city,
       price_nzd_week: item.price_nzd_week,
       source_url: item.source_url || '',
+      latitude: item.latitude ?? '',
+      longitude: item.longitude ?? '',
       status: item.status
     });
   }
@@ -73,7 +85,19 @@ export default function ModerationPage() {
     const res = await fetch('/api/admin/moderation', {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ listing_id: id, action: 'update', ...draft })
+      body: JSON.stringify({
+        listing_id: id,
+        action: 'update',
+        ...draft,
+        latitude:
+          draft.latitude === '' || draft.latitude === null || draft.latitude === undefined
+            ? null
+            : Number(draft.latitude),
+        longitude:
+          draft.longitude === '' || draft.longitude === null || draft.longitude === undefined
+            ? null
+            : Number(draft.longitude)
+      })
     });
     const data = await res.json();
     setMsg(res.ok ? `updated #${id}` : data.error || 'failed');
@@ -199,6 +223,24 @@ export default function ModerationPage() {
                       placeholder="Source URL"
                       style={{ border: '1px solid #d0d5dd', borderRadius: 8, padding: '8px 10px' }}
                     />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <input
+                        type="number"
+                        step="any"
+                        value={String(draft.latitude ?? '')}
+                        onChange={(e) => setDraft((d) => ({ ...d, latitude: e.target.value }))}
+                        placeholder="Latitude"
+                        style={{ border: '1px solid #d0d5dd', borderRadius: 8, padding: '8px 10px' }}
+                      />
+                      <input
+                        type="number"
+                        step="any"
+                        value={String(draft.longitude ?? '')}
+                        onChange={(e) => setDraft((d) => ({ ...d, longitude: e.target.value }))}
+                        placeholder="Longitude"
+                        style={{ border: '1px solid #d0d5dd', borderRadius: 8, padding: '8px 10px' }}
+                      />
+                    </div>
                     <select
                       value={String(draft.status ?? i.status)}
                       onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as ListingItem['status'] }))}
