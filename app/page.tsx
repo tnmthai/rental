@@ -682,18 +682,23 @@ export default function HomePage() {
         {typeof visitCount === 'number' ? <span>👀 {visitCount.toLocaleString()} {t.visits}</span> : null}
         {typeof onlineCount === 'number' ? <span>🟢 {onlineCount.toLocaleString()} {t.online}</span> : null}
         <span>🌐 {t.language}</span>
-        <button
-          onClick={() => setLang('en')}
-          style={{ border: '1px solid #d0d5dd', borderRadius: 999, padding: '4px 10px', background: lang === 'en' ? '#111827' : '#fff', color: lang === 'en' ? '#fff' : '#111827' }}
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value as Lang)}
+          aria-label={t.language}
+          style={{
+            border: '1px solid #d0d5dd',
+            borderRadius: 999,
+            padding: '6px 12px',
+            background: '#fff',
+            color: '#111827',
+            fontSize: 13,
+            fontWeight: 600
+          }}
         >
-          {t.english}
-        </button>
-        <button
-          onClick={() => setLang('vi')}
-          style={{ border: '1px solid #d0d5dd', borderRadius: 999, padding: '4px 10px', background: lang === 'vi' ? '#111827' : '#fff', color: lang === 'vi' ? '#fff' : '#111827' }}
-        >
-          {t.vietnamese}
-        </button>
+          <option value="en">{t.english}</option>
+          <option value="vi">{t.vietnamese}</option>
+        </select>
       </footer>
 
       <style jsx global>{`
