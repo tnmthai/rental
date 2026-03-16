@@ -58,7 +58,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body style={{ fontFamily: 'system-ui, sans-serif', margin: 0, padding: 24 }}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1 }}>{children}</div>
+            <footer style={{ marginTop: 24, paddingTop: 12, borderTop: '1px solid #e5e7eb', fontSize: 13, color: '#4b5563' }}>
+              Contact admin: <a href="mailto:info@rentfinder.nz" style={{ color: '#1a73e8', textDecoration: 'none' }}>info@rentfinder.nz</a>
+            </footer>
+          </div>
+        </Providers>
       </body>
     </html>
   );
