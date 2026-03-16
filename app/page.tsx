@@ -95,20 +95,22 @@ function inferCoordsFromCity(city?: string | null): { lat: number; lng: number }
 }
 
 function normalizeCoords(lat?: number | string | null, lng?: number | string | null, city?: string | null): { lat: number; lng: number } | null {
-  if (lat === null || lat === undefined || lng === null || lng === undefined || lat === '' || lng === '') {
+  const missingCoords = lat === null || lat === undefined || lng === null || lng === undefined || lat === '' || lng === '';
+  if (missingCoords) {
+    // Only fall back to town/city center when coordinates are missing.
     return inferCoordsFromCity(city);
   }
 
   const la = Number(lat);
   const lo = Number(lng);
-  if (!Number.isFinite(la) || !Number.isFinite(lo)) return inferCoordsFromCity(city);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
 
   // Auto-fix swapped input: lat should be [-90, 90], lng should be [-180, 180].
   if (Math.abs(la) > 90 && Math.abs(lo) <= 90) {
     return { lat: lo, lng: la };
   }
 
-  if (Math.abs(la) > 90 || Math.abs(lo) > 180) return inferCoordsFromCity(city);
+  if (Math.abs(la) > 90 || Math.abs(lo) > 180) return null;
   return { lat: la, lng: lo };
 }
 

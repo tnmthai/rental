@@ -14,7 +14,11 @@ type Point = {
   lng: number;
 };
 
-function FitBounds({ points }: { points: Point[] }) {
+type DisplayPoint = Point & {
+  clusterCount: number;
+};
+
+function FitBounds({ points }: { points: DisplayPoint[] }) {
   const map = useMap();
 
   useEffect(() => {
@@ -31,7 +35,7 @@ function FitBounds({ points }: { points: Point[] }) {
 }
 
 export default function ListingMap({ points }: { points: Point[] }) {
-  const displayPoints = useMemo(() => {
+  const displayPoints = useMemo<DisplayPoint[]>(() => {
     const groups = new Map<string, Point[]>();
     for (const p of points) {
       const key = `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
@@ -39,21 +43,21 @@ export default function ListingMap({ points }: { points: Point[] }) {
       groups.get(key)!.push(p);
     }
 
-    const spread: Point[] = [];
+    const spread: DisplayPoint[] = [];
     groups.forEach((group) => {
       if (group.length === 1) {
-        spread.push(group[0]);
+        spread.push({ ...group[0], clusterCount: 1 });
         return;
       }
 
-      // If multiple listings share the exact same coordinate, spread them a bit
-      // so all pins remain visible/clickable instead of overlapping.
+      // If multiple listings share the same coordinate, spread them a bit
+      // so all pins remain visible/clickable instead of fully overlapping.
       const radius = 0.0012; // ~130m latitude
       group.forEach((p, i) => {
         const angle = (2 * Math.PI * i) / group.length;
         const latOffset = radius * Math.sin(angle);
         const lngOffset = (radius * Math.cos(angle)) / Math.max(Math.cos((p.lat * Math.PI) / 180), 0.1);
-        spread.push({ ...p, lat: p.lat + latOffset, lng: p.lng + lngOffset });
+        spread.push({ ...p, lat: p.lat + latOffset, lng: p.lng + lngOffset, clusterCount: group.length });
       });
     });
 
@@ -83,6 +87,24 @@ export default function ListingMap({ points }: { points: Point[] }) {
                 {`${p.price_nzd_week}$/w`}
               </Tooltip>
               <Popup>
+                {p.clusterCount > 1 ? (
+                  <div style={{ marginBottom: 8 }}>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#1d4ed8',
+                        background: '#dbeafe',
+                        border: '1px solid #bfdbfe',
+                        borderRadius: 999,
+                        padding: '2px 8px'
+                      }}
+                    >
+                      {p.clusterCount} listings at this area
+                    </span>
+                  </div>
+                ) : null}
                 <div style={{ fontWeight: 700 }}>{p.title}</div>
                 <div style={{ fontSize: 13, color: '#4b5563' }}>{p.city}</div>
                 <div style={{ marginTop: 4 }}>${p.price_nzd_week}/week</div>
