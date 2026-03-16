@@ -150,8 +150,11 @@ function normalizeCoordScale(value: number, maxAbs: number): number {
 
   // Heal malformed numeric coordinates where decimal separator is lost,
   // e.g. 17248094250846224 -> 172.48094250846224
-  while (Math.abs(v) > maxAbs && Number.isInteger(v)) {
+  // Keep scaling down until value is in valid range.
+  let guard = 0;
+  while (Math.abs(v) > maxAbs && guard < 20) {
     v = v / 10;
+    guard += 1;
   }
 
   return v;

@@ -115,8 +115,10 @@ function sanitizeRichText(html: string) {
 function normalizeCoordScale(value: number, maxAbs: number): number {
   if (!Number.isFinite(value)) return value;
   let v = value;
-  while (Math.abs(v) > maxAbs && Number.isInteger(v)) {
+  let guard = 0;
+  while (Math.abs(v) > maxAbs && guard < 20) {
     v = v / 10;
+    guard += 1;
   }
   return v;
 }
