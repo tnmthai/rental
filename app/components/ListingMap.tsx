@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 type Point = {
   id: number;
@@ -17,7 +17,7 @@ type Point = {
 function FitBounds({ points }: { points: Point[] }) {
   const map = useMap();
 
-  useMemo(() => {
+  useEffect(() => {
     if (!points.length) return;
     if (points.length === 1) {
       map.setView([points[0].lat, points[0].lng], 12);
@@ -31,7 +31,36 @@ function FitBounds({ points }: { points: Point[] }) {
 }
 
 export default function ListingMap({ points }: { points: Point[] }) {
-  if (!points.length) return null;
+  const displayPoints = useMemo(() => {
+    const groups = new Map<string, Point[]>();
+    for (const p of points) {
+      const key = `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(p);
+    }
+
+    const spread: Point[] = [];
+    groups.forEach((group) => {
+      if (group.length === 1) {
+        spread.push(group[0]);
+        return;
+      }
+
+      // If multiple listings share the exact same coordinate, spread them a bit
+      // so all pins remain visible/clickable instead of overlapping.
+      const radius = 0.0012; // ~130m latitude
+      group.forEach((p, i) => {
+        const angle = (2 * Math.PI * i) / group.length;
+        const latOffset = radius * Math.sin(angle);
+        const lngOffset = (radius * Math.cos(angle)) / Math.max(Math.cos((p.lat * Math.PI) / 180), 0.1);
+        spread.push({ ...p, lat: p.lat + latOffset, lng: p.lng + lngOffset });
+      });
+    });
+
+    return spread;
+  }, [points]);
+
+  if (!displayPoints.length) return null;
 
   return (
     <section style={{ marginBottom: 16 }}>
@@ -42,10 +71,10 @@ export default function ListingMap({ points }: { points: Point[] }) {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
           />
-          <FitBounds points={points} />
-          {points.map((p) => (
+          <FitBounds points={displayPoints} />
+          {displayPoints.map((p, idx) => (
             <CircleMarker
-              key={p.id}
+              key={`${p.id}-${idx}`}
               center={[p.lat, p.lng]}
               radius={8}
               pathOptions={{ color: '#1a73e8', fillColor: '#1a73e8', fillOpacity: 0.8 }}
