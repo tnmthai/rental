@@ -1,6 +1,7 @@
 import Script from 'next/script';
 import { getListingById } from '@/lib/db';
 import SubNav from '@/app/components/SubNav';
+import ListingGallery from '@/app/components/ListingGallery';
 
 function formatDescription(text: string): string[] {
   return text
@@ -119,7 +120,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
           <iframe
             title="listing-map"
             src={mapUrl}
-            style={{ width: '100%', maxWidth: 780, height: 260, border: '1px solid #e5e7eb', borderRadius: 8 }}
+            style={{ width: '100%', height: 260, border: '1px solid #e5e7eb', borderRadius: 8 }}
             loading="lazy"
           />
         </section>
@@ -150,19 +151,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
         </div>
       ) : null}
 
-      {images.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, maxWidth: 780 }}>
-          {images.map((url, idx) => (
-            <a key={`${item.id}-${idx}`} href={url} target="_blank">
-              <img
-                src={url}
-                alt={`${item.title}-${idx + 1}`}
-                style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
-              />
-            </a>
-          ))}
-        </div>
-      ) : null}
+      {images.length > 0 ? <ListingGallery title={item.title} images={images} /> : null}
 
       <Script id="listing-event-track" strategy="afterInteractive">{`
         (() => {
