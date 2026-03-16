@@ -78,19 +78,69 @@ function hasHtmlTags(text: string): boolean {
 }
 
 const NZ_COORDS: Record<string, [number, number]> = {
-  lincoln: [-43.640065697016475, 172.48548578309143],
   auckland: [-36.8485, 174.7633],
-  christchurch: [-43.5321, 172.6362],
   wellington: [-41.2866, 174.7756],
+  christchurch: [-43.5321, 172.6362],
+  hamilton: [-37.787, 175.2793],
+  dunedin: [-45.8788, 170.5028],
   nelson: [-41.2706, 173.284],
-  rolleston: [-43.5947, 172.3822]
+  lincoln: [-43.6458, 172.4704],
+  rolleston: [-43.5947, 172.3822],
+  palmerston_north: [-40.3564, 175.6111],
+  tauranga: [-37.6878, 176.1651],
+  rotorua: [-38.1368, 176.2497],
+  napier: [-39.4928, 176.912],
+  hastings: [-39.6381, 176.8495],
+  new_plymouth: [-39.0556, 174.0752],
+  whangarei: [-35.7251, 174.3237],
+  invercargill: [-46.4132, 168.3538],
+  queenstown: [-45.0312, 168.6626],
+  wanaka: [-44.6967, 169.1367],
+  blenheim: [-41.5134, 173.9612],
+  gisborne: [-38.6623, 178.0176],
+  masterton: [-40.9497, 175.6573],
+  whanganui: [-39.9333, 175.05],
+  canterbury: [-43.5, 171.5],
+  selwyn: [-43.65, 172.25],
+  northland: [-35.6, 174.3],
+  waikato: [-37.7833, 175.2833],
+  otago: [-45.2, 170.3],
+  southland: [-46.2, 168.4]
 };
 
+function normalizePlaceKey(s?: string | null): string {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\b(district|city|region)\b/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function inferCoordsFromCity(city?: string | null): { lat: number; lng: number } | null {
-  const t = (city || '').toLowerCase();
-  for (const [k, v] of Object.entries(NZ_COORDS)) {
-    if (t.includes(k)) return { lat: v[0], lng: v[1] };
+  const normalized = normalizePlaceKey(city);
+  if (!normalized) return null;
+
+  const parts = normalized.split(',').map((x) => x.trim()).filter(Boolean);
+  const candidates = parts.length ? [...parts, ...[...parts].reverse(), normalized] : [normalized];
+
+  for (const c of candidates) {
+    const words = c.split(/\s+/).filter(Boolean);
+    if (NZ_COORDS[c]) return { lat: NZ_COORDS[c][0], lng: NZ_COORDS[c][1] };
+    const compact = c.replace(/\s+/g, '_');
+    if (NZ_COORDS[compact]) return { lat: NZ_COORDS[compact][0], lng: NZ_COORDS[compact][1] };
+
+    for (let i = 0; i < words.length; i++) {
+      if (NZ_COORDS[words[i]]) return { lat: NZ_COORDS[words[i]][0], lng: NZ_COORDS[words[i]][1] };
+      if (i < words.length - 1) {
+        const two = `${words[i]}_${words[i + 1]}`;
+        if (NZ_COORDS[two]) return { lat: NZ_COORDS[two][0], lng: NZ_COORDS[two][1] };
+      }
+    }
   }
+
   return null;
 }
 
