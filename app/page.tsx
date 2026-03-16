@@ -144,6 +144,19 @@ function inferCoordsFromCity(city?: string | null): { lat: number; lng: number }
   return null;
 }
 
+function normalizeCoordScale(value: number, maxAbs: number): number {
+  if (!Number.isFinite(value)) return value;
+  let v = value;
+
+  // Heal malformed numeric coordinates where decimal separator is lost,
+  // e.g. 17248094250846224 -> 172.48094250846224
+  while (Math.abs(v) > maxAbs && Number.isInteger(v)) {
+    v = v / 10;
+  }
+
+  return v;
+}
+
 function normalizeCoords(lat?: number | string | null, lng?: number | string | null, city?: string | null): { lat: number; lng: number } | null {
   const missingCoords = lat === null || lat === undefined || lng === null || lng === undefined || lat === '' || lng === '';
   if (missingCoords) {
@@ -151,9 +164,12 @@ function normalizeCoords(lat?: number | string | null, lng?: number | string | n
     return inferCoordsFromCity(city);
   }
 
-  const la = Number(lat);
-  const lo = Number(lng);
+  let la = Number(lat);
+  let lo = Number(lng);
   if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+
+  la = normalizeCoordScale(la, 90);
+  lo = normalizeCoordScale(lo, 180);
 
   // Auto-fix swapped input: lat should be [-90, 90], lng should be [-180, 180].
   if (Math.abs(la) > 90 && Math.abs(lo) <= 90) {

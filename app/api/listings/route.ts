@@ -112,6 +112,15 @@ function sanitizeRichText(html: string) {
     .trim();
 }
 
+function normalizeCoordScale(value: number, maxAbs: number): number {
+  if (!Number.isFinite(value)) return value;
+  let v = value;
+  while (Math.abs(v) > maxAbs && Number.isInteger(v)) {
+    v = v / 10;
+  }
+  return v;
+}
+
 export async function GET() {
   try {
     const items = await listRecentListings(50);
@@ -159,10 +168,13 @@ export async function POST(req: NextRequest) {
     const parsedLng = Number(body.longitude);
 
     const hasRawManualCoords = Number.isFinite(parsedLat) && Number.isFinite(parsedLng);
-    const normalizedManual = hasRawManualCoords
-      ? (Math.abs(parsedLat) > 90 && Math.abs(parsedLng) <= 90
-          ? { latitude: parsedLng, longitude: parsedLat }
-          : { latitude: parsedLat, longitude: parsedLng })
+    const normalizedRawLat = hasRawManualCoords ? normalizeCoordScale(parsedLat, 90) : null;
+    const normalizedRawLng = hasRawManualCoords ? normalizeCoordScale(parsedLng, 180) : null;
+
+    const normalizedManual = (normalizedRawLat !== null && normalizedRawLng !== null)
+      ? (Math.abs(normalizedRawLat) > 90 && Math.abs(normalizedRawLng) <= 90
+          ? { latitude: normalizedRawLng, longitude: normalizedRawLat }
+          : { latitude: normalizedRawLat, longitude: normalizedRawLng })
       : null;
 
     const hasManualCoords = Boolean(
