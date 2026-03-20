@@ -825,6 +825,20 @@ export default function HomePage() {
         </section>
       )}
 
+      <section style={{ marginTop: 22, padding: '10px 0 4px', borderTop: '1px dashed #e5e7eb' }}>
+        <h4 style={{ margin: '0 0 8px', color: '#111827' }}>Popular searches: room for rent in</h4>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', fontSize: 13 }}>
+          <a href="/rent/auckland">Auckland</a>
+          <a href="/rent/auckland-aut">Auckland (AUT)</a>
+          <a href="/rent/hamilton">Hamilton</a>
+          <a href="/rent/wellington">Wellington</a>
+          <a href="/rent/christchurch">Christchurch</a>
+          <a href="/rent/lincoln">Lincoln</a>
+          <a href="/rent/dunedin">Dunedin</a>
+          <a href="/rent/palmerston-north">Palmerston North</a>
+        </div>
+      </section>
+
       <footer
         style={{
           marginTop: 'auto',
