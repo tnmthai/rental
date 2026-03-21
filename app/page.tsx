@@ -247,6 +247,7 @@ const I18N = {
     language: 'Language',
     english: 'English',
     vietnamese: 'Vietnamese',
+    slogan: 'Post fast, find smart',
     saveNeedLogin: 'Please log in first.',
     saveOk: 'Saved search created.',
     saveFail: 'Failed to save',
@@ -284,6 +285,7 @@ const I18N = {
     language: 'Ngôn ngữ',
     english: 'English',
     vietnamese: 'Tiếng Việt',
+    slogan: 'Post nhanh, tìm thông minh',
     saveNeedLogin: 'Vui lòng đăng nhập trước.',
     saveOk: 'Đã lưu tìm kiếm.',
     saveFail: 'Lưu thất bại',
@@ -624,7 +626,7 @@ export default function HomePage() {
           RentFinder
         </a>
         <p style={{ margin: '-4px 0 14px', color: '#5f6368', fontSize: 16, fontWeight: 600 }}>
-          Post nhanh, tìm thông minh
+          {t.slogan}
         </p>
 
         <div
