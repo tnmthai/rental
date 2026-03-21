@@ -26,6 +26,13 @@ function hasHtmlTags(text: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(text);
 }
 
+function shouldHideDescription(description?: string | null, sourceUrl?: string | null): boolean {
+  if (!description) return false;
+  const isRoomiesSource = /roomies\.co\.nz/i.test(sourceUrl || '');
+  const hasExternalPrefix = /^\s*\[External listing from Roomies\]/i.test(description);
+  return isRoomiesSource && hasExternalPrefix;
+}
+
 const NZ_COORDS: Record<string, [number, number]> = {
   lincoln: [-43.640065697016475, 172.48548578309143],
   auckland: [-36.8485, 174.7633],
@@ -125,7 +132,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
         </section>
       ) : null}
 
-      {item.description ? (
+      {item.description && !shouldHideDescription(item.description, item.source_url) ? (
         <div
           style={{
             margin: '8px 0 10px',

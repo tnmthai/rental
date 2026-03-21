@@ -77,6 +77,13 @@ function hasHtmlTags(text: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(text);
 }
 
+function shouldHideDescription(description?: string | null, sourceUrl?: string | null): boolean {
+  if (!description) return false;
+  const isRoomiesSource = /roomies\.co\.nz/i.test(sourceUrl || '');
+  const hasExternalPrefix = /^\s*\[External listing from Roomies\]/i.test(description);
+  return isRoomiesSource && hasExternalPrefix;
+}
+
 const NZ_COORDS: Record<string, [number, number]> = {
   auckland: [-36.8485, 174.7633],
   wellington: [-41.2866, 174.7756],
@@ -747,7 +754,7 @@ export default function HomePage() {
                     {t.share}
                   </button>
                 </div>
-                {h.description ? (
+                {h.description && !shouldHideDescription(h.description, h.source_url) ? (
                   <div
                     style={{
                       margin: '10px 0 10px',
