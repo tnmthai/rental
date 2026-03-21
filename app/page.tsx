@@ -285,7 +285,7 @@ const I18N = {
     language: 'Ngôn ngữ',
     english: 'English',
     vietnamese: 'Tiếng Việt',
-    slogan: 'Post nhanh, tìm thông minh',
+    slogan: 'Đăng nhanh, tìm thông minh',
     saveNeedLogin: 'Vui lòng đăng nhập trước.',
     saveOk: 'Đã lưu tìm kiếm.',
     saveFail: 'Lưu thất bại',
