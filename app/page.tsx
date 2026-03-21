@@ -623,6 +623,9 @@ export default function HomePage() {
         >
           RentFinder
         </a>
+        <p style={{ margin: '-4px 0 14px', color: '#5f6368', fontSize: 16, fontWeight: 600 }}>
+          Post nhanh, tìm thông minh
+        </p>
 
         <div
           style={{
