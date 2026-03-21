@@ -2,9 +2,26 @@
 import pg from 'pg';
 const { Pool } = pg;
 
-const LIST_URL = 'https://www.roomies.co.nz/rooms/lincoln-canterbury';
-const LIMIT = Number(process.argv[2] || 10);
+const AREAS = {
+  lincoln: { listUrl: 'https://www.roomies.co.nz/rooms/lincoln-canterbury', nearSchool: 'Lincoln University', cityHint: /lincoln|canterbury/i },
+  auckland: { listUrl: 'https://www.roomies.co.nz/rooms/auckland', nearSchool: 'University of Auckland', cityHint: /auckland/i },
+  hamilton: { listUrl: 'https://www.roomies.co.nz/rooms/hamilton', nearSchool: 'University of Waikato', cityHint: /hamilton|waikato/i },
+  wellington: { listUrl: 'https://www.roomies.co.nz/rooms/wellington', nearSchool: 'Victoria University of Wellington', cityHint: /wellington/i },
+  christchurch: { listUrl: 'https://www.roomies.co.nz/rooms/christchurch', nearSchool: 'University of Canterbury', cityHint: /christchurch|canterbury/i },
+  dunedin: { listUrl: 'https://www.roomies.co.nz/rooms/dunedin', nearSchool: 'University of Otago', cityHint: /dunedin|otago/i },
+  'palmerston-north': { listUrl: 'https://www.roomies.co.nz/rooms/palmerston-north', nearSchool: 'Massey University', cityHint: /palmerston|manawatu/i }
+};
+
+const AREA = String(process.argv[2] || 'lincoln').toLowerCase();
+const LIMIT = Number(process.argv[3] || 10);
 const DRY_RUN = process.argv.includes('--dry-run');
+
+if (!AREAS[AREA]) {
+  console.error(`Unknown area '${AREA}'. Available: ${Object.keys(AREAS).join(', ')}`);
+  process.exit(1);
+}
+
+const LIST_URL = AREAS[AREA].listUrl;
 
 function req(url) {
   return fetch(url, {
@@ -43,7 +60,7 @@ function parseWeeklyPrice(html) {
   return m ? Number(m[1]) : 0;
 }
 
-function toListing(roomId, html) {
+function toListing(roomId, html, cityHint) {
   const ld = pickRoomJsonLd(html);
   if (!ld) return null;
 
@@ -51,7 +68,7 @@ function toListing(roomId, html) {
   const parts = name.split('|').map((x) => x.trim()).filter(Boolean);
   const title = parts.slice(0, 2).join(' · ') || `Room listing #${roomId}`;
 
-  const cityRaw = parts.find((p) => /lincoln|canterbury/i.test(p)) || 'Lincoln, Canterbury';
+  const cityRaw = parts.find((p) => cityHint.test(p)) || parts.find((p) => /new zealand/i.test(p)) || parts[1] || 'New Zealand';
   const city = cityRaw.includes('New Zealand') ? cityRaw : `${cityRaw}, New Zealand`;
 
   const price = parseWeeklyPrice(html);
@@ -89,7 +106,7 @@ async function main() {
     try {
       const url = `https://www.roomies.co.nz/rooms/${roomId}`;
       const html = await req(url);
-      const item = toListing(roomId, html);
+      const item = toListing(roomId, html, AREAS[AREA].cityHint);
       if (!item) {
         skipped++;
         continue;
@@ -132,7 +149,7 @@ async function main() {
             item.description,
             /furnished/i.test(item.title),
             /inc\./i.test(html) || /included/i.test(item.description),
-            'Lincoln University',
+            AREAS[AREA].nearSchool,
             item.latitude,
             item.longitude
           ]
@@ -151,6 +168,7 @@ async function main() {
     JSON.stringify(
       {
         mode: DRY_RUN || !hasDb ? 'dry-run' : 'import',
+        area: AREA,
         imported,
         skipped,
         checked: roomIds.length,
