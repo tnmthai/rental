@@ -110,8 +110,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
         </button>
       </div>
       <p style={{ color: '#4d5156', fontSize: 14 }}>
-        Posted by: {item.user_name || 'Unknown'} {item.user_email ? `(${item.user_email})` : ''} · Posted at:{' '}
-        {new Date(item.created_at).toLocaleString()}
+        Posted at: {new Date(item.created_at).toLocaleString()}
       </p>
 
       {mapUrl ? (

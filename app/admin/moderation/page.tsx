@@ -261,10 +261,6 @@ export default function ModerationPage() {
                   </>
                 )}
                 <div style={{ marginTop: 8, fontSize: 13, color: '#667085' }}>
-                  Posted by: <b>{i.user_name || 'Unknown'}</b>
-                  {i.user_email ? ` (${i.user_email})` : ''}
-                </div>
-                <div style={{ marginTop: 2, fontSize: 13, color: '#667085' }}>
                   Posted at: {new Date(i.created_at).toLocaleString()}
                 </div>
                 <div style={{ marginTop: 2, fontSize: 13, color: '#667085' }}>Status: {i.status}</div>
