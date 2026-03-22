@@ -501,6 +501,18 @@ function isGenericUniversityOnly(input?: string | null): boolean {
   return !!s && /\buniversity\b/.test(s) && !/\b(of|aut|uoa|uc|lu|lincoln|canterbury|auckland|waikato|otago|massey|victoria)\b/.test(s);
 }
 
+function canonicalizeNearSchool(input?: string | null): string | undefined {
+  const s = normalizeSchoolName(input);
+  if (!s) return undefined;
+
+  if (/(\blu\b|lincoln university)/.test(s)) return 'Lincoln University';
+  if (/(\buc\b|university of canterbury|canterbury university)/.test(s)) return 'University of Canterbury';
+  if (/(\buoa\b|university of auckland|auckland university)/.test(s)) return 'University of Auckland';
+  if (/(\baut\b|auckland university of technology)/.test(s)) return 'AUT';
+
+  return input?.trim() || undefined;
+}
+
 function applyNearSchoolStrictFilter(results: any[], need: Need): any[] {
   if (!need.nearSchool) return results;
 
@@ -539,7 +551,11 @@ export async function POST(req: NextRequest) {
     const userText = String(message || '').trim();
 
     const aiNeed = await parseNeedAI(userText);
-    const need = aiNeed || parseNeedRuleBased(userText);
+    const parsedNeed = aiNeed || parseNeedRuleBased(userText);
+    const need: Need = {
+      ...parsedNeed,
+      nearSchool: canonicalizeNearSchool(parsedNeed.nearSchool) || parsedNeed.nearSchool
+    };
     const region = detectSearchRegion(userText, need);
 
     const rawResults = await searchListings(need);
@@ -550,7 +566,10 @@ export async function POST(req: NextRequest) {
         ? relevant
         : [];
     const distanceFiltered = applyDistanceFilter(regionResults, need, 50);
-    const results = applyNearSchoolStrictFilter(distanceFiltered, need);
+    const strictSchoolFiltered = applyNearSchoolStrictFilter(distanceFiltered, need);
+    const results = need.nearSchool && strictSchoolFiltered.length === 0
+      ? distanceFiltered
+      : strictSchoolFiltered;
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
