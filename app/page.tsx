@@ -229,6 +229,9 @@ const I18N = {
     signOut: 'Sign out',
     logIn: 'Log in',
     searchPlaceholder: 'Search rentals in natural language...',
+    samplePrompt: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    suggestionsTitle: 'AI suggestion prompts',
+    suggestionsHint: 'Tap a prompt to quickly fill your search',
     searching: 'Searching...',
     search: 'Search',
     save: 'Save',
@@ -267,6 +270,9 @@ const I18N = {
     signOut: 'Đăng xuất',
     logIn: 'Đăng nhập',
     searchPlaceholder: 'Tìm nhà thuê bằng ngôn ngữ tự nhiên...',
+    samplePrompt: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    suggestionsTitle: 'Gợi ý prompt AI',
+    suggestionsHint: 'Bấm để điền nhanh câu tìm kiếm',
     searching: 'Đang tìm...',
     search: 'Tìm',
     save: 'Lưu',
@@ -308,7 +314,7 @@ type Lang = keyof typeof I18N;
 
 export default function HomePage() {
   const { data: session } = useSession();
-  const [query, setQuery] = useState('Room under 250 NZD/week near LU in Lincoln, furnished, bills included');
+  const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [reply, setReply] = useState('');
   const [aiOverview, setAiOverview] = useState('');
@@ -324,6 +330,18 @@ export default function HomePage() {
   const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
   const keywords = useMemo(() => extractKeywords(query), [query]);
   const t = I18N[lang];
+  const suggestedPrompts = useMemo(
+    () => [
+      t.samplePrompt,
+      lang === 'vi'
+        ? 'Phòng gần University of Canterbury dưới 230 NZD/tuần, có giường và bàn học, ưu tiên nữ'
+        : 'Room near University of Canterbury under 230 NZD/week, bed + study desk, female preferred',
+      lang === 'vi'
+        ? 'Studio cho 2 người ở Christchurch dưới 380 NZD/tuần, cho nuôi mèo, có chỗ đậu xe'
+        : 'Studio for 2 in Christchurch under 380 NZD/week, cat friendly, with parking'
+    ],
+    [lang, t.samplePrompt]
+  );
   const mapPoints = useMemo(
     () =>
       hits
@@ -630,6 +648,7 @@ export default function HomePage() {
         </p>
 
         <div
+          className="searchBar"
           style={{
             display: 'flex',
             gap: 10,
@@ -637,37 +656,76 @@ export default function HomePage() {
             border: '1px solid #dfe1e5',
             borderRadius: 999,
             boxShadow: '0 1px 6px rgba(32,33,36,.1)',
-            background: '#fff'
+            background: '#fff',
+            width: '100%',
+            boxSizing: 'border-box'
           }}
         >
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t.searchPlaceholder}
-            style={{ flex: 1, border: 'none', outline: 'none', fontSize: 16, padding: '8px 10px' }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') run();
-            }}
-          />
-          <button
-            onClick={run}
-            disabled={loading}
-            style={{ border: 'none', borderRadius: 999, padding: '10px 18px', background: '#1a73e8', color: '#fff' }}
-          >
-            {loading ? t.searching : t.search}
-          </button>
-          <button
-            onClick={saveSearch}
-            style={{ border: '1px solid #dfe1e5', borderRadius: 999, padding: '10px 14px', background: '#fff' }}
-          >
-            {t.save}
-          </button>
+          <div className="searchInputWrap" style={{ flex: 1, minWidth: 0 }}>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t.samplePrompt}
+              style={{ flex: 1, width: '100%', border: 'none', outline: 'none', fontSize: 16, padding: '8px 10px', boxSizing: 'border-box' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') run();
+              }}
+            />
+          </div>
+          <div className="searchActions" style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={run}
+              disabled={loading}
+              style={{ border: 'none', borderRadius: 999, padding: '10px 18px', background: '#1a73e8', color: '#fff', whiteSpace: 'nowrap' }}
+            >
+              {loading ? t.searching : t.search}
+            </button>
+            <button
+              onClick={saveSearch}
+              style={{ border: '1px solid #dfe1e5', borderRadius: 999, padding: '10px 14px', background: '#fff', whiteSpace: 'nowrap' }}
+            >
+              {t.save}
+            </button>
+          </div>
         </div>
 
         <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
           <a href="/post">{t.createListing}</a> · <a href="/dashboard">{t.myDashboard}</a>
         </p>
         {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
+
+        <div
+          style={{
+            marginTop: 14,
+            textAlign: 'left',
+            border: '1px solid #dbeafe',
+            background: '#eff6ff',
+            borderRadius: 12,
+            padding: '10px 12px'
+          }}
+        >
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#1d4ed8' }}>{t.suggestionsTitle}</div>
+          <div style={{ fontSize: 12, color: '#475569', margin: '3px 0 8px' }}>{t.suggestionsHint}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {suggestedPrompts.map((prompt, idx) => (
+              <button
+                key={`${prompt}-${idx}`}
+                onClick={() => setQuery(prompt)}
+                style={{
+                  border: '1px solid #bfdbfe',
+                  background: '#fff',
+                  color: '#1e3a8a',
+                  borderRadius: 999,
+                  padding: '6px 10px',
+                  fontSize: 12,
+                  cursor: 'pointer'
+                }}
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
 
       {(aiOverview || reply) && (
@@ -905,6 +963,21 @@ export default function HomePage() {
           .home-topbar {
             margin-bottom: 24px !important;
             padding: 0 14px !important;
+          }
+
+          .searchBar {
+            border-radius: 18px !important;
+            flex-wrap: wrap;
+            gap: 8px !important;
+          }
+
+          .searchInputWrap {
+            flex-basis: 100%;
+          }
+
+          .searchActions {
+            width: 100%;
+            justify-content: flex-end;
           }
         }
       `}</style>
