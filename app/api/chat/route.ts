@@ -451,6 +451,79 @@ function applyDistanceFilter(results: any[], need: Need, maxKm = 50): any[] {
   });
 }
 
+function normalizeSchoolName(input?: string | null): string {
+  return String(input || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function expandSchoolAliases(input?: string | null): string[] {
+  const s = normalizeSchoolName(input);
+  if (!s) return [];
+
+  const out = new Set<string>([s]);
+
+  // University of Canterbury aliases
+  if (/(\buc\b|university of canterbury|canterbury university)/.test(s)) {
+    out.add('uc');
+    out.add('university of canterbury');
+    out.add('canterbury university');
+  }
+
+  // Lincoln University aliases
+  if (/(\blu\b|lincoln university)/.test(s)) {
+    out.add('lu');
+    out.add('lincoln university');
+  }
+
+  // University of Auckland aliases
+  if (/(\buoa\b|university of auckland|auckland university)/.test(s)) {
+    out.add('uoa');
+    out.add('university of auckland');
+    out.add('auckland university');
+  }
+
+  // AUT aliases
+  if (/(\baut\b|auckland university of technology)/.test(s)) {
+    out.add('aut');
+    out.add('auckland university of technology');
+  }
+
+  return Array.from(out);
+}
+
+function isGenericUniversityOnly(input?: string | null): boolean {
+  const s = normalizeSchoolName(input);
+  return !!s && /\buniversity\b/.test(s) && !/\b(of|aut|uoa|uc|lu|lincoln|canterbury|auckland|waikato|otago|massey|victoria)\b/.test(s);
+}
+
+function applyNearSchoolStrictFilter(results: any[], need: Need): any[] {
+  if (!need.nearSchool) return results;
+
+  const aliases = expandSchoolAliases(need.nearSchool);
+  if (aliases.length === 0) return results;
+
+  return results.filter((row) => {
+    const near = normalizeSchoolName(row?.near_school || '');
+    if (!near) return false;
+
+    if (isGenericUniversityOnly(near)) return false;
+
+    return aliases.some((alias) => {
+      if (!alias) return false;
+      if (alias.length <= 3) {
+        const re = new RegExp(`\\b${alias.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}\\b`, 'i');
+        return re.test(near);
+      }
+      return near.includes(alias);
+    });
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -476,7 +549,8 @@ export async function POST(req: NextRequest) {
       : region === 'nz'
         ? relevant
         : [];
-    const results = applyDistanceFilter(regionResults, need, 50);
+    const distanceFiltered = applyDistanceFilter(regionResults, need, 50);
+    const results = applyNearSchoolStrictFilter(distanceFiltered, need);
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
