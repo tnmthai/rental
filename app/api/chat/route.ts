@@ -45,9 +45,11 @@ function parseNeedRuleBased(msg: string): Need {
     ? 'AUT'
     : lower.includes('uoa') || lower.includes('auckland university')
       ? 'UoA'
-      : lower.includes('lu') || lower.includes('lincoln university')
-        ? 'LU'
-        : undefined;
+      : lower.includes('uc') || lower.includes('university of canterbury') || lower.includes('canterbury university')
+        ? 'UC'
+        : lower.includes('lu') || lower.includes('lincoln university')
+          ? 'LU'
+          : undefined;
 
   const suburb = lower.includes('lincoln') ? 'lincoln' : undefined;
 
@@ -567,9 +569,7 @@ export async function POST(req: NextRequest) {
         : [];
     const distanceFiltered = applyDistanceFilter(regionResults, need, 50);
     const strictSchoolFiltered = applyNearSchoolStrictFilter(distanceFiltered, need);
-    const results = need.nearSchool && strictSchoolFiltered.length === 0
-      ? distanceFiltered
-      : strictSchoolFiltered;
+    const results = strictSchoolFiltered;
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
