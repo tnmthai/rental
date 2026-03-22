@@ -510,7 +510,7 @@ function canonicalizeNearSchool(input?: string | null): string | undefined {
   if (/(\buoa\b|university of auckland|auckland university)/.test(s)) return 'University of Auckland';
   if (/(\baut\b|auckland university of technology)/.test(s)) return 'AUT';
 
-  return input?.trim() || undefined;
+  return typeof input === 'string' ? input.trim() || undefined : undefined;
 }
 
 function applyNearSchoolStrictFilter(results: any[], need: Need): any[] {
