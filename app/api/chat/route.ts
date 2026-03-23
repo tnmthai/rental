@@ -786,10 +786,13 @@ export async function POST(req: NextRequest) {
     const parsedNeed: Need = {
       ...ruleNeed,
       ...(aiNeed || {}),
-      // Preserve rule-based nearSchool when AI extractor omits it.
-      nearSchool: asSafeString(aiNeed?.nearSchool) || ruleNeed.nearSchool,
-      city: asSafeString(aiNeed?.city) || ruleNeed.city,
-      suburb: asSafeString(aiNeed?.suburb) || ruleNeed.suburb,
+      // Hard-priority for explicit rule-detected constraints from user text.
+      nearSchool: ruleNeed.nearSchool || asSafeString(aiNeed?.nearSchool),
+      city: ruleNeed.city || asSafeString(aiNeed?.city),
+      suburb: ruleNeed.suburb || asSafeString(aiNeed?.suburb),
+      maxPrice: ruleNeed.maxPrice || (typeof aiNeed?.maxPrice === 'number' ? aiNeed.maxPrice : undefined),
+      furnished: typeof ruleNeed.furnished === 'boolean' ? ruleNeed.furnished : (typeof aiNeed?.furnished === 'boolean' ? aiNeed.furnished : undefined),
+      billsIncluded: typeof ruleNeed.billsIncluded === 'boolean' ? ruleNeed.billsIncluded : (typeof aiNeed?.billsIncluded === 'boolean' ? aiNeed.billsIncluded : undefined),
       queryText: asSafeString(aiNeed?.queryText) || userText
     };
 
