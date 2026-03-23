@@ -9,6 +9,8 @@ type Need = {
   furnished?: boolean;
   billsIncluded?: boolean;
   nearSchool?: string;
+  femalePreferred?: boolean;
+  requiresDesk?: boolean;
   queryText?: string;
 };
 
@@ -53,7 +55,15 @@ function parseNeedRuleBased(msg: string): Need {
 
   const suburb = lower.includes('lincoln') ? 'lincoln' : undefined;
 
-  return { city, suburb, maxPrice, furnished, billsIncluded, nearSchool, queryText: msg.trim() };
+  const femalePreferred = /(female preferred|prefer female|female only|girls only|ưu tiên nữ|nữ)/.test(lower)
+    ? true
+    : undefined;
+
+  const requiresDesk = /(study desk|desk|bàn học|bàn làm việc)/.test(lower)
+    ? true
+    : undefined;
+
+  return { city, suburb, maxPrice, furnished, billsIncluded, nearSchool, femalePreferred, requiresDesk, queryText: msg.trim() };
 }
 
 async function parseNeedAI(message: string): Promise<Need | null> {
@@ -63,7 +73,7 @@ async function parseNeedAI(message: string): Promise<Need | null> {
   if (!apiKey) return null;
 
   const prompt = `Extract rental search filters from user query. Return strict JSON only with keys:
-city, suburb, maxPrice, furnished, billsIncluded, nearSchool, queryText.
+city, suburb, maxPrice, furnished, billsIncluded, nearSchool, femalePreferred, requiresDesk, queryText.
 Use null when unknown. Query: ${message}`;
 
   try {
@@ -108,6 +118,8 @@ Use null when unknown. Query: ${message}`;
       furnished: typeof j.furnished === 'boolean' ? j.furnished : undefined,
       billsIncluded: typeof j.billsIncluded === 'boolean' ? j.billsIncluded : undefined,
       nearSchool: j.nearSchool || undefined,
+      femalePreferred: typeof j.femalePreferred === 'boolean' ? j.femalePreferred : undefined,
+      requiresDesk: typeof j.requiresDesk === 'boolean' ? j.requiresDesk : undefined,
       queryText: j.queryText || message
     };
   } catch {
@@ -117,7 +129,7 @@ Use null when unknown. Query: ${message}`;
 
 function hasAnyStructuredFilter(need: Need): boolean {
   return Boolean(
-    need.city || need.suburb || need.maxPrice || need.furnished || need.billsIncluded || need.nearSchool
+    need.city || need.suburb || need.maxPrice || need.furnished || need.billsIncluded || need.nearSchool || need.femalePreferred || need.requiresDesk
   );
 }
 
@@ -304,6 +316,71 @@ async function searchExternalWeb(message: string, need: Need): Promise<ExternalH
   return run(fallbackQuery);
 }
 
+function normalizeText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeListingConsistency(row: any): any {
+  const title = normalizeText(String(row?.title || ''));
+  const description = normalizeText(String(row?.description || ''));
+  const hay = `${title} ${description}`;
+
+  const looksUnfurnished = /(unfurnished|khong noi that|trong|không nội thất)/.test(hay);
+  const looksFurnished = /(furnished|fully furnished|day du noi that|đầy đủ nội thất)/.test(hay);
+  const femaleFriendly = /(female preferred|female only|girls only|nu|nữ)/.test(hay);
+  const hasDesk = /(study desk|desk|ban hoc|bàn học|ban lam viec|bàn làm việc)/.test(hay);
+
+  let furnished = Boolean(row?.furnished);
+  if (looksUnfurnished) furnished = false;
+  else if (looksFurnished) furnished = true;
+
+  return {
+    ...row,
+    furnished,
+    female_friendly: femaleFriendly,
+    has_desk: hasDesk
+  };
+}
+
+function dedupeListings(rows: any[]): any[] {
+  const byKey = new Map<string, any>();
+  for (const row of rows) {
+    const source = String(row?.source_url || '').trim().toLowerCase();
+    const key = source
+      ? `src:${source}`
+      : `sig:${normalizeText(String(row?.title || ''))}|${normalizeText(String(row?.city || ''))}|${Number(row?.price_nzd_week || 0)}`;
+
+    if (!byKey.has(key)) {
+      byKey.set(key, row);
+      continue;
+    }
+
+    const old = byKey.get(key);
+    const oldScore = Number(old?.match_score || 0);
+    const newScore = Number(row?.match_score || 0);
+    if (newScore > oldScore) byKey.set(key, row);
+  }
+  return Array.from(byKey.values());
+}
+
+function applyPreferenceSignals(results: any[], need: Need): any[] {
+  if (!Array.isArray(results) || results.length === 0) return [];
+
+  const ranked = [...results].sort((a, b) => {
+    const aBoost = (need.femalePreferred && a.female_friendly ? 2 : 0) + (need.requiresDesk && a.has_desk ? 2 : 0);
+    const bBoost = (need.femalePreferred && b.female_friendly ? 2 : 0) + (need.requiresDesk && b.has_desk ? 2 : 0);
+    if (bBoost !== aBoost) return bBoost - aBoost;
+    return Number(a.price_nzd_week || 0) - Number(b.price_nzd_week || 0);
+  });
+
+  return ranked;
+}
+
 async function buildAIOverview(message: string, need: Need, results: any[]): Promise<string | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -317,10 +394,19 @@ async function buildAIOverview(message: string, need: Need, results: any[]): Pro
     furnished: r?.furnished,
     bills_included: r?.bills_included,
     near_school: r?.near_school,
+    femaleFriendly: r?.female_friendly,
+    hasDeskMention: r?.has_desk,
     available_date: r?.available_date
   }));
 
-  const prompt = `User query: ${message}\nParsed filters: ${JSON.stringify(need)}\nTop results: ${JSON.stringify(compact)}\n\nWrite a short AI overview in plain English (2-4 sentences):\n- answer the user's intent directly\n- mention the best match quality\n- if no results, suggest what to relax first\nNo markdown.`;
+  const unmet: string[] = [];
+  if (need.nearSchool && compact.length && !compact.some((r) => String(r.near_school || '').toLowerCase().includes(String(need.nearSchool || '').toLowerCase()))) {
+    unmet.push(`near ${need.nearSchool}`);
+  }
+  if (need.femalePreferred && compact.length && !compact.some((r) => r.femaleFriendly)) unmet.push('female preferred');
+  if (need.requiresDesk && compact.length && !compact.some((r) => r.hasDeskMention)) unmet.push('study desk');
+
+  const prompt = `User query: ${message}\nParsed filters: ${JSON.stringify(need)}\nTop results: ${JSON.stringify(compact)}\nPotential unmet constraints: ${JSON.stringify(unmet)}\n\nWrite a short AI overview in plain English (2-4 sentences):\n- answer the user's intent directly\n- never claim a constraint is satisfied unless explicit in data\n- if constraints are unmet, state that clearly and suggest what to relax first\n- do not mention listings outside the filtered scope as "best"\nNo markdown.`;
 
   try {
     const controller = new AbortController();
@@ -382,6 +468,10 @@ const NZ_COORDS: Record<string, [number, number]> = {
   dunedin: [-45.8788, 170.5028],
   nelson: [-41.2706, 173.2840],
   lincoln: [-43.640065697016475, 172.48548578309143],
+  uc: [-43.5235, 172.5833],
+  university_of_canterbury: [-43.5235, 172.5833],
+  lu: [-43.640065697016475, 172.48548578309143],
+  lincoln_university: [-43.640065697016475, 172.48548578309143],
   canterbury: [-43.5, 171.5],
   selwyn: [-43.65, 172.25],
   palmerston_north: [-40.3564, 175.6111],
@@ -442,7 +532,7 @@ function distanceKm(a: [number, number], b: [number, number]): number {
 }
 
 function applyDistanceFilter(results: any[], need: Need, maxKm = 50): any[] {
-  const anchorText = need.city || need.suburb || null;
+  const anchorText = need.city || need.suburb || need.nearSchool || null;
   const anchor = findCoordFromText(anchorText);
   if (!anchor) return results;
 
@@ -635,8 +725,8 @@ export async function POST(req: NextRequest) {
     const relaxedResults = await searchListings(relaxedNeed);
 
     const mergedMap = new Map<number, any>();
-    [...rawResults, ...relaxedResults].forEach((r) => mergedMap.set(Number(r.id), r));
-    const merged = Array.from(mergedMap.values());
+    [...rawResults, ...relaxedResults].forEach((r) => mergedMap.set(Number(r.id), normalizeListingConsistency(r)));
+    const merged = dedupeListings(Array.from(mergedMap.values()));
 
     const relevant = pickRelevantInternalResults(merged);
     const basePool = relevant.length ? relevant : merged;
@@ -649,7 +739,8 @@ export async function POST(req: NextRequest) {
     const aiRanked = await rankResultsWithAI(userText, need, distanceFiltered);
 
     const strictSchoolFiltered = applyNearSchoolStrictFilter(aiRanked, need);
-    const results = strictSchoolFiltered.length ? strictSchoolFiltered : aiRanked;
+    const schoolScoped = need.nearSchool ? strictSchoolFiltered : aiRanked;
+    const results = applyPreferenceSignals(schoolScoped, need);
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
@@ -658,6 +749,8 @@ export async function POST(req: NextRequest) {
     if (need.furnished) detailBits.push('furnished');
     if (need.billsIncluded) detailBits.push('bills included');
     if (need.nearSchool) detailBits.push(`near ${need.nearSchool}`);
+    if (need.femalePreferred) detailBits.push('female preferred');
+    if (need.requiresDesk) detailBits.push('study desk');
 
     const mode = 'AI-ranking (semantic)';
     const reply = results.length
