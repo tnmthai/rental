@@ -524,7 +524,8 @@ export default function HomePage() {
         padding: '8px 16px 80px',
         minHeight: '100vh',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        color: '#1f2937'
       }}
     >
       <header
@@ -670,7 +671,7 @@ export default function HomePage() {
         >
           RentFinder
         </a>
-        <p style={{ margin: '-4px 0 14px', color: '#5f6368', fontSize: 16, fontWeight: 600 }}>
+        <p style={{ margin: '-2px 0 16px', color: '#4b5563', fontSize: 17, fontWeight: 600, letterSpacing: 0.1 }}>
           {t.slogan}
         </p>
 
@@ -680,10 +681,10 @@ export default function HomePage() {
             display: 'flex',
             gap: 10,
             padding: 10,
-            border: '1px solid #dfe1e5',
-            borderRadius: 999,
-            boxShadow: '0 1px 6px rgba(32,33,36,.1)',
-            background: '#fff',
+            border: '1px solid #e5e7eb',
+            borderRadius: 22,
+            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.07)',
+            background: '#ffffff',
             width: '100%',
             boxSizing: 'border-box'
           }}
@@ -693,7 +694,7 @@ export default function HomePage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t.samplePrompt}
-              style={{ flex: 1, width: '100%', border: 'none', outline: 'none', fontSize: 16, padding: '8px 10px', boxSizing: 'border-box' }}
+              style={{ flex: 1, width: '100%', border: 'none', outline: 'none', fontSize: 19, lineHeight: 1.4, color: '#111827', padding: '10px 12px', boxSizing: 'border-box' }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') run();
               }}
@@ -703,13 +704,13 @@ export default function HomePage() {
             <button
               onClick={run}
               disabled={loading}
-              style={{ border: 'none', borderRadius: 999, padding: '10px 18px', background: '#1a73e8', color: '#fff', whiteSpace: 'nowrap' }}
+              style={{ border: 'none', borderRadius: 999, padding: '10px 18px', background: '#2563eb', color: '#fff', whiteSpace: 'nowrap', fontWeight: 600 }}
             >
               {loading ? t.searching : t.search}
             </button>
             <button
               onClick={saveSearch}
-              style={{ border: '1px solid #dfe1e5', borderRadius: 999, padding: '10px 14px', background: '#fff', whiteSpace: 'nowrap' }}
+              style={{ border: '1px solid #d1d5db', borderRadius: 999, padding: '10px 14px', background: '#fff', whiteSpace: 'nowrap', color: '#374151' }}
             >
               {t.save}
             </button>
@@ -725,26 +726,26 @@ export default function HomePage() {
           style={{
             marginTop: 14,
             textAlign: 'left',
-            border: '1px solid #dbeafe',
-            background: '#eff6ff',
-            borderRadius: 12,
-            padding: '10px 12px'
+            border: '1px solid #e5e7eb',
+            background: '#f8fafc',
+            borderRadius: 14,
+            padding: '12px 14px'
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#1d4ed8' }}>{t.suggestionsTitle}</div>
-          <div style={{ fontSize: 12, color: '#475569', margin: '3px 0 8px' }}>{t.suggestionsHint}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937' }}>{t.suggestionsTitle}</div>
+          <div style={{ fontSize: 13, color: '#4b5563', margin: '4px 0 9px' }}>{t.suggestionsHint}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {suggestedPrompts.map((prompt, idx) => (
               <button
                 key={`${prompt}-${idx}`}
                 onClick={() => setQuery(prompt)}
                 style={{
-                  border: '1px solid #bfdbfe',
-                  background: '#fff',
-                  color: '#1e3a8a',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#374151',
                   borderRadius: 999,
-                  padding: '6px 10px',
-                  fontSize: 12,
+                  padding: '7px 11px',
+                  fontSize: 13,
                   cursor: 'pointer'
                 }}
               >
@@ -759,12 +760,13 @@ export default function HomePage() {
         <section
           style={{
             marginBottom: 18,
-            color: '#3c4043',
-            fontSize: 15,
+            color: '#374151',
+            fontSize: 16,
+            lineHeight: 1.6,
             border: '1px solid #e5e7eb',
-            background: '#f8fafc',
-            borderRadius: 10,
-            padding: '10px 12px'
+            background: '#ffffff',
+            borderRadius: 12,
+            padding: '12px 14px'
           }}
         >
           <strong>{t.aiOverview}:</strong> {aiOverview || reply}
@@ -792,7 +794,7 @@ export default function HomePage() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, color: '#1a0dab', fontSize: 22 }}>{highlightText(h.title, keywords)}</h3>
+                  <h3 style={{ margin: 0, color: '#111827', fontSize: 21, lineHeight: 1.35 }}>{highlightText(h.title, keywords)}</h3>
                   <span
                     style={{
                       whiteSpace: 'nowrap',
@@ -1013,6 +1015,12 @@ export default function HomePage() {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
+        }
+
+        body {
+          -webkit-font-smoothing: antialiased;
+          text-rendering: optimizeLegibility;
+          background: #f9fafb;
         }
 
         .descClamp {
