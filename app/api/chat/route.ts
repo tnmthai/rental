@@ -538,6 +538,70 @@ function applyNearSchoolStrictFilter(results: any[], need: Need): any[] {
   });
 }
 
+async function rankResultsWithAI(message: string, need: Need, candidates: any[]): Promise<any[]> {
+  if (!Array.isArray(candidates) || candidates.length === 0) return [];
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const base = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
+  if (!apiKey) return candidates;
+
+  const compact = candidates.slice(0, 40).map((r) => ({
+    id: r.id,
+    title: r.title,
+    city: r.city,
+    price: r.price_nzd_week,
+    furnished: !!r.furnished,
+    billsIncluded: !!r.bills_included,
+    nearSchool: r.near_school || null
+  }));
+
+  const prompt = `You rank rental listings for user intent.\nReturn strict JSON only: {"ids":[...]} where ids are listing ids ordered best->worst.\nIf none suitable return {"ids":[]}.\n\nUser query: ${message}\nParsed need: ${JSON.stringify(need)}\nCandidates: ${JSON.stringify(compact)}`;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5500);
+    const res = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: 'You are a strict JSON ranker for rental search relevance.' },
+          { role: 'user', content: prompt }
+        ]
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (!res.ok) return candidates;
+
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text) return candidates;
+
+    const normalized = String(text).trim();
+    const candidateJson = normalized.startsWith('{') ? normalized : (normalized.match(/\{[\s\S]*\}/)?.[0] || '');
+    if (!candidateJson) return candidates;
+
+    const parsed = JSON.parse(candidateJson);
+    const ids = Array.isArray(parsed?.ids) ? parsed.ids.map((x: any) => Number(x)).filter((x: number) => Number.isFinite(x)) : [];
+    if (!ids.length) return [];
+
+    const byId = new Map<number, any>(candidates.map((x) => [Number(x.id), x]));
+    const ranked = ids.map((id: number) => byId.get(id)).filter((x: any): x is any => Boolean(x));
+    const leftovers = candidates.filter((x) => !ids.includes(Number(x.id)));
+    return [...ranked, ...leftovers];
+  } catch {
+    return candidates;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -561,15 +625,31 @@ export async function POST(req: NextRequest) {
     const region = detectSearchRegion(userText, need);
 
     const rawResults = await searchListings(need);
-    const relevant = pickRelevantInternalResults(rawResults);
+
+    const relaxedNeed: Need = {
+      ...need,
+      nearSchool: undefined,
+      furnished: undefined,
+      billsIncluded: undefined
+    };
+    const relaxedResults = await searchListings(relaxedNeed);
+
+    const mergedMap = new Map<number, any>();
+    [...rawResults, ...relaxedResults].forEach((r) => mergedMap.set(Number(r.id), r));
+    const merged = Array.from(mergedMap.values());
+
+    const relevant = pickRelevantInternalResults(merged);
+    const basePool = relevant.length ? relevant : merged;
+
     const regionResults = region === 'vn'
-      ? relevant.filter(isVietnamLikeListing)
-      : region === 'nz'
-        ? relevant
-        : [];
+      ? basePool.filter(isVietnamLikeListing)
+      : basePool;
+
     const distanceFiltered = applyDistanceFilter(regionResults, need, 50);
-    const strictSchoolFiltered = applyNearSchoolStrictFilter(distanceFiltered, need);
-    const results = strictSchoolFiltered;
+    const aiRanked = await rankResultsWithAI(userText, need, distanceFiltered);
+
+    const strictSchoolFiltered = applyNearSchoolStrictFilter(aiRanked, need);
+    const results = strictSchoolFiltered.length ? strictSchoolFiltered : aiRanked;
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
@@ -579,7 +659,7 @@ export async function POST(req: NextRequest) {
     if (need.billsIncluded) detailBits.push('bills included');
     if (need.nearSchool) detailBits.push(`near ${need.nearSchool}`);
 
-    const mode = aiNeed ? 'AI-assisted' : 'rule-based (fallback)';
+    const mode = 'AI-ranking (semantic)';
     const reply = results.length
       ? `Found ${results.length} matching options${detailBits.length ? ` (${detailBits.join(', ')})` : ''}. (${mode})`
       : 'No matching listings yet. Try increasing budget, expanding location, or removing one filter.';
