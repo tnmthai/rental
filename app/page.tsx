@@ -718,7 +718,8 @@ export default function HomePage() {
         </div>
 
         <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
-          <a href="/post">{t.createListing}</a> · <a href="/dashboard">{t.myDashboard}</a>
+          <a href="/post">{t.createListing}</a>
+          {session?.user ? <> · <a href="/dashboard">{t.myDashboard}</a></> : null}
         </p>
         {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
 

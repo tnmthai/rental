@@ -81,22 +81,31 @@ export default function DashboardPage() {
       {msg ? <p>{msg}</p> : null}
 
       <section style={{ marginTop: 20 }}>
+        <h2>Moderation</h2>
+        <p>
+          If you are admin, open <a href="/admin/moderation">/admin/moderation</a>
+        </p>
+      </section>
+
+      <section style={{ marginTop: 20 }}>
         <h2>My Listings</h2>
-        <ul style={{ padding: 0 }}>
-          {listings.map((l) => (
-            <li key={l.id} style={{ listStyle: 'none', border: '1px solid #eee', padding: 12, borderRadius: 8, marginBottom: 10 }}>
-              <b>{l.title}</b> · {l.city} · ${l.price_nzd_week}/week · status: {l.status}
-              <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
-                Created: {new Date(l.created_at).toLocaleString()} · Expires: {l.expires_at ? new Date(l.expires_at).toLocaleString() : 'N/A'}
-              </div>
-              <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                <button onClick={() => act(l.id, 'pause')}>Pause</button>
-                <button onClick={() => act(l.id, 'resume')}>Resume</button>
-                <button onClick={() => act(l.id, 'extend')}>Extend +7d</button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div style={{ maxHeight: 420, overflowY: 'auto', paddingRight: 4, border: '1px solid #f0f0f0', borderRadius: 10 }}>
+          <ul style={{ padding: 10, margin: 0 }}>
+            {listings.map((l) => (
+              <li key={l.id} style={{ listStyle: 'none', border: '1px solid #eee', padding: 12, borderRadius: 8, marginBottom: 10, background: '#fff' }}>
+                <b>{l.title}</b> · {l.city} · ${l.price_nzd_week}/week · status: {l.status}
+                <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
+                  Created: {new Date(l.created_at).toLocaleString()} · Expires: {l.expires_at ? new Date(l.expires_at).toLocaleString() : 'N/A'}
+                </div>
+                <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                  <button onClick={() => act(l.id, 'pause')}>Pause</button>
+                  <button onClick={() => act(l.id, 'resume')}>Resume</button>
+                  <button onClick={() => act(l.id, 'extend')}>Extend +7d</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <section style={{ marginTop: 20 }}>
@@ -139,12 +148,6 @@ export default function DashboardPage() {
         </section>
       ) : null}
 
-      <section style={{ marginTop: 20 }}>
-        <h2>Moderation</h2>
-        <p>
-          If you are admin, open <a href="/admin/moderation">/admin/moderation</a>
-        </p>
-      </section>
     </main>
   );
 }
