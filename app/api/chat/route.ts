@@ -66,6 +66,14 @@ function parseNeedRuleBased(msg: string): Need {
   return { city, suburb, maxPrice, furnished, billsIncluded, nearSchool, femalePreferred, requiresDesk, queryText: msg.trim() };
 }
 
+function asSafeString(v: unknown): string | undefined {
+  if (typeof v === 'string') {
+    const t = v.trim();
+    return t ? t : undefined;
+  }
+  return undefined;
+}
+
 async function parseNeedAI(message: string): Promise<Need | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -112,15 +120,15 @@ Use null when unknown. Query: ${message}`;
     if (!candidate) return null;
     const j = JSON.parse(candidate);
     return {
-      city: j.city || undefined,
-      suburb: j.suburb || undefined,
+      city: asSafeString(j.city),
+      suburb: asSafeString(j.suburb),
       maxPrice: j.maxPrice ? Number(j.maxPrice) : undefined,
       furnished: typeof j.furnished === 'boolean' ? j.furnished : undefined,
       billsIncluded: typeof j.billsIncluded === 'boolean' ? j.billsIncluded : undefined,
-      nearSchool: j.nearSchool || undefined,
+      nearSchool: asSafeString(j.nearSchool),
       femalePreferred: typeof j.femalePreferred === 'boolean' ? j.femalePreferred : undefined,
       requiresDesk: typeof j.requiresDesk === 'boolean' ? j.requiresDesk : undefined,
-      queryText: j.queryText || message
+      queryText: asSafeString(j.queryText) || message
     };
   } catch {
     return null;
@@ -487,7 +495,7 @@ const NZ_COORDS: Record<string, [number, number]> = {
 
 function normalizePlaceKey(s?: string | null): string | null {
   if (!s) return null;
-  const t = s
+  const t = String(s)
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -710,7 +718,10 @@ export async function POST(req: NextRequest) {
     const parsedNeed = aiNeed || parseNeedRuleBased(userText);
     const need: Need = {
       ...parsedNeed,
-      nearSchool: canonicalizeNearSchool(parsedNeed.nearSchool) || parsedNeed.nearSchool
+      city: asSafeString(parsedNeed.city),
+      suburb: asSafeString(parsedNeed.suburb),
+      nearSchool: canonicalizeNearSchool(asSafeString(parsedNeed.nearSchool)),
+      queryText: asSafeString(parsedNeed.queryText) || userText
     };
     const region = detectSearchRegion(userText, need);
 
