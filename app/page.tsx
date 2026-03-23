@@ -84,6 +84,27 @@ function shouldHideDescription(description?: string | null, sourceUrl?: string |
   return isRoomiesSource && hasExternalPrefix;
 }
 
+function normalizeBadgeText(input: string): string {
+  return (input || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function hasFemaleFriendlySignal(h: Hit): boolean {
+  if (h.female_friendly) return true;
+  const text = normalizeBadgeText(`${h.title || ''} ${h.description || ''}`);
+  return /(female preferred|prefer female|female only|girls only|uu tien nu|nu)/.test(text);
+}
+
+function hasDeskSignal(h: Hit): boolean {
+  if (h.has_desk) return true;
+  const text = normalizeBadgeText(`${h.title || ''} ${h.description || ''}`);
+  return /(study desk|desk|ban hoc|ban lam viec)/.test(text);
+}
+
 const NZ_COORDS: Record<string, [number, number]> = {
   auckland: [-36.8485, 174.7633],
   wellington: [-41.2866, 174.7756],
@@ -201,6 +222,8 @@ type Hit = {
   furnished?: boolean;
   bills_included?: boolean;
   near_school?: string | null;
+  female_friendly?: boolean;
+  has_desk?: boolean;
   available_date?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -263,7 +286,9 @@ const I18N = {
     billsIncluded: 'bills included',
     billsSeparate: 'bills separate',
     near: 'near',
-    available: 'available'
+    available: 'available',
+    femalePreferredBadge: 'female preferred',
+    studyDeskBadge: 'study desk'
   },
   vi: {
     aiNote: 'Ghi chú AI',
@@ -304,7 +329,9 @@ const I18N = {
     billsIncluded: 'đã gồm hóa đơn',
     billsSeparate: 'chưa gồm hóa đơn',
     near: 'gần',
-    available: 'có thể ở từ'
+    available: 'có thể ở từ',
+    femalePreferredBadge: 'ưu tiên nữ',
+    studyDeskBadge: 'có bàn học'
   }
 } as const;
 
@@ -750,6 +777,8 @@ export default function HomePage() {
           <h3 style={{ margin: '0 0 10px', color: '#111827' }}>{t.internalListings}</h3>
           {hits.map((h) => {
             const gallery = normalizeImageUrls(h.image_urls);
+            const femaleFriendly = hasFemaleFriendlySignal(h);
+            const hasDesk = hasDeskSignal(h);
             return (
               <article
                 key={h.id}
@@ -800,6 +829,40 @@ export default function HomePage() {
                   {h.near_school ? <> · {t.near} {highlightText(h.near_school, keywords)}</> : null}
                   {h.available_date ? <> · {t.available} {new Date(h.available_date).toLocaleDateString()}</> : null}
                 </div>
+                {(femaleFriendly || hasDesk) ? (
+                  <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {femaleFriendly ? (
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: '#7f1d1d',
+                          background: '#fee2e2',
+                          border: '1px solid #fecaca',
+                          borderRadius: 999,
+                          padding: '2px 8px'
+                        }}
+                      >
+                        {t.femalePreferredBadge}
+                      </span>
+                    ) : null}
+                    {hasDesk ? (
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: '#1e3a8a',
+                          background: '#dbeafe',
+                          border: '1px solid #bfdbfe',
+                          borderRadius: 999,
+                          padding: '2px 8px'
+                        }}
+                      >
+                        {t.studyDeskBadge}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div style={{ marginTop: 8, display: 'flex', gap: 12, fontSize: 13 }}>
                   <a href={`/listing/${h.id}`}>{t.viewDetail}</a>
                   <button
