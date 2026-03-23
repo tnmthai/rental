@@ -613,6 +613,18 @@ function canonicalizeNearSchool(input?: string | null): string | undefined {
   return typeof input === 'string' ? input.trim() || undefined : undefined;
 }
 
+function inferNearSchoolFromMessage(message: string): string | undefined {
+  const s = normalizeSchoolName(message);
+  if (!s) return undefined;
+
+  if (/(\blu\b|lincoln university)/.test(s)) return 'Lincoln University';
+  if (/(\buc\b|university of canterbury|canterbury university)/.test(s)) return 'University of Canterbury';
+  if (/(\buoa\b|university of auckland|auckland university)/.test(s)) return 'University of Auckland';
+  if (/(\baut\b|auckland university of technology)/.test(s)) return 'AUT';
+
+  return undefined;
+}
+
 function applyNearSchoolStrictFilter(results: any[], need: Need): any[] {
   if (!need.nearSchool) return results;
 
@@ -726,11 +738,13 @@ export async function POST(req: NextRequest) {
       queryText: asSafeString(aiNeed?.queryText) || userText
     };
 
+    const forcedNearSchool = inferNearSchoolFromMessage(userText);
+
     const need: Need = {
       ...parsedNeed,
       city: asSafeString(parsedNeed.city),
       suburb: asSafeString(parsedNeed.suburb),
-      nearSchool: canonicalizeNearSchool(asSafeString(parsedNeed.nearSchool)),
+      nearSchool: forcedNearSchool || canonicalizeNearSchool(asSafeString(parsedNeed.nearSchool)),
       queryText: asSafeString(parsedNeed.queryText) || userText
     };
     const region = detectSearchRegion(userText, need);
