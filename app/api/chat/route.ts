@@ -389,6 +389,61 @@ function applyPreferenceSignals(results: any[], need: Need): any[] {
   return ranked;
 }
 
+function applyHardConstraints(results: any[], need: Need): any[] {
+  if (!Array.isArray(results) || results.length === 0) return [];
+
+  let out = [...results];
+
+  if (need.maxPrice) {
+    out = out.filter((r) => Number(r?.price_nzd_week || 0) > 0 && Number(r.price_nzd_week) <= Number(need.maxPrice));
+  }
+
+  const locNeed = normalizeText(`${need.suburb || ''} ${need.city || ''}`.trim());
+  if (locNeed) {
+    out = out.filter((r) => {
+      const hay = normalizeText(`${r?.city || ''} ${r?.title || ''} ${r?.near_school || ''}`);
+      return hay.includes(locNeed) || locNeed.split(' ').some((w) => w.length >= 4 && hay.includes(w));
+    });
+  }
+
+  if (typeof need.furnished === 'boolean') {
+    out = out.filter((r) => Boolean(r?.furnished) === need.furnished);
+  }
+
+  if (typeof need.billsIncluded === 'boolean') {
+    out = out.filter((r) => Boolean(r?.bills_included) === need.billsIncluded);
+  }
+
+  return out;
+}
+
+function applyHardConstraintsWithFallback(results: any[], need: Need): any[] {
+  const strict = applyHardConstraints(results, need);
+  if (strict.length > 0) return strict;
+
+  // Relax order: billsIncluded -> furnished -> location; keep maxPrice if possible.
+  let relaxed = [...results];
+  if (need.maxPrice) {
+    relaxed = relaxed.filter((r) => Number(r?.price_nzd_week || 0) > 0 && Number(r.price_nzd_week) <= Number(need.maxPrice));
+  }
+
+  if (typeof need.furnished === 'boolean') {
+    const x = relaxed.filter((r) => Boolean(r?.furnished) === need.furnished);
+    if (x.length) relaxed = x;
+  }
+
+  if (need.city || need.suburb) {
+    const locNeed = normalizeText(`${need.suburb || ''} ${need.city || ''}`.trim());
+    const x = relaxed.filter((r) => {
+      const hay = normalizeText(`${r?.city || ''} ${r?.title || ''} ${r?.near_school || ''}`);
+      return hay.includes(locNeed) || locNeed.split(' ').some((w) => w.length >= 4 && hay.includes(w));
+    });
+    if (x.length) relaxed = x;
+  }
+
+  return relaxed;
+}
+
 async function buildAIOverview(message: string, need: Need, results: any[]): Promise<string | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -774,8 +829,12 @@ export async function POST(req: NextRequest) {
     const aiRanked = await rankResultsWithAI(userText, need, distanceFiltered);
 
     const strictSchoolFiltered = applyNearSchoolStrictFilter(aiRanked, need);
-    const schoolScoped = need.nearSchool ? strictSchoolFiltered : aiRanked;
-    const results = applyPreferenceSignals(schoolScoped, need);
+    const schoolScoped = need.nearSchool
+      ? (strictSchoolFiltered.length ? strictSchoolFiltered : aiRanked)
+      : aiRanked;
+
+    const hardConstrained = applyHardConstraintsWithFallback(schoolScoped, need);
+    const results = applyPreferenceSignals(hardConstrained, need);
 
     const detailBits: string[] = [];
     if (need.city) detailBits.push(`in ${need.city}`);
