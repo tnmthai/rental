@@ -53,7 +53,19 @@ export default async function RentByLocationPage({ params }: Props) {
     );
   }
 
-  const rows = await searchListings({ city: item.location });
+  const [rowsByCity, rowsByUniversity] = await Promise.all([
+    searchListings({ city: item.location }),
+    searchListings({ nearSchool: item.university })
+  ]);
+
+  const rowMap = new Map<number, any>();
+  [...rowsByCity, ...rowsByUniversity].forEach((r: any) => rowMap.set(Number(r.id), r));
+  const rows = Array.from(rowMap.values()).sort((a: any, b: any) => {
+    const pa = Number(a?.price_nzd_week || 0);
+    const pb = Number(b?.price_nzd_week || 0);
+    if (pa !== pb) return pa - pb;
+    return Number(b?.id || 0) - Number(a?.id || 0);
+  });
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
