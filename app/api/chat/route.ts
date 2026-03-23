@@ -714,8 +714,18 @@ export async function POST(req: NextRequest) {
     const { message } = await req.json();
     const userText = String(message || '').trim();
 
+    const ruleNeed = parseNeedRuleBased(userText);
     const aiNeed = await parseNeedAI(userText);
-    const parsedNeed = aiNeed || parseNeedRuleBased(userText);
+    const parsedNeed: Need = {
+      ...ruleNeed,
+      ...(aiNeed || {}),
+      // Preserve rule-based nearSchool when AI extractor omits it.
+      nearSchool: asSafeString(aiNeed?.nearSchool) || ruleNeed.nearSchool,
+      city: asSafeString(aiNeed?.city) || ruleNeed.city,
+      suburb: asSafeString(aiNeed?.suburb) || ruleNeed.suburb,
+      queryText: asSafeString(aiNeed?.queryText) || userText
+    };
+
     const need: Need = {
       ...parsedNeed,
       city: asSafeString(parsedNeed.city),

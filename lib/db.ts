@@ -103,6 +103,7 @@ export async function searchListings(filters: ListingSearch) {
 
   if (nearSchool) {
     params.push(`%${nearSchool}%`);
+    where.push(`near_school ILIKE $${params.length}`);
     scoreParts.push(`CASE WHEN near_school ILIKE $${params.length} THEN 1 ELSE 0 END`);
   }
 
