@@ -169,6 +169,19 @@ export default function ModerationPage() {
           >
             Growth dashboard
           </a>
+          <a
+            href="/admin/wanted"
+            style={{
+              border: '1px solid #d0d5dd',
+              background: '#fff',
+              color: '#111827',
+              borderRadius: 8,
+              padding: '7px 11px',
+              textDecoration: 'none'
+            }}
+          >
+            Wanted moderation
+          </a>
         </div>
       </header>
 

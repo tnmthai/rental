@@ -15,6 +15,15 @@ type Listing = {
 };
 
 type SavedSearch = { id: number; name: string; query: string; created_at: string };
+type WantedPost = {
+  id: number;
+  title: string;
+  city: string;
+  budget_nzd_week: number;
+  status: string;
+  created_at: string;
+  expires_at?: string | null;
+};
 type GrowthData = {
   windowDays: number;
   daily: Array<{ day: string; listings_new: number }>;
@@ -30,20 +39,24 @@ export default function DashboardPage() {
   const { data: session, status } = useSession();
   const [listings, setListings] = useState<Listing[]>([]);
   const [saved, setSaved] = useState<SavedSearch[]>([]);
+  const [wanted, setWanted] = useState<WantedPost[]>([]);
   const [growth, setGrowth] = useState<GrowthData | null>(null);
   const [msg, setMsg] = useState('');
 
   async function load() {
-    const [a, b, c] = await Promise.all([
+    const [a, b, c, d] = await Promise.all([
       fetch('/api/my/listings'),
       fetch('/api/my/saved-searches'),
-      fetch('/api/admin/growth-metrics?days=14')
+      fetch('/api/admin/growth-metrics?days=14'),
+      fetch('/api/my/wanted')
     ]);
     const aj = await a.json();
     const bj = await b.json();
     const cj = await c.json().catch(() => ({}));
+    const dj = await d.json().catch(() => ({}));
     setListings(aj.items || []);
     setSaved(bj.items || []);
+    setWanted(dj.items || []);
     if (c.ok) setGrowth(cj.data || null);
   }
 
@@ -59,6 +72,17 @@ export default function DashboardPage() {
     });
     const data = await res.json();
     setMsg(res.ok ? `${action} done for #${listing_id}` : data.error || 'Action failed');
+    await load();
+  }
+
+  async function actWanted(wanted_id: number, action: 'pause' | 'resume') {
+    const res = await fetch('/api/my/wanted', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ wanted_id, action })
+    });
+    const data = await res.json();
+    setMsg(res.ok ? `${action} done for request #${wanted_id}` : data.error || 'Action failed');
     await load();
   }
 
@@ -101,6 +125,26 @@ export default function DashboardPage() {
                   <button onClick={() => act(l.id, 'pause')}>Pause</button>
                   <button onClick={() => act(l.id, 'resume')}>Resume</button>
                   <button onClick={() => act(l.id, 'extend')}>Extend +7d</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 20 }}>
+        <h2>My Room Requests</h2>
+        <div style={{ maxHeight: 320, overflowY: 'auto', paddingRight: 4, border: '1px solid #f0f0f0', borderRadius: 10 }}>
+          <ul style={{ padding: 10, margin: 0 }}>
+            {wanted.map((w) => (
+              <li key={w.id} style={{ listStyle: 'none', border: '1px solid #eee', padding: 12, borderRadius: 8, marginBottom: 10, background: '#fff' }}>
+                <b>{w.title}</b> · {w.city} · budget ${w.budget_nzd_week}/week · status: {w.status}
+                <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
+                  Created: {new Date(w.created_at).toLocaleString()} · Expires: {w.expires_at ? new Date(w.expires_at).toLocaleString() : 'N/A'}
+                </div>
+                <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                  <button onClick={() => actWanted(w.id, 'pause')}>Pause</button>
+                  <button onClick={() => actWanted(w.id, 'resume')}>Resume</button>
                 </div>
               </li>
             ))}

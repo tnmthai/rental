@@ -721,3 +721,72 @@ export async function listRecentWantedPosts(limit = 30) {
   );
   return rows;
 }
+
+export async function getWantedPostsByUser(userId: number) {
+  const p = getPool();
+  await ensureWantedPostsTable();
+  const { rows } = await p.query(
+    `
+      SELECT id, user_id, title, city, budget_nzd_week, description,
+             furnished, bills_included, near_school, available_date, created_at, expires_at, status
+      FROM wanted_posts
+      WHERE user_id=$1
+      ORDER BY created_at DESC
+    `,
+    [userId]
+  );
+  return rows;
+}
+
+export async function listPendingWantedPosts(limit = 300) {
+  const p = getPool();
+  await ensureWantedPostsTable();
+  const { rows } = await p.query(
+    `
+      SELECT w.id, w.user_id, w.title, w.city, w.budget_nzd_week, w.description,
+             w.furnished, w.bills_included, w.near_school, w.available_date,
+             w.created_at, w.expires_at, w.status,
+             u.name AS user_name, u.email AS user_email
+      FROM wanted_posts w
+      LEFT JOIN users u ON u.id = w.user_id
+      WHERE w.status='pending'
+      ORDER BY w.created_at ASC
+      LIMIT $1
+    `,
+    [Math.min(Math.max(limit, 1), 1000)]
+  );
+  return rows;
+}
+
+export async function listAllWantedPostsAdmin(limit = 500) {
+  const p = getPool();
+  await ensureWantedPostsTable();
+  const { rows } = await p.query(
+    `
+      SELECT w.id, w.user_id, w.title, w.city, w.budget_nzd_week, w.description,
+             w.furnished, w.bills_included, w.near_school, w.available_date,
+             w.created_at, w.expires_at, w.status,
+             u.name AS user_name, u.email AS user_email
+      FROM wanted_posts w
+      LEFT JOIN users u ON u.id = w.user_id
+      ORDER BY w.created_at DESC
+      LIMIT $1
+    `,
+    [Math.min(Math.max(limit, 1), 1000)]
+  );
+  return rows;
+}
+
+export async function updateWantedPostStatus(wantedId: number, status: 'approved' | 'rejected' | 'paused' | 'pending') {
+  const p = getPool();
+  await ensureWantedPostsTable();
+  const { rows } = await p.query(`UPDATE wanted_posts SET status=$1 WHERE id=$2 RETURNING id, status`, [status, wantedId]);
+  return rows[0] || null;
+}
+
+export async function deleteWantedPostById(wantedId: number) {
+  const p = getPool();
+  await ensureWantedPostsTable();
+  const { rows } = await p.query(`DELETE FROM wanted_posts WHERE id=$1 RETURNING id, title`, [wantedId]);
+  return rows[0] || null;
+}
