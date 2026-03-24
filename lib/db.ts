@@ -638,3 +638,86 @@ export async function deleteUserById(userId: number) {
   );
   return rows[0] || null;
 }
+
+export type NewWantedPost = {
+  user_id: number;
+  title: string;
+  city: string;
+  budget_nzd_week: number;
+  description?: string | null;
+  furnished?: boolean;
+  bills_included?: boolean;
+  near_school?: string | null;
+  available_date?: string | null;
+  duration_days?: number;
+};
+
+async function ensureWantedPostsTable() {
+  const p = getPool();
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS wanted_posts (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      city TEXT NOT NULL,
+      budget_nzd_week INTEGER NOT NULL,
+      description TEXT,
+      furnished BOOLEAN NOT NULL DEFAULT FALSE,
+      bills_included BOOLEAN NOT NULL DEFAULT FALSE,
+      near_school TEXT,
+      available_date DATE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      expires_at TIMESTAMPTZ,
+      status TEXT NOT NULL DEFAULT 'approved'
+    )
+  `);
+}
+
+export async function createWantedPost(input: NewWantedPost) {
+  const p = getPool();
+  await ensureWantedPostsTable();
+  const durationDays = Math.min(Math.max(Number(input.duration_days || 30), 1), 180);
+
+  const { rows } = await p.query(
+    `
+      INSERT INTO wanted_posts (
+        user_id, title, city, budget_nzd_week, description,
+        furnished, bills_included, near_school, available_date, expires_at, status
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::date, now() + make_interval(days => $10), 'approved')
+      RETURNING id, user_id, title, city, budget_nzd_week, description,
+                furnished, bills_included, near_school, available_date, created_at, expires_at, status
+    `,
+    [
+      input.user_id,
+      input.title,
+      input.city,
+      input.budget_nzd_week,
+      input.description || null,
+      Boolean(input.furnished),
+      Boolean(input.bills_included),
+      input.near_school || null,
+      input.available_date || null,
+      durationDays
+    ]
+  );
+
+  return rows[0];
+}
+
+export async function listRecentWantedPosts(limit = 30) {
+  const p = getPool();
+  await ensureWantedPostsTable();
+  const { rows } = await p.query(
+    `
+      SELECT id, user_id, title, city, budget_nzd_week, description,
+             furnished, bills_included, near_school, available_date, created_at, expires_at, status
+      FROM wanted_posts
+      WHERE status='approved' AND (expires_at IS NULL OR expires_at > now())
+      ORDER BY created_at DESC
+      LIMIT $1
+    `,
+    [Math.min(Math.max(limit, 1), 200)]
+  );
+  return rows;
+}
