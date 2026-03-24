@@ -12,6 +12,8 @@ type Wanted = {
   furnished?: boolean;
   bills_included?: boolean;
   near_school?: string;
+  contact_name?: string;
+  contact_email?: string;
   created_at: string;
 };
 
@@ -43,6 +45,26 @@ export default function WantedPage() {
             {x.near_school ? <> · near {x.near_school}</> : null}
           </div>
           {x.description ? <p style={{ margin: '6px 0 0', color: '#374151' }}>{x.description}</p> : null}
+          <div style={{ marginTop: 8, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            {x.contact_email ? (
+              <a
+                href={`mailto:${x.contact_email}?subject=${encodeURIComponent(`Room offer for your request #${x.id}`)}`}
+                style={{
+                  display: 'inline-block',
+                  background: '#2563eb',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  borderRadius: 8,
+                  padding: '6px 10px',
+                  fontSize: 13,
+                  fontWeight: 600
+                }}
+              >
+                Contact renter
+              </a>
+            ) : null}
+            {x.contact_name ? <span style={{ fontSize: 13, color: '#6b7280' }}>Renter: {x.contact_name}</span> : null}
+          </div>
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>Posted: {new Date(x.created_at).toLocaleString()}</div>
         </article>
       ))}

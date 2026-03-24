@@ -710,11 +710,13 @@ export async function listRecentWantedPosts(limit = 30) {
   await ensureWantedPostsTable();
   const { rows } = await p.query(
     `
-      SELECT id, user_id, title, city, budget_nzd_week, description,
-             furnished, bills_included, near_school, available_date, created_at, expires_at, status
-      FROM wanted_posts
-      WHERE status='approved' AND (expires_at IS NULL OR expires_at > now())
-      ORDER BY created_at DESC
+      SELECT w.id, w.user_id, w.title, w.city, w.budget_nzd_week, w.description,
+             w.furnished, w.bills_included, w.near_school, w.available_date, w.created_at, w.expires_at, w.status,
+             u.name AS contact_name, u.email AS contact_email
+      FROM wanted_posts w
+      LEFT JOIN users u ON u.id = w.user_id
+      WHERE w.status='approved' AND (w.expires_at IS NULL OR w.expires_at > now())
+      ORDER BY w.created_at DESC
       LIMIT $1
     `,
     [Math.min(Math.max(limit, 1), 200)]
