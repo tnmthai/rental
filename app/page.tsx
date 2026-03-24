@@ -287,6 +287,9 @@ const I18N = {
     english: 'English',
     vietnamese: 'Vietnamese',
     slogan: 'Post fast, find smart',
+    heroTitle: 'Search less. Match faster.',
+    heroSubtitle:
+      'Skip the old manual way of house hunting — click, filter, scroll, repeat. Just type naturally, like texting a friend. RentFinder understands and finds the right listings for you.',
     saveNeedLogin: 'Please log in first.',
     saveOk: 'Saved search created.',
     saveFail: 'Failed to save',
@@ -330,6 +333,9 @@ const I18N = {
     english: 'English',
     vietnamese: 'Tiếng Việt',
     slogan: 'Đăng nhanh, tìm thông minh',
+    heroTitle: 'Tìm ít hơn. Khớp nhanh hơn.',
+    heroSubtitle:
+      'Bỏ cách tìm nhà thủ công cũ: bấm lọc, kéo màn hình, lặp lại. Chỉ cần gõ bằng ngôn ngữ tự nhiên như đang nhắn tin — RentFinder sẽ hiểu và trả về listing phù hợp cho bạn.',
     saveNeedLogin: 'Vui lòng đăng nhập trước.',
     saveOk: 'Đã lưu tìm kiếm.',
     saveFail: 'Lưu thất bại',
@@ -687,8 +693,11 @@ export default function HomePage() {
         >
           RentFinder
         </a>
-        <p style={{ margin: '-2px 0 16px', color: '#4b5563', fontSize: 17, fontWeight: 600, letterSpacing: 0.1 }}>
-          {t.slogan}
+        <h1 style={{ margin: '-2px 0 6px', color: '#111827', fontSize: 34, fontWeight: 800, letterSpacing: -0.4 }}>
+          {t.heroTitle}
+        </h1>
+        <p style={{ margin: '0 0 16px', color: '#4b5563', fontSize: 16, fontWeight: 500, maxWidth: 860, marginInline: 'auto', lineHeight: 1.5 }}>
+          {t.heroSubtitle}
         </p>
 
         <div
