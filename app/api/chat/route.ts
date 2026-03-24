@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchListings } from '@/lib/db';
+import { searchListings, searchWantedPosts } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 type Need = {
@@ -861,6 +861,7 @@ export async function POST(req: NextRequest) {
     const wantsExternal = /(\bexternal\b|\bweb\b|ngoài|outside)/i.test(userText);
     const shouldFetchExternal = results.length < 5 || wantsExternal;
     const externalResults = shouldFetchExternal ? await searchExternalWeb(userText, need) : [];
+    const wantedResults = await searchWantedPosts(need, 20);
 
     const aiOverview =
       shortNoResultHint ||
@@ -871,7 +872,7 @@ export async function POST(req: NextRequest) {
           ? `No listings matched in our internal database right now, but I found ${externalResults.length} external web suggestions you can check.`
           : 'I could not find matching listings right now. Try relaxing price, location, or one optional condition to see more results.');
 
-    return NextResponse.json({ reply, aiOverview, filters: need, results, externalResults, mode });
+    return NextResponse.json({ reply, aiOverview, filters: need, results, wantedResults, externalResults, mode });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

@@ -724,6 +724,67 @@ export async function listRecentWantedPosts(limit = 30) {
   return rows;
 }
 
+export async function searchWantedPosts(filters: ListingSearch, limit = 30) {
+  const p = getPool();
+  await ensureWantedPostsTable();
+  const params: Array<string | number | boolean> = [];
+  const where: string[] = ["w.status='approved'", '(w.expires_at IS NULL OR w.expires_at > now())'];
+
+  const asNonEmptyString = (v: unknown): string | undefined => {
+    if (typeof v === 'string') {
+      const t = v.trim();
+      return t ? t : undefined;
+    }
+    return undefined;
+  };
+
+  const city = asNonEmptyString(filters.city);
+  const suburb = asNonEmptyString(filters.suburb);
+  const nearSchool = asNonEmptyString(filters.nearSchool);
+  const maxPrice = Number.isFinite(Number(filters.maxPrice)) && Number(filters.maxPrice) > 0 ? Number(filters.maxPrice) : undefined;
+
+  if (city) {
+    params.push(`%${city}%`);
+    where.push(`w.city ILIKE $${params.length}`);
+  }
+  if (suburb) {
+    params.push(`%${suburb}%`);
+    where.push(`(w.title ILIKE $${params.length} OR w.description ILIKE $${params.length} OR w.city ILIKE $${params.length})`);
+  }
+  if (maxPrice) {
+    params.push(maxPrice);
+    where.push(`w.budget_nzd_week <= $${params.length}`);
+  }
+  if (typeof filters.furnished === 'boolean') {
+    params.push(filters.furnished);
+    where.push(`w.furnished = $${params.length}`);
+  }
+  if (typeof filters.billsIncluded === 'boolean') {
+    params.push(filters.billsIncluded);
+    where.push(`w.bills_included = $${params.length}`);
+  }
+  if (nearSchool) {
+    params.push(`%${nearSchool}%`);
+    where.push(`w.near_school ILIKE $${params.length}`);
+  }
+
+  params.push(Math.min(Math.max(limit, 1), 200));
+  const { rows } = await p.query(
+    `
+      SELECT w.id, w.user_id, w.title, w.city, w.budget_nzd_week, w.description,
+             w.furnished, w.bills_included, w.near_school, w.available_date, w.created_at, w.expires_at, w.status,
+             u.name AS contact_name, u.email AS contact_email
+      FROM wanted_posts w
+      LEFT JOIN users u ON u.id = w.user_id
+      ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+      ORDER BY w.created_at DESC
+      LIMIT $${params.length}
+    `,
+    params
+  );
+  return rows;
+}
+
 export async function getWantedPostsByUser(userId: number) {
   const p = getPool();
   await ensureWantedPostsTable();

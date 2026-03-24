@@ -236,6 +236,19 @@ type ExternalHit = {
   source: 'web';
 };
 
+type WantedHit = {
+  id: number;
+  title: string;
+  city: string;
+  budget_nzd_week: number;
+  description?: string;
+  furnished?: boolean;
+  bills_included?: boolean;
+  near_school?: string;
+  contact_name?: string;
+  contact_email?: string;
+};
+
 async function trackClientEvent(event_name: 'contact_click' | 'share_click', listing_id?: number) {
   try {
     await fetch('/api/events', {
@@ -346,6 +359,7 @@ export default function HomePage() {
   const [reply, setReply] = useState('');
   const [aiOverview, setAiOverview] = useState('');
   const [hits, setHits] = useState<Hit[]>([]);
+  const [wantedHits, setWantedHits] = useState<WantedHit[]>([]);
   const [externalHits, setExternalHits] = useState<ExternalHit[]>([]);
   const [saveMsg, setSaveMsg] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
@@ -392,6 +406,7 @@ export default function HomePage() {
     setLoading(true);
     setReply('');
     setHits([]);
+    setWantedHits([]);
     setExternalHits([]);
 
     const loadingSteps = [t.searchingOverview1, t.searchingOverview2, t.searchingOverview3];
@@ -412,6 +427,7 @@ export default function HomePage() {
       setReply(data.reply || data.error || 'No reply');
       setAiOverview(data.aiOverview || '');
       setHits(data.results || []);
+      setWantedHits(data.wantedResults || []);
       setExternalHits(data.externalResults || []);
     } catch {
       setReply('Search failed. Please try again.');
@@ -939,6 +955,34 @@ export default function HomePage() {
               </article>
             );
           })}
+        </section>
+      )}
+
+      {wantedHits.length > 0 && (
+        <section style={{ marginTop: 18 }}>
+          <h3 style={{ margin: '0 0 8px', color: '#111827' }}>Room requests (renters looking for rooms)</h3>
+          <ul style={{ padding: 0, margin: 0 }}>
+            {wantedHits.map((w) => (
+              <li key={w.id} style={{ listStyle: 'none', borderTop: '1px solid #eee', padding: '10px 0' }}>
+                <div style={{ fontWeight: 700, color: '#111827' }}>{w.title}</div>
+                <div style={{ color: '#4b5563', marginTop: 3 }}>
+                  {w.city} · budget ${w.budget_nzd_week}/week · {w.furnished ? 'furnished preferred' : 'furnished optional'} · {w.bills_included ? 'bills included preferred' : 'bills flexible'}
+                  {w.near_school ? <> · near {w.near_school}</> : null}
+                </div>
+                {w.description ? <div style={{ marginTop: 4, color: '#6b7280' }}>{w.description}</div> : null}
+                {w.contact_email ? (
+                  <div style={{ marginTop: 6 }}>
+                    <a
+                      href={`mailto:${w.contact_email}?subject=${encodeURIComponent(`Room offer for your request #${w.id}`)}`}
+                      style={{ color: '#1a73e8', textDecoration: 'none', fontWeight: 600 }}
+                    >
+                      Contact renter
+                    </a>
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
