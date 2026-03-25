@@ -680,145 +680,112 @@ export default function HomePage() {
         )}
       </header>
 
-      <section style={{ marginBottom: 26 }}>
+      <section style={{ textAlign: 'center', marginBottom: 26 }}>
+        <a
+          href="/"
+          style={{
+            display: 'inline-block',
+            fontSize: 54,
+            fontWeight: 800,
+            letterSpacing: -1,
+            marginBottom: 14,
+            textDecoration: 'none',
+            background: 'linear-gradient(90deg, #ff0000 0%, #ff7f00 20%, #ffd600 40%, #1e88e5 60%, #00c853 80%, #ff0000 100%)',
+            backgroundSize: '250% 100%',
+            animation: 'rainbowShift 14s ease-in-out infinite',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent'
+          }}
+          title="Back to home"
+        >
+          RentFinder
+        </a>
+        <h1 style={{ margin: '-2px 0 6px', color: '#111827', fontSize: 34, fontWeight: 800, letterSpacing: -0.4 }}>
+          {t.heroTitle}
+        </h1>
+        <p style={{ margin: '0 0 16px', color: '#4b5563', fontSize: 16, fontWeight: 500, maxWidth: 860, marginInline: 'auto', lineHeight: 1.5 }}>
+          {t.heroSubtitle}
+        </p>
+
         <div
-          className="heroGrid"
+          className="searchBar"
           style={{
             display: 'flex',
-            flexWrap: 'wrap',
-            gap: 28,
-            alignItems: 'stretch',
-            justifyContent: 'space-between'
+            gap: 10,
+            padding: 10,
+            border: '1px solid #e5e7eb',
+            borderRadius: 22,
+            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.07)',
+            background: '#ffffff',
+            width: '100%',
+            boxSizing: 'border-box'
           }}
         >
-          <div
-            style={{
-              flex: '1 1 320px',
-              minWidth: 280,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 14
-            }}
-          >
-            <a
-              href="/"
-              style={{
-                display: 'inline-block',
-                fontSize: 54,
-                fontWeight: 800,
-                letterSpacing: -1,
-                textDecoration: 'none',
-                background: 'linear-gradient(90deg, #ff0000 0%, #ff7f00 20%, #ffd600 40%, #1e88e5 60%, #00c853 80%, #ff0000 100%)',
-                backgroundSize: '250% 100%',
-                animation: 'rainbowShift 14s ease-in-out infinite',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                color: 'transparent'
+          <div className="searchInputWrap" style={{ flex: 1, minWidth: 0 }}>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t.samplePrompt}
+              style={{ flex: 1, width: '100%', border: 'none', outline: 'none', fontSize: 19, lineHeight: 1.4, color: '#111827', padding: '10px 12px', boxSizing: 'border-box' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') run();
               }}
-              title="Back to home"
-            >
-              RentFinder
-            </a>
-            <div>
-              <h1 style={{ margin: '6px 0 10px', color: '#111827', fontSize: 38, fontWeight: 800, letterSpacing: -0.6 }}>
-                {t.heroTitle}
-              </h1>
-              <p style={{ margin: 0, color: '#4b5563', fontSize: 17, fontWeight: 500, lineHeight: 1.6 }}>
-                {t.heroSubtitle}
-              </p>
-            </div>
+            />
           </div>
-
-          <div
-            style={{
-              flex: '1 1 380px',
-              minWidth: 320,
-              border: '1px solid #e5e7eb',
-              borderRadius: 28,
-              padding: 18,
-              background: '#fff',
-              boxShadow: '0 20px 40px rgba(15, 23, 42, 0.08)'
-            }}
-          >
-            <div
-              className="searchBar"
-              style={{
-                display: 'flex',
-                gap: 10,
-                padding: 10,
-                border: '1px solid #e5e7eb',
-                borderRadius: 22,
-                background: '#f8fafc',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
+          <div className="searchActions" style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={run}
+              disabled={loading}
+              style={{ border: 'none', borderRadius: 999, padding: '10px 18px', background: '#2563eb', color: '#fff', whiteSpace: 'nowrap', fontWeight: 600 }}
             >
-              <div className="searchInputWrap" style={{ flex: 1, minWidth: 0 }}>
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t.samplePrompt}
-                  style={{ flex: 1, width: '100%', border: 'none', outline: 'none', fontSize: 19, lineHeight: 1.4, color: '#111827', padding: '10px 12px', boxSizing: 'border-box', background: 'transparent' }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') run();
-                  }}
-                />
-              </div>
-              <div className="searchActions" style={{ display: 'flex', gap: 10 }}>
-                <button
-                  onClick={run}
-                  disabled={loading}
-                  style={{ border: 'none', borderRadius: 999, padding: '10px 18px', background: '#2563eb', color: '#fff', whiteSpace: 'nowrap', fontWeight: 600 }}
-                >
-                  {loading ? t.searching : t.search}
-                </button>
-                <button
-                  onClick={saveSearch}
-                  style={{ border: '1px solid #d1d5db', borderRadius: 999, padding: '10px 14px', background: '#fff', whiteSpace: 'nowrap', color: '#374151' }}
-                >
-                  {t.save}
-                </button>
-              </div>
-            </div>
-
-            <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
-              <a href="/post">{t.createListing}</a> · <a href="/wanted/post">Post room request</a> · <a href="/wanted">Room requests</a>
-              {session?.user ? <> · <a href="/dashboard">{t.myDashboard}</a></> : null}
-            </p>
-            {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
-
-            <div
-              style={{
-                marginTop: 14,
-                textAlign: 'left',
-                border: '1px solid #e5e7eb',
-                background: '#f8fafc',
-                borderRadius: 18,
-                padding: '14px 16px'
-              }}
+              {loading ? t.searching : t.search}
+            </button>
+            <button
+              onClick={saveSearch}
+              style={{ border: '1px solid #d1d5db', borderRadius: 999, padding: '10px 14px', background: '#fff', whiteSpace: 'nowrap', color: '#374151' }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937' }}>{t.suggestionsTitle}</div>
-              <div style={{ fontSize: 13, color: '#4b5563', margin: '4px 0 9px' }}>{t.suggestionsHint}</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {suggestedPrompts.map((prompt, idx) => (
-                  <button
-                    key={`${prompt}-${idx}`}
-                    onClick={() => setQuery(prompt)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      background: '#ffffff',
-                      color: '#374151',
-                      borderRadius: 999,
-                      padding: '7px 11px',
-                      fontSize: 13,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            </div>
+              {t.save}
+            </button>
+          </div>
+        </div>
+
+        <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
+          <a href="/post">{t.createListing}</a> · <a href="/wanted/post">Post room request</a> · <a href="/wanted">Room requests</a>
+          {session?.user ? <> · <a href="/dashboard">{t.myDashboard}</a></> : null}
+        </p>
+        {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
+
+        <div
+          style={{
+            marginTop: 14,
+            textAlign: 'left',
+            border: '1px solid #e5e7eb',
+            background: '#f8fafc',
+            borderRadius: 14,
+            padding: '12px 14px'
+          }}
+        >
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937' }}>{t.suggestionsTitle}</div>
+          <div style={{ fontSize: 13, color: '#4b5563', margin: '4px 0 9px' }}>{t.suggestionsHint}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {suggestedPrompts.map((prompt, idx) => (
+              <button
+                key={`${prompt}-${idx}`}
+                onClick={() => setQuery(prompt)}
+                style={{
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#374151',
+                  borderRadius: 999,
+                  padding: '7px 11px',
+                  fontSize: 13,
+                  cursor: 'pointer'
+                }}
+              >
+                {prompt}
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -1219,15 +1186,7 @@ export default function HomePage() {
           overflow: hidden;
         }
 
-        .heroGrid {
-          align-items: stretch;
-        }
-
         @media (max-width: 768px) {
-          .heroGrid {
-            flex-direction: column;
-          }
-
           .home-topbar {
             margin-bottom: 24px !important;
             padding: 0 14px !important;
