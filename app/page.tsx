@@ -277,6 +277,10 @@ const I18N = {
     internalListings: 'Our internal listings',
     viewDetail: 'View detail',
     share: 'Share',
+    viewSource: 'Open original listing',
+    perWeek: 'per week',
+    noPhoto: 'No photo yet',
+    photosLabel: 'photos',
     readMore: 'Read more',
     readLess: 'Read less',
     externalSuggestions: 'External web suggestions',
@@ -323,6 +327,10 @@ const I18N = {
     internalListings: 'Danh sách nội bộ',
     viewDetail: 'Xem chi tiết',
     share: 'Chia sẻ',
+    viewSource: 'Mở nguồn gốc tin đăng',
+    perWeek: 'mỗi tuần',
+    noPhoto: 'Chưa có ảnh',
+    photosLabel: 'ảnh',
     readMore: 'Xem thêm',
     readLess: 'Thu gọn',
     externalSuggestions: 'Gợi ý từ web bên ngoài',
@@ -803,167 +811,261 @@ export default function HomePage() {
         <section>
           {mapPoints.length > 0 ? <ListingMap points={mapPoints} /> : null}
           <h3 style={{ margin: '0 0 10px', color: '#111827' }}>{t.internalListings}</h3>
-          {hits.map((h) => {
-            const gallery = normalizeImageUrls(h.image_urls);
-            const femaleFriendly = hasFemaleFriendlySignal(h);
-            const hasDesk = hasDeskSignal(h);
-            return (
-              <article
-                key={h.id}
-                style={{
-                  border: '1px solid #e8ecf4',
-                  borderRadius: 14,
-                  padding: '14px 14px 12px',
-                  marginBottom: 12,
-                  background: '#fff',
-                  boxShadow: '0 4px 16px rgba(15, 23, 42, 0.04)'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, color: '#111827', fontSize: 21, lineHeight: 1.35 }}>{highlightText(h.title, keywords)}</h3>
-                  <span
-                    style={{
-                      whiteSpace: 'nowrap',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      background: '#eaf2ff',
-                      border: '1px solid #cfe1ff',
-                      borderRadius: 999,
-                      padding: '4px 10px',
-                      fontSize: 14
-                    }}
-                  >
-                    ${h.price_nzd_week}/week
-                  </span>
-                </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: 16
+            }}
+          >
+            {hits.map((h) => {
+              const gallery = normalizeImageUrls(h.image_urls);
+              const primaryImage = gallery[0] || null;
+              const extraPhotos = Math.max(gallery.length - 1, 0);
+              const femaleFriendly = hasFemaleFriendlySignal(h);
+              const hasDesk = hasDeskSignal(h);
+              const hideDescription = shouldHideDescription(h.description, h.source_url);
+              const plainSnippet = !hideDescription && h.description
+                ? formatDescription(h.description.replace(/<[^>]+>/g, ' ')).join(' ')
+                : '';
+              const normalizedSnippet = plainSnippet.replace(/\s+/g, ' ').trim();
+              const snippet = normalizedSnippet.length > 220 ? `${normalizedSnippet.slice(0, 220).trim()}…` : normalizedSnippet;
+              const canExpand = normalizedSnippet.length > 220;
+              const metaParts: Array<JSX.Element | string> = [];
+              if (h.city) metaParts.push(<span key="city">{highlightText(h.city, keywords)}</span>);
+              if (h.near_school) metaParts.push(
+                <span key="near">{t.near} {highlightText(h.near_school, keywords)}</span>
+              );
+              if (h.available_date) metaParts.push(
+                <span key="available">{t.available} {new Date(h.available_date).toLocaleDateString()}</span>
+              );
 
-                <div style={{ color: '#006621', fontSize: 13, marginTop: 4 }}>
-                  {h.source_url ? (
-                    <a
-                      href={h.source_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={() => trackClientEvent('contact_click', h.id)}
-                      style={{ color: '#006621', textDecoration: 'none' }}
-                    >
-                      {h.source_url}
-                    </a>
-                  ) : (
-                    t.noSource
-                  )}
-                </div>
-                <div style={{ marginTop: 8, color: '#4d5156', fontSize: 14 }}>
-                  {highlightText(h.city, keywords)} · {h.furnished ? t.furnished : t.unfurnished} · {h.bills_included ? t.billsIncluded : t.billsSeparate}
-                  {h.near_school ? <> · {t.near} {highlightText(h.near_school, keywords)}</> : null}
-                  {h.available_date ? <> · {t.available} {new Date(h.available_date).toLocaleDateString()}</> : null}
-                </div>
-                {(femaleFriendly || hasDesk) ? (
-                  <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {femaleFriendly ? (
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: '#7f1d1d',
-                          background: '#fee2e2',
-                          border: '1px solid #fecaca',
-                          borderRadius: 999,
-                          padding: '2px 8px'
+              return (
+                <article
+                  key={h.id}
+                  style={{
+                    border: '1px solid #e6ebf2',
+                    borderRadius: 20,
+                    overflow: 'hidden',
+                    background: '#fff',
+                    boxShadow: '0 20px 35px rgba(15, 23, 42, 0.08)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: '100%'
+                  }}
+                >
+                  {primaryImage ? (
+                    <div style={{ position: 'relative', width: '100%', paddingTop: '62%', overflow: 'hidden' }}>
+                      <img
+                        src={primaryImage}
+                        alt={h.title}
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.style.display = 'none';
                         }}
-                      >
-                        {t.femalePreferredBadge}
-                      </span>
-                    ) : null}
-                    {hasDesk ? (
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: '#1e3a8a',
-                          background: '#dbeafe',
-                          border: '1px solid #bfdbfe',
-                          borderRadius: 999,
-                          padding: '2px 8px'
-                        }}
-                      >
-                        {t.studyDeskBadge}
-                      </span>
-                    ) : null}
-                  </div>
-                ) : null}
-                <div style={{ marginTop: 8, display: 'flex', gap: 12, fontSize: 13 }}>
-                  <a href={`/listing/${h.id}`}>{t.viewDetail}</a>
-                  <button
-                    onClick={async () => {
-                      const url = `${window.location.origin}/listing/${h.id}`;
-                      if (navigator.share) {
-                        await navigator.share({ title: h.title, url }).catch(() => {});
-                      } else {
-                        await navigator.clipboard.writeText(url).catch(() => {});
-                      }
-                      trackClientEvent('share_click', h.id);
-                    }}
-                    style={{ border: 'none', background: 'transparent', color: '#1a73e8', padding: 0, cursor: 'pointer' }}
-                  >
-                    {t.share}
-                  </button>
-                </div>
-                {h.description && !shouldHideDescription(h.description, h.source_url) ? (
-                  <div
-                    style={{
-                      margin: '10px 0 10px',
-                      color: '#4d5156',
-                      lineHeight: 1.55,
-                      padding: '10px 12px',
-                      background: '#f8fafc',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: 10
-                    }}
-                  >
-                    {hasHtmlTags(h.description) ? (
-                      <div
-                        className={!expandedDesc[h.id] ? 'descClamp' : undefined}
-                        dangerouslySetInnerHTML={{ __html: sanitizeDescriptionHtml(h.description) }}
                       />
-                    ) : (
-                      <div className={!expandedDesc[h.id] ? 'descClamp' : undefined}>
-                        {formatDescription(h.description).map((line, idx) => (
-                          <p key={idx} style={{ margin: '0 0 6px' }}>
-                            {line.startsWith('•') || line.startsWith('-') ? <strong>{line.slice(0, 1)} </strong> : null}
-                            {highlightText(line.replace(/^[-•]\s*/, ''), keywords)}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                    <button
-                      onClick={() => setExpandedDesc((prev) => ({ ...prev, [h.id]: !prev[h.id] }))}
-                      style={{ border: 'none', background: 'transparent', color: '#1a73e8', padding: 0, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-                    >
-                      {expandedDesc[h.id] ? t.readLess : t.readMore}
-                    </button>
-                  </div>
-                ) : null}
-
-                {gallery.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, maxWidth: 650 }}>
-                    {gallery.map((url, idx) => (
-                      <a key={`${h.id}-${idx}`} href={url} target="_blank" title={`image-${idx + 1}`}>
-                        <img
-                          src={url}
-                          alt={`${h.title}-${idx + 1}`}
-                          style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #ddd' }}
-                          onError={(e) => {
-                            const target = e.currentTarget as HTMLImageElement;
-                            target.style.display = 'none';
+                      {extraPhotos > 0 ? (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            right: 12,
+                            top: 12,
+                            background: 'rgba(15, 23, 42, 0.8)',
+                            color: '#fff',
+                            borderRadius: 999,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            padding: '4px 10px'
                           }}
-                        />
-                      </a>
-                    ))}
+                        >
+                          +{extraPhotos} {t.photosLabel}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        height: 180,
+                        background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 600,
+                        color: '#6b7280'
+                      }}
+                    >
+                      {t.noPhoto}
+                    </div>
+                  )}
+
+                  <div style={{ padding: '14px 16px 18px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h3 style={{ margin: 0, color: '#0f172a', fontSize: 20, lineHeight: 1.35 }}>
+                          {highlightText(h.title, keywords)}
+                        </h3>
+                        {metaParts.length ? (
+                          <p style={{ margin: '6px 0 0', color: '#4b5563', fontSize: 13, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                            {metaParts.map((part, idx) => (
+                              <span key={idx} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                {idx > 0 ? <span style={{ color: '#d1d5db' }}>•</span> : null}
+                                {part}
+                              </span>
+                            ))}
+                          </p>
+                        ) : null}
+                      </div>
+                      <span
+                        style={{
+                          whiteSpace: 'nowrap',
+                          fontWeight: 800,
+                          color: '#044e6c',
+                          background: '#e0f2fe',
+                          borderRadius: 14,
+                          padding: '6px 12px',
+                          fontSize: 14,
+                          alignSelf: 'flex-start'
+                        }}
+                      >
+                        ${h.price_nzd_week.toLocaleString()} {t.perWeek}
+                      </span>
+                    </div>
+
+                    {snippet ? (
+                      <div style={{ marginTop: 12 }}>
+                        <p
+                          className={!expandedDesc[h.id] ? 'descClamp' : undefined}
+                          style={{ margin: 0, color: '#4d5156', fontSize: 14, lineHeight: 1.6, minHeight: 48 }}
+                        >
+                          {highlightText(snippet, keywords)}
+                        </p>
+                        {canExpand ? (
+                          <button
+                            onClick={() => setExpandedDesc((prev) => ({ ...prev, [h.id]: !prev[h.id] }))}
+                            style={{ border: 'none', background: 'transparent', color: '#1a73e8', padding: 0, cursor: 'pointer', fontSize: 13, fontWeight: 600, marginTop: 6 }}
+                          >
+                            {expandedDesc[h.id] ? t.readLess : t.readMore}
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: '#0f172a',
+                          background: '#f1f5f9',
+                          borderRadius: 999,
+                          padding: '4px 10px'
+                        }}
+                      >
+                        {h.furnished ? t.furnished : t.unfurnished}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: '#0f172a',
+                          background: '#f1f5f9',
+                          borderRadius: 999,
+                          padding: '4px 10px'
+                        }}
+                      >
+                        {h.bills_included ? t.billsIncluded : t.billsSeparate}
+                      </span>
+                      {femaleFriendly ? (
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: '#7f1d1d',
+                            background: '#fee2e2',
+                            borderRadius: 999,
+                            padding: '4px 10px'
+                          }}
+                        >
+                          {t.femalePreferredBadge}
+                        </span>
+                      ) : null}
+                      {hasDesk ? (
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: '#1e3a8a',
+                            background: '#dbeafe',
+                            borderRadius: 999,
+                            padding: '4px 10px'
+                          }}
+                        >
+                          {t.studyDeskBadge}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                        <a
+                          href={`/listing/${h.id}`}
+                          style={{
+                            border: '1px solid #1d4ed8',
+                            color: '#1d4ed8',
+                            borderRadius: 999,
+                            padding: '8px 16px',
+                            fontWeight: 600,
+                            textDecoration: 'none'
+                          }}
+                        >
+                          {t.viewDetail}
+                        </a>
+                        <button
+                          onClick={async () => {
+                            const url = `${window.location.origin}/listing/${h.id}`;
+                            if (navigator.share) {
+                              await navigator.share({ title: h.title, url }).catch(() => {});
+                            } else {
+                              await navigator.clipboard.writeText(url).catch(() => {});
+                            }
+                            trackClientEvent('share_click', h.id);
+                          }}
+                          style={{
+                            border: 'none',
+                            borderRadius: 999,
+                            padding: '8px 16px',
+                            background: '#0ea5e9',
+                            color: '#fff',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {t.share}
+                        </button>
+                      </div>
+
+                      <div style={{ fontSize: 12, color: '#006621' }}>
+                        {h.source_url ? (
+                          <a
+                            href={h.source_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => trackClientEvent('contact_click', h.id)}
+                            style={{ color: '#006621', textDecoration: 'none', fontWeight: 600 }}
+                          >
+                            {t.viewSource}
+                          </a>
+                        ) : (
+                          <span>{t.noSource}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                ) : null}
-              </article>
-            );
-          })}
+                </article>
+              );
+            })}
+          </div>
         </section>
       )}
 
