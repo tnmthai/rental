@@ -268,10 +268,21 @@ const I18N = {
     samplePrompt: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
     suggestionsTitle: 'AI suggestion prompts',
     suggestionsHint: 'Tap a prompt to quickly fill your search',
+    demoTitle: 'See it in action (20s demo)',
+    demoPromptLabel: 'You type',
+    demoOutputLabel: 'RentFinder returns',
+    demoPromptSample: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    demoPoints: [
+      'Filters 10 rooms under $250/week within 5km of Lincoln Uni',
+      'Automatically highlights bills-included & furnished tags',
+      'Generates an AI summary + copyable contact links'
+    ],
+    demoCtaHint: 'Press Enter to search · Shift+Enter for a new line',
     searching: 'Searching...',
     search: 'Search',
     save: 'Save',
     createListing: 'Create listing',
+    shareRoom: 'Share your room',
     myDashboard: 'My dashboard',
     aiOverview: 'AI Overview',
     internalListings: 'Our internal listings',
@@ -318,10 +329,21 @@ const I18N = {
     samplePrompt: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
     suggestionsTitle: 'Gợi ý prompt AI',
     suggestionsHint: 'Bấm để điền nhanh câu tìm kiếm',
+    demoTitle: 'Xem thử (demo 20 giây)',
+    demoPromptLabel: 'Bạn gõ',
+    demoOutputLabel: 'RentFinder trả về',
+    demoPromptSample: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    demoPoints: [
+      'Lọc còn 10 phòng dưới $250/tuần trong bán kính 5km quanh Lincoln',
+      'Tự gắn tag đã gồm bills & có nội thất',
+      'Sinh tóm tắt AI + link liên hệ để copy nhanh'
+    ],
+    demoCtaHint: 'Nhấn Enter để tìm · Shift+Enter để xuống dòng',
     searching: 'Đang tìm...',
     search: 'Tìm',
     save: 'Lưu',
     createListing: 'Đăng tin',
+    shareRoom: 'Chia sẻ phòng của bạn',
     myDashboard: 'Bảng điều khiển',
     aiOverview: 'Tóm tắt AI',
     internalListings: 'Danh sách nội bộ',
@@ -793,9 +815,44 @@ export default function HomePage() {
           </div>
         </div>
 
+        <div style={{ marginTop: 18, fontSize: 12, fontWeight: 700, color: '#4338ca', letterSpacing: 1, textTransform: 'uppercase' }}>
+          {t.demoTitle}
+        </div>
+
+        <div
+          className="heroDemo"
+          style={{
+            marginTop: 14,
+            display: 'flex',
+            gap: 16,
+            padding: '14px 16px',
+            border: '1px solid #e5e7eb',
+            borderRadius: 18,
+            background: '#ffffff',
+            textAlign: 'left',
+            boxShadow: '0 10px 30px rgba(15, 23, 42, 0.05)'
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoPromptLabel}</div>
+            <p style={{ margin: '8px 0 6px', fontSize: 15, color: '#1f2937', lineHeight: 1.6 }}>
+              “{t.demoPromptSample}”
+            </p>
+            <small style={{ color: '#6b7280' }}>{t.demoCtaHint}</small>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoOutputLabel}</div>
+            <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#374151', lineHeight: 1.6 }}>
+              {t.demoPoints.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
         <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
           <a href="/post">{t.createListing}</a> · <a href="/wanted/post">Post room request</a> · <a href="/wanted">Room requests</a>
-          {session?.user ? <> · <a href="/dashboard">{t.myDashboard}</a></> : null}
+          {session?.user ? <> · <a href="/dashboard">{t.myDashboard}</a></> : null} · <a href="/hosts">{t.shareRoom}</a>
         </p>
         {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
 
@@ -1234,6 +1291,18 @@ export default function HomePage() {
           font-family: inherit;
         }
 
+        .heroDemo {
+          transition: box-shadow 0.2s ease;
+        }
+
+        .heroDemo:hover {
+          box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        .heroDemo > div {
+          flex: 1;
+        }
+
         @media (max-width: 768px) {
           .home-topbar {
             margin-bottom: 24px !important;
@@ -1252,6 +1321,10 @@ export default function HomePage() {
 
           .searchInputWrap textarea {
             min-height: 72px;
+          }
+
+          .heroDemo {
+            flex-direction: column;
           }
 
           .searchActions {
