@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSession, signOut } from 'next-auth/react';
 
@@ -383,6 +383,7 @@ export default function HomePage() {
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>('en');
   const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
+  const searchInputRef = useRef<HTMLTextAreaElement | null>(null);
   const keywords = useMemo(() => extractKeywords(query), [query]);
   const t = I18N[lang];
   const suggestedPrompts = useMemo(
@@ -415,6 +416,13 @@ export default function HomePage() {
         .filter(Boolean) as Array<{ id: number; title: string; city: string; price_nzd_week: number; lat: number; lng: number }>,
     [hits]
   );
+
+  useEffect(() => {
+    if (!searchInputRef.current) return;
+    const el = searchInputRef.current;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 240)}px`;
+  }, [query]);
 
   async function run() {
     setLoading(true);
@@ -732,17 +740,39 @@ export default function HomePage() {
             boxShadow: '0 8px 24px rgba(15, 23, 42, 0.07)',
             background: '#ffffff',
             width: '100%',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            alignItems: 'stretch'
           }}
         >
-          <div className="searchInputWrap" style={{ flex: 1, minWidth: 0 }}>
-            <input
+          <div className="searchInputWrap" style={{ flex: 1, minWidth: 0, display: 'flex' }}>
+            <textarea
+              ref={searchInputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t.samplePrompt}
-              style={{ flex: 1, width: '100%', border: 'none', outline: 'none', fontSize: 19, lineHeight: 1.4, color: '#111827', padding: '10px 12px', boxSizing: 'border-box' }}
+              rows={1}
+              spellCheck={false}
+              style={{
+                flex: 1,
+                width: '100%',
+                border: 'none',
+                outline: 'none',
+                fontSize: 16,
+                lineHeight: 1.4,
+                color: '#111827',
+                padding: '12px 14px',
+                boxSizing: 'border-box',
+                borderRadius: 16,
+                resize: 'none',
+                background: 'transparent',
+                minHeight: 48,
+                overflow: 'hidden'
+              }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') run();
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  run();
+                }
               }}
             />
           </div>
@@ -1199,6 +1229,11 @@ export default function HomePage() {
           overflow: hidden;
         }
 
+        .searchInputWrap textarea {
+          width: 100%;
+          font-family: inherit;
+        }
+
         @media (max-width: 768px) {
           .home-topbar {
             margin-bottom: 24px !important;
@@ -1215,9 +1250,19 @@ export default function HomePage() {
             flex-basis: 100%;
           }
 
+          .searchInputWrap textarea {
+            min-height: 72px;
+          }
+
           .searchActions {
             width: 100%;
-            justify-content: flex-end;
+            justify-content: flex-start;
+            gap: 8px !important;
+            flex-wrap: wrap;
+          }
+
+          .searchActions button {
+            flex: 1;
           }
         }
       `}</style>
