@@ -701,10 +701,23 @@ export default function HomePage() {
         >
           RentFinder
         </a>
-        <h1 style={{ margin: '-2px 0 6px', color: '#111827', fontSize: 30, fontWeight: 800, letterSpacing: -0.2 }}>
+        <h1
+          style={{
+            margin: '-2px 0 6px',
+            fontSize: '11pt',
+            fontWeight: 800,
+            letterSpacing: -0.2,
+            background: 'linear-gradient(90deg, #ff0000 0%, #ff7f00 20%, #ffd600 40%, #1e88e5 60%, #00c853 80%, #ff0000 100%)',
+            backgroundSize: '250% 100%',
+            animation: 'rainbowShift 14s ease-in-out infinite',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent'
+          }}
+        >
           {t.heroTitle}
         </h1>
-        <p style={{ margin: '0 0 16px', color: '#4b5563', fontSize: 15, fontWeight: 500, maxWidth: 760, marginInline: 'auto', lineHeight: 1.5 }}>
+        <p style={{ margin: '0 0 16px', color: '#4b5563', fontSize: '10pt', fontWeight: 500, maxWidth: 760, marginInline: 'auto', lineHeight: 1.5 }}>
           {t.heroSubtitle}
         </p>
 
