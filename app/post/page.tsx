@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import type { CSSProperties } from 'react';
 import { useMemo, useState } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import SubNav from '@/app/components/SubNav';
@@ -37,6 +38,49 @@ const editorFormats = [
   'code-block'
 ];
 
+const fieldStyle: CSSProperties = {
+  width: '100%',
+  padding: '12px 13px',
+  border: '1px solid #d8e0eb',
+  borderRadius: 12,
+  fontSize: 14,
+  outline: 'none',
+  background: '#fff',
+  color: '#111827',
+  boxSizing: 'border-box'
+};
+
+const labelStyle: CSSProperties = {
+  display: 'grid',
+  gap: 7,
+  color: '#334155',
+  fontSize: 13,
+  fontWeight: 800
+};
+
+function ToggleChip({ checked, label, onChange }: { checked: boolean; label: string; onChange: (checked: boolean) => void }) {
+  return (
+    <label
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 9,
+        border: checked ? '1px solid #2563eb' : '1px solid #d8e0eb',
+        borderRadius: 999,
+        padding: '9px 12px',
+        background: checked ? '#eff6ff' : '#ffffff',
+        color: checked ? '#1d4ed8' : '#475569',
+        fontSize: 13,
+        fontWeight: 800,
+        cursor: 'pointer'
+      }}
+    >
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ accentColor: '#2563eb' }} />
+      {label}
+    </label>
+  );
+}
+
 export default function PostListingPage() {
   const { data: session, status } = useSession();
   const [form, setForm] = useState({
@@ -55,22 +99,14 @@ export default function PostListingPage() {
     latitude: '',
     longitude: ''
   });
-
   const [images, setImages] = useState<FileList | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState('');
 
-  const areas = useMemo(() => {
-    return NZ_LOCATIONS.find((r) => r.region === form.region)?.areas ?? [];
-  }, [form.region]);
-
-  const suburbs = useMemo(() => {
-    return areas.find((a) => a.area === form.area)?.suburbs ?? [];
-  }, [areas, form.area]);
-
-  const schools = useMemo(() => {
-    return getSchools(form.region, form.area);
-  }, [form.region, form.area]);
+  const areas = useMemo(() => NZ_LOCATIONS.find((r) => r.region === form.region)?.areas ?? [], [form.region]);
+  const suburbs = useMemo(() => areas.find((a) => a.area === form.area)?.suburbs ?? [], [areas, form.area]);
+  const schools = useMemo(() => getSchools(form.region, form.area), [form.region, form.area]);
+  const selectedImageCount = images?.length ?? 0;
 
   async function onSubmit() {
     setSubmitting(true);
@@ -112,40 +148,34 @@ export default function PostListingPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save listing');
 
-      setMsg(`✅ Listing #${data.item.id} posted with ${imageUrls.length} image(s)`);
+      setMsg(`Listing #${data.item.id} submitted with ${imageUrls.length} image(s). It will appear after moderation.`);
       setForm({ ...form, title: '', source_url: '', description: '', duration_days: 30, available_date: '', latitude: '', longitude: '' });
       setImages(null);
     } catch (e: any) {
-      setMsg(`❌ ${e.message || 'Something went wrong'}`);
+      setMsg(e.message || 'Something went wrong');
     } finally {
       setSubmitting(false);
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    padding: '11px 12px',
-    border: '1px solid #dbe3ef',
-    borderRadius: 10,
-    fontSize: 14,
-    outline: 'none',
-    background: '#fff'
-  };
-
   if (status === 'loading') {
-    return <main style={{ maxWidth: 980, margin: '0 auto', padding: '34px 16px' }}><SubNav />Loading...</main>;
+    return (
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '34px 16px' }}>
+        <SubNav />
+        <p style={{ color: '#64748b' }}>Loading...</p>
+      </main>
+    );
   }
 
   if (!session?.user) {
     return (
-      <main style={{ maxWidth: 560, margin: '0 auto', padding: '60px 16px' }}>
+      <main style={{ maxWidth: 760, margin: '0 auto', padding: '56px 16px' }}>
         <SubNav />
-        <section style={{ border: '1px solid #e7edf5', borderRadius: 14, padding: 24, textAlign: 'center' }}>
-          <h1 style={{ marginTop: 0 }}>Sign in required</h1>
-          <p style={{ color: '#5b677a' }}>Please sign in before creating a listing.</p>
-          <button
-            onClick={() => signIn(undefined, { callbackUrl: '/post' })}
-            style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid #1a73e8', background: '#1a73e8', color: '#fff' }}
-          >
+        <section style={{ border: '1px solid #dbeafe', borderRadius: 22, padding: 30, background: '#f8fbff', textAlign: 'center', boxShadow: '0 20px 50px rgba(15, 23, 42, 0.08)' }}>
+          <p style={{ margin: '0 0 8px', color: '#2563eb', fontWeight: 850, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.8 }}>Host tools</p>
+          <h1 style={{ margin: '0 0 10px', fontSize: 34, letterSpacing: 0 }}>Sign in to create a listing</h1>
+          <p style={{ margin: '0 auto 22px', color: '#64748b', lineHeight: 1.6, maxWidth: 520 }}>Add photos, rental details, location, availability, and moderation-ready highlights for renters.</p>
+          <button onClick={() => signIn(undefined, { callbackUrl: '/post' })} style={{ padding: '12px 18px', borderRadius: 999, border: '1px solid #2563eb', background: '#2563eb', color: '#fff', fontWeight: 850, cursor: 'pointer' }}>
             Go to login
           </button>
         </section>
@@ -154,32 +184,43 @@ export default function PostListingPage() {
   }
 
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: '34px 16px 56px', background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 220px)' }}>
+    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '30px 16px 64px' }}>
       <SubNav />
-      <section
-        style={{
-          border: '1px solid #e7edf5',
-          borderRadius: 18,
-          padding: 24,
-          background: '#fff',
-          boxShadow: '0 10px 30px rgba(20, 61, 120, 0.06)'
-        }}
-      >
-        <h1 style={{ marginTop: 0, marginBottom: 8, fontWeight: 700, letterSpacing: -0.2 }}>Create Listing</h1>
-        <p style={{ marginTop: 0, color: '#5b677a' }}>
-          Publish a rental post with multiple images and a structured NZ location selector.
-        </p>
+      <section style={{ marginBottom: 22, display: 'grid', gap: 18, gridTemplateColumns: 'minmax(0, 1.25fr) minmax(260px, 0.75fr)', alignItems: 'stretch' }} className="postHero">
+        <div style={{ border: '1px solid #dbeafe', borderRadius: 24, padding: 28, background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 56%, #ecfeff 100%)', boxShadow: '0 20px 60px rgba(15, 23, 42, 0.08)' }}>
+          <p style={{ margin: '0 0 8px', color: '#2563eb', fontWeight: 850, fontSize: 13, letterSpacing: 0.8, textTransform: 'uppercase' }}>Create listing</p>
+          <h1 style={{ margin: 0, fontSize: 38, lineHeight: 1.1, letterSpacing: 0 }}>Publish a room renters can understand fast.</h1>
+          <p style={{ margin: '12px 0 0', color: '#526173', fontSize: 16, lineHeight: 1.65, maxWidth: 680 }}>Add the practical details first: price, location, photos, availability, and what is included. RentFinder turns it into a searchable listing for NZ renters.</p>
+        </div>
+        <aside style={{ border: '1px solid #e5eaf2', borderRadius: 24, padding: 22, background: '#0f172a', color: '#fff', display: 'grid', alignContent: 'center', gap: 14 }}>
+          {['Photos improve trust', 'Pending moderation by default', 'Listings can run up to 180 days'].map((item) => (
+            <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'center', color: '#dbeafe', fontWeight: 750 }}>
+              <span style={{ width: 9, height: 9, borderRadius: 999, background: '#38bdf8' }} />
+              {item}
+            </div>
+          ))}
+        </aside>
+      </section>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Title</span>
-            <input style={inputStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Sunny room near LU" />
+      <section style={{ border: '1px solid #e5eaf2', borderRadius: 24, background: '#ffffff', boxShadow: '0 18px 50px rgba(15, 23, 42, 0.08)', overflow: 'hidden' }}>
+        <div style={{ padding: 24, borderBottom: '1px solid #eef2f7', display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 22 }}>Listing details</h2>
+            <p style={{ margin: '6px 0 0', color: '#64748b' }}>Required basics, location, amenities, and photos.</p>
+          </div>
+          <span style={{ border: '1px solid #bbf7d0', color: '#166534', background: '#f0fdf4', borderRadius: 999, padding: '7px 11px', fontSize: 13, fontWeight: 850 }}>Signed in</span>
+        </div>
+
+        <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }} className="postGrid">
+          <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>
+            Title
+            <input style={fieldStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Sunny furnished room near Lincoln University" />
           </label>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Region</span>
+          <label style={labelStyle}>
+            Region
             <select
-              style={inputStyle}
+              style={fieldStyle}
               value={form.region}
               onChange={(e) => {
                 const region = e.target.value;
@@ -189,184 +230,116 @@ export default function PostListingPage() {
                 setForm({ ...form, region, area: firstArea, suburb: firstSuburb, near_school: '(None)' });
               }}
             >
-              {NZ_LOCATIONS.map((r) => (
-                <option key={r.region} value={r.region}>
-                  {r.region}
-                </option>
-              ))}
+              {NZ_LOCATIONS.map((r) => <option key={r.region} value={r.region}>{r.region}</option>)}
             </select>
           </label>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>City / District</span>
-            <select
-              style={inputStyle}
-              value={form.area}
-              onChange={(e) => {
-                const area = e.target.value;
-                const firstSuburb = areas.find((a) => a.area === area)?.suburbs[0] ?? '';
-                setForm({ ...form, area, suburb: firstSuburb });
-              }}
-            >
-              {areas.map((a) => (
-                <option key={a.area} value={a.area}>
-                  {a.area}
-                </option>
-              ))}
+          <label style={labelStyle}>
+            City / District
+            <select style={fieldStyle} value={form.area} onChange={(e) => {
+              const area = e.target.value;
+              const firstSuburb = areas.find((a) => a.area === area)?.suburbs[0] ?? '';
+              setForm({ ...form, area, suburb: firstSuburb });
+            }}>
+              {areas.map((a) => <option key={a.area} value={a.area}>{a.area}</option>)}
             </select>
           </label>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Suburb</span>
-            <select style={inputStyle} value={form.suburb} onChange={(e) => setForm({ ...form, suburb: e.target.value })}>
-              {suburbs.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
+          <label style={labelStyle}>
+            Suburb
+            <select style={fieldStyle} value={form.suburb} onChange={(e) => setForm({ ...form, suburb: e.target.value })}>
+              {suburbs.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </label>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Price (NZD / week)</span>
-            <input
-              style={inputStyle}
-              type="number"
-              value={form.price_nzd_week}
-              onChange={(e) => setForm({ ...form, price_nzd_week: Number(e.target.value) })}
-            />
+          <label style={labelStyle}>
+            Price (NZD / week)
+            <input style={fieldStyle} type="number" min={1} value={form.price_nzd_week} onChange={(e) => setForm({ ...form, price_nzd_week: Number(e.target.value) })} />
           </label>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Listing duration (days)</span>
-            <input
-              style={inputStyle}
-              type="number"
-              min={1}
-              max={180}
-              value={form.duration_days}
-              onChange={(e) => setForm({ ...form, duration_days: Number(e.target.value) })}
-            />
+          <label style={labelStyle}>
+            Listing duration
+            <input style={fieldStyle} type="number" min={1} max={180} value={form.duration_days} onChange={(e) => setForm({ ...form, duration_days: Number(e.target.value) })} />
           </label>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Available date</span>
-            <input
-              style={inputStyle}
-              type="date"
-              value={form.available_date}
-              onChange={(e) => setForm({ ...form, available_date: e.target.value })}
-            />
+          <label style={labelStyle}>
+            Available date
+            <input style={fieldStyle} type="date" value={form.available_date} onChange={(e) => setForm({ ...form, available_date: e.target.value })} />
           </label>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Nearby University / Polytechnic (Optional)</span>
-            <select style={inputStyle} value={form.near_school} onChange={(e) => setForm({ ...form, near_school: e.target.value })}>
-              {schools.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
+          <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>
+            Nearby university / polytechnic
+            <select style={fieldStyle} value={form.near_school} onChange={(e) => setForm({ ...form, near_school: e.target.value })}>
+              {schools.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </label>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Latitude (Optional)</span>
-            <input
-              style={inputStyle}
-              type="number"
-              step="any"
-              value={form.latitude}
-              onChange={(e) => setForm({ ...form, latitude: e.target.value })}
-              placeholder="e.g. -36.8485"
-            />
-          </label>
-
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Longitude (Optional)</span>
-            <input
-              style={inputStyle}
-              type="number"
-              step="any"
-              value={form.longitude}
-              onChange={(e) => setForm({ ...form, longitude: e.target.value })}
-              placeholder="e.g. 174.7633"
-            />
-          </label>
-
-          <div style={{ display: 'flex', gap: 18, alignItems: 'end' }}>
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#374151' }}>
-              <input type="checkbox" checked={form.furnished} onChange={(e) => setForm({ ...form, furnished: e.target.checked })} />
-              Furnished
-            </label>
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#374151' }}>
-              <input
-                type="checkbox"
-                checked={form.bills_included}
-                onChange={(e) => setForm({ ...form, bills_included: e.target.checked })}
-              />
-              Bills included
-            </label>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <ToggleChip checked={form.furnished} label="Furnished" onChange={(checked) => setForm({ ...form, furnished: checked })} />
+            <ToggleChip checked={form.bills_included} label="Bills included" onChange={(checked) => setForm({ ...form, bills_included: checked })} />
           </div>
 
-          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Source URL (Optional)</span>
-            <input
-              style={inputStyle}
-              value={form.source_url}
-              onChange={(e) => setForm({ ...form, source_url: e.target.value })}
-              placeholder="Facebook / TradeMe / etc"
-            />
+          <label style={labelStyle}>
+            Latitude (optional)
+            <input style={fieldStyle} type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="-36.8485" />
           </label>
 
-          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Description</span>
-            <div style={{ border: '1px solid #dbe3ef', borderRadius: 10, overflow: 'hidden' }}>
-              <ReactQuill
-                theme="snow"
-                value={form.description}
-                onChange={(value) => setForm({ ...form, description: value })}
-                modules={editorModules}
-                formats={editorFormats}
-                placeholder="Write listing details with rich formatting..."
-                style={{ background: '#fff' }}
-              />
+          <label style={labelStyle}>
+            Longitude (optional)
+            <input style={fieldStyle} type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="174.7633" />
+          </label>
+
+          <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>
+            Source URL
+            <input style={fieldStyle} value={form.source_url} onChange={(e) => setForm({ ...form, source_url: e.target.value })} placeholder="Facebook, Trade Me, Roomies, or your preferred contact link" />
+          </label>
+
+          <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>
+            Description
+            <div style={{ border: '1px solid #d8e0eb', borderRadius: 14, overflow: 'hidden', background: '#fff' }}>
+              <ReactQuill theme="snow" value={form.description} onChange={(value) => setForm({ ...form, description: value })} modules={editorModules} formats={editorFormats} placeholder="Room vibe, flatmates, transport, parking, bills, house rules..." />
             </div>
-            <small style={{ color: '#6b7280' }}>
-              Supports bold, italic, underline, alignment, indent/tab, bullet/number list, and text color.
-            </small>
+            <small style={{ color: '#64748b', fontWeight: 600 }}>Rich text is supported. Keep contact instructions clear and practical.</small>
           </label>
 
-          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            <span style={{ color: '#374151', fontSize: 13, fontWeight: 600 }}>Images</span>
-            <input style={inputStyle} type="file" accept="image/*" multiple onChange={(e) => setImages(e.target.files)} />
-            <small style={{ color: '#6b7280' }}>You can select multiple images in one upload.</small>
+          <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>
+            Images
+            <div style={{ border: '1px dashed #93c5fd', borderRadius: 16, padding: 18, background: '#f8fbff' }}>
+              <input style={{ ...fieldStyle, border: 'none', padding: 0, background: 'transparent' }} type="file" accept="image/*" multiple onChange={(e) => setImages(e.target.files)} />
+              <p style={{ margin: '10px 0 0', color: '#64748b', fontSize: 13, fontWeight: 650 }}>{selectedImageCount ? `${selectedImageCount} image(s) selected` : 'Upload bright, real photos of the room and shared spaces.'}</p>
+            </div>
           </label>
         </div>
 
-        <div style={{ marginTop: 18 }}>
-          <button
-            onClick={onSubmit}
-            disabled={submitting}
-            style={{
-              padding: '11px 18px',
-              borderRadius: 10,
-              border: '1px solid #1a73e8',
-              background: '#1a73e8',
-              color: '#fff',
-              fontWeight: 600
-            }}
-          >
-            {submitting ? 'Publishing...' : 'Publish Listing'}
+        <div style={{ padding: 24, borderTop: '1px solid #eef2f7', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <button onClick={onSubmit} disabled={submitting} style={{ padding: '13px 18px', borderRadius: 999, border: '1px solid #2563eb', background: submitting ? '#93c5fd' : '#2563eb', color: '#fff', fontWeight: 850, cursor: submitting ? 'default' : 'pointer', boxShadow: submitting ? 'none' : '0 12px 26px rgba(37, 99, 235, 0.2)' }}>
+            {submitting ? 'Publishing...' : 'Publish listing'}
           </button>
-          {msg ? <p style={{ marginTop: 10 }}>{msg}</p> : null}
+          {msg ? <p style={{ margin: 0, color: msg.toLowerCase().includes('submitted') ? '#166534' : '#b91c1c', fontWeight: 750 }}>{msg}</p> : null}
         </div>
       </section>
 
       <style jsx global>{`
         .ql-editor {
-          min-height: 180px;
+          min-height: 190px;
           font-size: 14px;
+        }
+
+        .ql-toolbar.ql-snow,
+        .ql-container.ql-snow {
+          border: none;
+        }
+
+        .ql-toolbar.ql-snow {
+          border-bottom: 1px solid #e5eaf2;
+          background: #f8fafc;
+        }
+
+        @media (max-width: 820px) {
+          .postHero,
+          .postGrid {
+            grid-template-columns: 1fr !important;
+          }
         }
       `}</style>
     </main>
