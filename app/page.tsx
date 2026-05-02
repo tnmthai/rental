@@ -268,7 +268,6 @@ const I18N = {
     helpButton: 'Help / Instructions',
     suggestionsTitle: 'AI suggestion prompts',
     suggestionsHint: 'Tap a prompt to quickly fill your search',
-    demoTitle: 'See it in action (20s demo)',
     demoPromptLabel: 'You type',
     demoOutputLabel: 'RentFinder returns',
     demoPromptSample: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
@@ -327,7 +326,6 @@ const I18N = {
     helpButton: 'Hướng dẫn',
     suggestionsTitle: 'Gợi ý prompt AI',
     suggestionsHint: 'Bấm để điền nhanh câu tìm kiếm',
-    demoTitle: 'Xem thử (demo 20 giây)',
     demoPromptLabel: 'Bạn gõ',
     demoOutputLabel: 'RentFinder trả về',
     demoPromptSample: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
@@ -667,12 +665,29 @@ export default function HomePage() {
             ) : null}
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-              <button
-                onClick={() => signOut({ callbackUrl: '/' })}
-                style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', background: '#fff' }}
-              >
-                {t.signOut}
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <a
+                  href="/dashboard"
+                  style={{
+                    border: '1px solid #bfdbfe',
+                    borderRadius: 999,
+                    padding: '6px 12px',
+                    background: '#eff6ff',
+                    color: '#1d4ed8',
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    fontWeight: 700
+                  }}
+                >
+                  {t.myDashboard}
+                </a>
+                <button
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', background: '#fff' }}
+                >
+                  {t.signOut}
+                </button>
+              </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#5f6368' }}>
                 {session.user.image ? (
@@ -857,9 +872,6 @@ export default function HomePage() {
             }}
           >
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#4338ca', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>
-                {t.demoTitle}
-              </div>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoPromptLabel}</div>
               <p style={{ margin: '8px 0 6px', fontSize: 15, color: '#1f2937', lineHeight: 1.6 }}>
                 “{t.demoPromptSample}”
