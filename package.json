@@ -12,15 +12,15 @@
     "@types/leaflet": "^1.9.21",
     "bcryptjs": "^3.0.3",
     "leaflet": "^1.9.4",
-    "next": "^16.2.4",
-    "next-auth": "^1.12.1",
+    "next": "^9.3.3",
+    "next-auth": "^^2.0.0",
     "nodemailer": "^8.0.7",
     "pg": "8.12.0",
     "quill": "^2.0.2",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-leaflet": "^4.2.1",
-    "react-quill": "^0.0.2"
+    "react-quill": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "20.16.5",
