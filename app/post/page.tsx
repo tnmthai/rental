@@ -1,42 +1,10 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import type { CSSProperties } from 'react';
 import { useMemo, useState } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import SubNav from '@/app/components/SubNav';
 import { NZ_LOCATIONS, getSchools } from '@/lib/nz-data';
-import 'react-quill/dist/quill.snow.css';
-
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-
-const editorModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ color: [] }, { background: [] }],
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    [{ align: [] }, { indent: '-1' }, { indent: '+1' }],
-    ['blockquote', 'code-block'],
-    ['clean']
-  ]
-};
-
-const editorFormats = [
-  'header',
-  'bold',
-  'italic',
-  'underline',
-  'strike',
-  'color',
-  'background',
-  'list',
-  'bullet',
-  'align',
-  'indent',
-  'blockquote',
-  'code-block'
-];
 
 const fieldStyle: CSSProperties = {
   width: '100%',
@@ -296,10 +264,13 @@ export default function PostListingPage() {
 
           <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>
             Description
-            <div style={{ border: '1px solid #d8e0eb', borderRadius: 14, overflow: 'hidden', background: '#fff' }}>
-              <ReactQuill theme="snow" value={form.description} onChange={(value) => setForm({ ...form, description: value })} modules={editorModules} formats={editorFormats} placeholder="Room vibe, flatmates, transport, parking, bills, house rules..." />
-            </div>
-            <small style={{ color: '#64748b', fontWeight: 600 }}>Rich text is supported. Keep contact instructions clear and practical.</small>
+            <textarea
+              style={{ ...fieldStyle, minHeight: 190, resize: 'vertical', lineHeight: 1.55 }}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Room vibe, flatmates, transport, parking, bills, house rules..."
+            />
+            <small style={{ color: '#64748b', fontWeight: 600 }}>Keep contact instructions clear and practical.</small>
           </label>
 
           <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>
@@ -319,22 +290,7 @@ export default function PostListingPage() {
         </div>
       </section>
 
-      <style jsx global>{`
-        .ql-editor {
-          min-height: 190px;
-          font-size: 14px;
-        }
-
-        .ql-toolbar.ql-snow,
-        .ql-container.ql-snow {
-          border: none;
-        }
-
-        .ql-toolbar.ql-snow {
-          border-bottom: 1px solid #e5eaf2;
-          background: #f8fafc;
-        }
-
+      <style jsx>{`
         @media (max-width: 820px) {
           .postHero,
           .postGrid {
