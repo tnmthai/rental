@@ -54,7 +54,7 @@ export default function HostsPage() {
         <p style={{ fontSize: 18, color: '#4b5563', margin: '0 auto', maxWidth: 640 }}>
           RentFinder mirrors your existing listing, adds clean AI highlights, and keeps your preferred contact link so students can reach you faster.
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap', marginTop: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
           <a
             href="mailto:info@rentfinder.nz?subject=Share%20my%20room&body=Hi%20RentFinder%2C%0AHere%20is%20my%20listing%20link%3A%20"
             style={{
@@ -70,24 +70,6 @@ export default function HostsPage() {
             }}
           >
             Email my listing link
-          </a>
-          <a
-            href="https://t.me/thaitran"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 999,
-              padding: '12px 26px',
-              fontWeight: 600,
-              border: '1px solid #d1d5db',
-              color: '#111827',
-              textDecoration: 'none'
-            }}
-          >
-            DM on Telegram
           </a>
         </div>
       </section>
@@ -122,7 +104,7 @@ export default function HostsPage() {
           </div>
         ))}
         <p style={{ marginTop: 24 }}>
-          Still unsure? Email <a href="mailto:info@rentfinder.nz">info@rentfinder.nz</a> or ping Telegram <a href="https://t.me/thaitran" target="_blank" rel="noreferrer">@thaitran</a>.
+          Still unsure? Email <a href="mailto:info@rentfinder.nz">info@rentfinder.nz</a>.
         </p>
       </section>
     </main>
