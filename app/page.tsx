@@ -261,7 +261,7 @@ async function trackClientEvent(event_name: 'contact_click' | 'share_click', lis
 
 const I18N = {
   en: {
-    aiNote: 'AI Note',
+    aiNote: 'AI Note', // Label for AI disclaimer button
     signOut: 'Sign out',
     logIn: 'Log in',
     searchPlaceholder: 'Search rentals in natural language...',
@@ -322,7 +322,7 @@ const I18N = {
     studyDeskBadge: 'study desk'
   },
   vi: {
-    aiNote: 'Ghi chú AI',
+    aiNote: 'Ghi chú AI', // Vietnamese translation for AI disclaimer button
     signOut: 'Đăng xuất',
     logIn: 'Đăng nhập',
     searchPlaceholder: 'Tìm nhà thuê bằng ngôn ngữ tự nhiên...',
@@ -400,6 +400,7 @@ export default function HomePage() {
   const [saveMsg, setSaveMsg] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
   const [newCount, setNewCount] = useState(0);
+  // State to control visibility of AI disclaimer tooltip
   const [showAIDisclaimer, setShowAIDisclaimer] = useState(false);
   const [visitCount, setVisitCount] = useState<number | null>(null);
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
@@ -605,6 +606,7 @@ export default function HomePage() {
         }}
       >
         <div style={{ position: 'relative' }}>
+          {/* AI Note button - shows disclaimer about AI-powered features */}
           <button
             onClick={() => setShowAIDisclaimer((v) => !v)}
             style={{
@@ -620,6 +622,7 @@ export default function HomePage() {
           >
             {t.aiNote}
           </button>
+          {/* AI disclaimer tooltip - explains AI usage and potential imperfections */}
           {showAIDisclaimer ? (
             <div
               style={{
