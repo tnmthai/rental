@@ -44,6 +44,26 @@ export default function HostsPage() {
         color: '#111827'
       }}
     >
+      <a
+        href="/"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1px solid #d1d5db',
+          borderRadius: 999,
+          padding: '8px 14px',
+          color: '#374151',
+          textDecoration: 'none',
+          fontSize: 14,
+          fontWeight: 700,
+          background: '#fff',
+          marginBottom: 24
+        }}
+      >
+        Back to home
+      </a>
+
       <section style={{ textAlign: 'center', marginBottom: 40 }}>
         <p style={{ display: 'inline-block', padding: '6px 14px', borderRadius: 999, background: '#eef2ff', color: '#4338ca', fontWeight: 600 }}>
           Host beta · free reposting
