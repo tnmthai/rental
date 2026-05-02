@@ -101,6 +101,14 @@ export default function LoginPage() {
         </button>
       </form>
 
+      {mode === 'login' ? (
+        <p style={{ marginTop: 10, fontSize: 14 }}>
+          <a href="/forgot-password" style={{ color: '#1a73e8', textDecoration: 'none' }}>
+            Forgot password?
+          </a>
+        </p>
+      ) : null}
+
       <p style={{ marginTop: 14, fontSize: 14 }}>
         {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
         <button

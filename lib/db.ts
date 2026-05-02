@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 
 let pool: Pool | null = null;
 let listingGeoColumnsEnsured = false;
+let userResetColumnsEnsured = false;
 
 export type ListingSearch = {
   city?: string;
@@ -244,6 +245,44 @@ export async function createUser(input: {
     [input.name || null, input.email, input.passwordHash || null, input.provider || 'email', input.providerId || null]
   );
   return rows[0];
+}
+
+async function ensureUserResetColumns() {
+  if (userResetColumnsEnsured) return;
+  const p = getPool();
+  await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_token TEXT`);
+  await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_token_expires_at TIMESTAMPTZ`);
+  userResetColumnsEnsured = true;
+}
+
+export async function createPasswordResetToken(userId: number, token: string, expiresAt: string) {
+  const p = getPool();
+  await ensureUserResetColumns();
+  const { rows } = await p.query(
+    `UPDATE users SET reset_password_token=$1, reset_password_token_expires_at=$2 WHERE id=$3 RETURNING id`,
+    [token, expiresAt, userId]
+  );
+  return rows[0] || null;
+}
+
+export async function findUserByResetToken(token: string) {
+  const p = getPool();
+  await ensureUserResetColumns();
+  const { rows } = await p.query(
+    `SELECT id, email, name FROM users WHERE reset_password_token=$1 AND reset_password_token_expires_at > now() LIMIT 1`,
+    [token]
+  );
+  return rows[0] || null;
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string) {
+  const p = getPool();
+  await ensureUserResetColumns();
+  const { rows } = await p.query(
+    `UPDATE users SET password_hash=$1, reset_password_token=NULL, reset_password_token_expires_at=NULL WHERE id=$2 RETURNING id`,
+    [passwordHash, userId]
+  );
+  return rows[0] || null;
 }
 
 export async function getListingsByUser(userId: number) {
