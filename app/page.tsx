@@ -261,7 +261,6 @@ async function trackClientEvent(event_name: 'contact_click' | 'share_click', lis
 
 const I18N = {
   en: {
-    aiNote: 'AI Note', // Label for AI disclaimer button
     signOut: 'Sign out',
     logIn: 'Log in',
     searchPlaceholder: 'Search rentals in natural language...',
@@ -303,8 +302,6 @@ const I18N = {
     vietnamese: 'Vietnamese',
     slogan: 'Post fast, find smart',
     heroTitle: 'Search less. Match faster.',
-    heroSubtitle:
-      'Skip the old manual way of house hunting — click, filter, scroll, repeat. Just type naturally, like texting a friend. RentFinder understands and finds the right listings for you.',
     saveNeedLogin: 'Please log in first.',
     saveOk: 'Saved search created.',
     saveFail: 'Failed to save',
@@ -322,7 +319,6 @@ const I18N = {
     studyDeskBadge: 'study desk'
   },
   vi: {
-    aiNote: 'Ghi chú AI', // Vietnamese translation for AI disclaimer button
     signOut: 'Đăng xuất',
     logIn: 'Đăng nhập',
     searchPlaceholder: 'Tìm nhà thuê bằng ngôn ngữ tự nhiên...',
@@ -364,8 +360,6 @@ const I18N = {
     vietnamese: 'Tiếng Việt',
     slogan: 'Đăng nhanh, tìm thông minh',
     heroTitle: 'Tìm ít hơn. Khớp nhanh hơn.',
-    heroSubtitle:
-      'Bỏ cách tìm nhà thủ công cũ: bấm lọc, kéo màn hình, lặp lại. Chỉ cần gõ bằng ngôn ngữ tự nhiên như đang nhắn tin — RentFinder sẽ hiểu và trả về listing phù hợp cho bạn.',
     saveNeedLogin: 'Vui lòng đăng nhập trước.',
     saveOk: 'Đã lưu tìm kiếm.',
     saveFail: 'Lưu thất bại',
@@ -400,8 +394,6 @@ export default function HomePage() {
   const [saveMsg, setSaveMsg] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
   const [newCount, setNewCount] = useState(0);
-  // State to control visibility of AI disclaimer tooltip
-  const [showAIDisclaimer, setShowAIDisclaimer] = useState(false);
   const [visitCount, setVisitCount] = useState<number | null>(null);
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>('en');
@@ -605,49 +597,6 @@ export default function HomePage() {
           boxSizing: 'border-box'
         }}
       >
-        <div style={{ position: 'relative' }}>
-          {/* AI Note button - shows disclaimer about AI-powered features */}
-          <button
-            onClick={() => setShowAIDisclaimer((v) => !v)}
-            style={{
-              border: '1px solid #d0d5dd',
-              borderRadius: 999,
-              padding: '6px 12px',
-              background: '#fff',
-              color: '#344054',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            {t.aiNote}
-          </button>
-          {/* AI disclaimer tooltip - explains AI usage and potential imperfections */}
-          {showAIDisclaimer ? (
-            <div
-              style={{
-                position: 'absolute',
-                top: '110%',
-                right: 0,
-                zIndex: 20,
-                width: 380,
-                maxWidth: '90vw',
-                border: '1px solid #e5e7eb',
-                borderRadius: 10,
-                background: '#fffef7',
-                color: '#444',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                padding: '10px 12px',
-                fontSize: 12,
-                lineHeight: 1.45,
-                whiteSpace: 'pre-line'
-              }}
-            >
-              {`This app is made with AI, so you might see weird highlights or other small issues. Please ignore the bugs.\n\n\nThanks for understanding.`}
-            </div>
-          ) : null}
-        </div>
-
         {session?.user ? (
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: '#3c4043' }}>
             {(pendingCount > 0 || newCount > 0) ? (
@@ -750,9 +699,6 @@ export default function HomePage() {
         >
           {t.heroTitle}
         </h1>
-        <p style={{ margin: '0 0 16px', color: '#4b5563', fontSize: '10pt', fontWeight: 500, maxWidth: 760, marginInline: 'auto', lineHeight: 1.5 }}>
-          {t.heroSubtitle}
-        </p>
 
         <div
           className="searchBar"
