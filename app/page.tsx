@@ -265,6 +265,7 @@ const I18N = {
     logIn: 'Log in',
     searchPlaceholder: 'Search rentals in natural language...',
     samplePrompt: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    helpButton: 'Help / Instructions',
     suggestionsTitle: 'AI suggestion prompts',
     suggestionsHint: 'Tap a prompt to quickly fill your search',
     demoTitle: 'See it in action (20s demo)',
@@ -323,6 +324,7 @@ const I18N = {
     logIn: 'Đăng nhập',
     searchPlaceholder: 'Tìm nhà thuê bằng ngôn ngữ tự nhiên...',
     samplePrompt: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    helpButton: 'Hướng dẫn',
     suggestionsTitle: 'Gợi ý prompt AI',
     suggestionsHint: 'Bấm để điền nhanh câu tìm kiếm',
     demoTitle: 'Xem thử (demo 20 giây)',
@@ -397,10 +399,17 @@ export default function HomePage() {
   const [visitCount, setVisitCount] = useState<number | null>(null);
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>('en');
+  const [showHelp, setShowHelp] = useState(false);
   const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
   const searchInputRef = useRef<HTMLTextAreaElement | null>(null);
   const keywords = useMemo(() => extractKeywords(query), [query]);
   const t = I18N[lang];
+  const navButtons = [
+    { href: '/post', label: t.createListing, primary: true },
+    { href: '/wanted/post', label: 'Post room request' },
+    { href: '/wanted', label: 'Room requests' },
+    { href: '/hosts', label: t.shareRoom }
+  ];
   const suggestedPrompts = useMemo(
     () => [
       t.samplePrompt,
@@ -597,6 +606,33 @@ export default function HomePage() {
           boxSizing: 'border-box'
         }}
       >
+        <nav className="topNav" aria-label="Primary actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
+          {navButtons.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: 34,
+                border: item.primary ? '1px solid #2563eb' : '1px solid #d1d5db',
+                borderRadius: 999,
+                padding: '6px 12px',
+                background: item.primary ? '#2563eb' : '#ffffff',
+                color: item.primary ? '#ffffff' : '#374151',
+                textDecoration: 'none',
+                fontSize: 13,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                boxShadow: item.primary ? '0 8px 20px rgba(37, 99, 235, 0.18)' : 'none'
+              }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
         {session?.user ? (
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: '#3c4043' }}>
             {(pendingCount > 0 || newCount > 0) ? (
@@ -764,45 +800,83 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 18, fontSize: 12, fontWeight: 700, color: '#4338ca', letterSpacing: 1, textTransform: 'uppercase' }}>
-          {t.demoTitle}
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
+          <button
+            type="button"
+            onClick={() => setShowHelp((v) => !v)}
+            aria-expanded={showHelp}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              border: '1px solid #c7d2fe',
+              borderRadius: 999,
+              padding: '9px 14px',
+              background: showHelp ? '#eef2ff' : '#ffffff',
+              color: '#3730a3',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 8px 22px rgba(67, 56, 202, 0.08)'
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 20,
+                height: 20,
+                borderRadius: 999,
+                background: '#4338ca',
+                color: '#fff',
+                fontSize: 12,
+                fontWeight: 800
+              }}
+            >
+              ?
+            </span>
+            {t.helpButton}
+          </button>
         </div>
 
-        <div
-          className="heroDemo"
-          style={{
-            marginTop: 14,
-            display: 'flex',
-            gap: 16,
-            padding: '14px 16px',
-            border: '1px solid #e5e7eb',
-            borderRadius: 18,
-            background: '#ffffff',
-            textAlign: 'left',
-            boxShadow: '0 10px 30px rgba(15, 23, 42, 0.05)'
-          }}
-        >
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoPromptLabel}</div>
-            <p style={{ margin: '8px 0 6px', fontSize: 15, color: '#1f2937', lineHeight: 1.6 }}>
-              “{t.demoPromptSample}”
-            </p>
-            <small style={{ color: '#6b7280' }}>{t.demoCtaHint}</small>
+        {showHelp ? (
+          <div
+            className="heroDemo"
+            style={{
+              marginTop: 14,
+              display: 'flex',
+              gap: 16,
+              padding: '14px 16px',
+              border: '1px solid #e5e7eb',
+              borderRadius: 18,
+              background: '#ffffff',
+              textAlign: 'left',
+              boxShadow: '0 10px 30px rgba(15, 23, 42, 0.05)'
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#4338ca', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>
+                {t.demoTitle}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoPromptLabel}</div>
+              <p style={{ margin: '8px 0 6px', fontSize: 15, color: '#1f2937', lineHeight: 1.6 }}>
+                “{t.demoPromptSample}”
+              </p>
+              <small style={{ color: '#6b7280' }}>{t.demoCtaHint}</small>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoOutputLabel}</div>
+              <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#374151', lineHeight: 1.6 }}>
+                {t.demoPoints.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoOutputLabel}</div>
-            <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#374151', lineHeight: 1.6 }}>
-              {t.demoPoints.map((point) => (
-                <li key={point}>{point}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        ) : null}
 
-        <p style={{ marginTop: 12, color: '#5f6368', fontSize: 13 }}>
-          <a href="/post">{t.createListing}</a> · <a href="/wanted/post">Post room request</a> · <a href="/wanted">Room requests</a>
-          {session?.user ? <> · <a href="/dashboard">{t.myDashboard}</a></> : null} · <a href="/hosts">{t.shareRoom}</a>
-        </p>
         {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
 
         <div
@@ -1256,6 +1330,13 @@ export default function HomePage() {
           .home-topbar {
             margin-bottom: 24px !important;
             padding: 0 14px !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+          }
+
+          .topNav {
+            justify-content: center !important;
+            width: 100%;
           }
 
           .searchBar {
