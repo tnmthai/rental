@@ -3,12 +3,13 @@ import Link from 'next/link';
 import { searchListings } from '@/lib/db';
 import { UNIVERSITY_LOCATIONS, getUniversityLocationBySlug } from '@/lib/university-seo';
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
 export const dynamic = 'force-dynamic';
 
-export function generateMetadata({ params }: Props): Metadata {
-  const item = getUniversityLocationBySlug(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const item = getUniversityLocationBySlug(slug);
   if (!item) {
     return {
       title: 'Room for rent in New Zealand | RentFinder'
@@ -43,7 +44,8 @@ export function generateMetadata({ params }: Props): Metadata {
 }
 
 export default async function RentByLocationPage({ params }: Props) {
-  const item = getUniversityLocationBySlug(params.slug);
+  const { slug } = await params;
+  const item = getUniversityLocationBySlug(slug);
   if (!item) {
     return (
       <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>

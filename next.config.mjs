@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    typedRoutes: false
-  }
+  typedRoutes: false,
+  outputFileTracingRoot: process.cwd()
 };
 
 export default nextConfig;

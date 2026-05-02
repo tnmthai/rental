@@ -78,8 +78,9 @@ function buildMapEmbedUrl(lat?: number | null, lng?: number | null, city?: strin
   return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${la}%2C${lo}`;
 }
 
-export default async function ListingDetailPage({ params }: { params: { id: string } }) {
-  const id = Number(params.id || 0);
+export default async function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await params;
+  const id = Number(rawId || 0);
   const item = Number.isFinite(id) ? await getListingById(id) : null;
 
   if (!item) {
