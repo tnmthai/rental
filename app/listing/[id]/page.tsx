@@ -2,6 +2,7 @@ import Script from 'next/script';
 import { getListingById } from '@/lib/db';
 import SubNav from '@/app/components/SubNav';
 import ListingGallery from '@/app/components/ListingGallery';
+import ListingDetailMap from '@/app/components/ListingDetailMap';
 
 function formatDescription(text: string): string[] {
   return text
@@ -65,19 +66,6 @@ function normalizeCoords(lat?: number | string | null, lng?: number | string | n
   return { lat: la, lng: lo };
 }
 
-function buildMapEmbedUrl(lat?: number | null, lng?: number | null, city?: string | null): string | null {
-  const c = normalizeCoords(lat, lng, city);
-  if (!c) return null;
-  const la = c.lat;
-  const lo = c.lng;
-  const delta = 0.02;
-  const left = lo - delta;
-  const right = lo + delta;
-  const top = la + delta;
-  const bottom = la - delta;
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${la}%2C${lo}`;
-}
-
 export default async function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: rawId } = await params;
   const id = Number(rawId || 0);
@@ -93,7 +81,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   }
 
   const images: string[] = Array.isArray(item.image_urls) ? item.image_urls : [];
-  const mapUrl = buildMapEmbedUrl(item.latitude, item.longitude, item.city);
+  const coords = normalizeCoords(item.latitude, item.longitude, item.city);
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
@@ -121,15 +109,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         Posted at: {new Date(item.created_at).toLocaleString()}
       </p>
 
-      {mapUrl ? (
+      {coords ? (
         <section style={{ margin: '10px 0 14px' }}>
           <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>Location map</h3>
-          <iframe
-            title="listing-map"
-            src={mapUrl}
-            style={{ width: '100%', height: 260, border: '1px solid #e5e7eb', borderRadius: 8 }}
-            loading="lazy"
-          />
+          <ListingDetailMap title={item.title} city={item.city} price={Number(item.price_nzd_week || 0)} lat={coords.lat} lng={coords.lng} />
         </section>
       ) : null}
 

@@ -72,8 +72,9 @@ export default function ListingMap({ points }: { points: Point[] }) {
       <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
         <MapContainer center={[-41.2865, 174.7762]} zoom={5} style={{ width: '100%', height: 360 }}>
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors'
+            url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+            detectRetina
           />
           <FitBounds points={displayPoints} />
           {displayPoints.map((p, idx) => (
