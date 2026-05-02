@@ -579,22 +579,23 @@ export default function HomePage() {
   return (
     <main
       style={{
-        maxWidth: 980,
+        maxWidth: 1080,
         margin: '0 auto',
-        padding: '8px 16px 80px',
+        padding: '18px 16px 80px',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        color: '#1f2937'
+        color: '#1f2937',
+        position: 'relative'
       }}
     >
       <header
         className="home-topbar"
         style={{
           display: 'flex',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 82,
+          marginBottom: 54,
           gap: 12,
           width: '100vw',
           position: 'relative',
@@ -604,7 +605,11 @@ export default function HomePage() {
           boxSizing: 'border-box'
         }}
       >
-        <nav className="topNav" aria-label="Primary actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
+        <a href="/" className="miniBrand" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: 900, fontSize: 18, letterSpacing: 0 }}>
+          RentFinder
+        </a>
+
+        <nav className="topNav" aria-label="Primary actions" style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', flex: 1 }}>
           {navButtons.map((item) => (
             <a
               key={item.href}
@@ -614,16 +619,16 @@ export default function HomePage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 minHeight: 34,
-                border: item.primary ? '1px solid #2563eb' : '1px solid #d1d5db',
+                border: item.primary ? '1px solid #0f766e' : '1px solid #d8e0eb',
                 borderRadius: 999,
-                padding: '6px 12px',
-                background: item.primary ? '#2563eb' : '#ffffff',
-                color: item.primary ? '#ffffff' : '#374151',
+                padding: '7px 13px',
+                background: item.primary ? '#0f766e' : 'rgba(255,255,255,0.9)',
+                color: item.primary ? '#ffffff' : '#334155',
                 textDecoration: 'none',
                 fontSize: 13,
-                fontWeight: 700,
+                fontWeight: 800,
                 whiteSpace: 'nowrap',
-                boxShadow: item.primary ? '0 8px 20px rgba(37, 99, 235, 0.18)' : 'none'
+                boxShadow: item.primary ? '0 10px 22px rgba(15, 118, 110, 0.18)' : '0 8px 18px rgba(15, 23, 42, 0.05)'
               }}
             >
               {item.label}
@@ -683,7 +688,7 @@ export default function HomePage() {
                 </a>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
-                  style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', background: '#fff' }}
+                  style={{ border: '1px solid #d8e0eb', borderRadius: 999, padding: '7px 12px', background: '#fff', color: '#334155', fontWeight: 700 }}
                 >
                   {t.signOut}
                 </button>
@@ -706,26 +711,40 @@ export default function HomePage() {
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 8 }}>
-            <a href="/login" style={{ border: '1px solid #dadce0', borderRadius: 999, padding: '6px 12px', textDecoration: 'none', color: '#1a73e8' }}>
+            <a href="/login" style={{ border: '1px solid #0f766e', borderRadius: 999, padding: '8px 14px', textDecoration: 'none', color: '#0f766e', background: '#fff', fontWeight: 850, boxShadow: '0 8px 18px rgba(15, 23, 42, 0.06)' }}>
               {t.logIn}
             </a>
           </div>
         )}
       </header>
 
-      <section style={{ textAlign: 'center', marginBottom: 26 }}>
+      <section
+        className="homeHero"
+        style={{
+          textAlign: 'center',
+          marginBottom: 26,
+          border: '1px solid #e5eaf2',
+          borderRadius: 30,
+          padding: '34px clamp(18px, 5vw, 48px)',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f0fdfa 42%, #eff6ff 100%)',
+          boxShadow: '0 24px 70px rgba(15, 23, 42, 0.11)',
+          overflow: 'hidden',
+          position: 'relative'
+        }}
+      >
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid #ccfbf1', borderRadius: 999, padding: '7px 12px', background: 'rgba(255,255,255,0.78)', color: '#0f766e', fontSize: 13, fontWeight: 850, marginBottom: 14 }}>
+          AI rental search for New Zealand
+        </div>
         <a
           href="/"
           style={{
             display: 'inline-block',
-            fontSize: 54,
-            fontWeight: 800,
-            letterSpacing: -1,
-            marginBottom: 14,
+            fontSize: 60,
+            fontWeight: 950,
+            letterSpacing: 0,
+            marginBottom: 10,
             textDecoration: 'none',
-            background: 'linear-gradient(90deg, #ff0000 0%, #ff7f00 20%, #ffd600 40%, #1e88e5 60%, #00c853 80%, #ff0000 100%)',
-            backgroundSize: '250% 100%',
-            animation: 'rainbowShift 14s ease-in-out infinite',
+            background: 'linear-gradient(90deg, #0f766e 0%, #2563eb 48%, #7c3aed 100%)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             color: 'transparent'
@@ -736,30 +755,33 @@ export default function HomePage() {
         </a>
         <h1
           style={{
-            margin: '-2px 0 6px',
-            fontSize: '11pt',
-            fontWeight: 800,
-            letterSpacing: -0.2,
-            background: 'linear-gradient(90deg, #ff0000 0%, #ff7f00 20%, #ffd600 40%, #1e88e5 60%, #00c853 80%, #ff0000 100%)',
-            backgroundSize: '250% 100%',
-            animation: 'rainbowShift 14s ease-in-out infinite',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            color: 'transparent'
+            margin: '0 auto 18px',
+            fontSize: 18,
+            fontWeight: 850,
+            letterSpacing: 0,
+            color: '#334155'
           }}
         >
           {t.heroTitle}
         </h1>
 
+        <div className="heroStats" style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
+          {['Rooms', 'Flats', 'University areas'].map((label) => (
+            <span key={label} style={{ border: '1px solid #d8e0eb', borderRadius: 999, padding: '7px 11px', background: 'rgba(255,255,255,0.72)', color: '#475569', fontSize: 13, fontWeight: 800 }}>
+              {label}
+            </span>
+          ))}
+        </div>
+
         <div
           className="searchBar"
           style={{
             display: 'flex',
-            gap: 10,
-            padding: 10,
-            border: '1px solid #e5e7eb',
-            borderRadius: 22,
-            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.07)',
+            gap: 12,
+            padding: 12,
+            border: '1px solid #dbeafe',
+            borderRadius: 24,
+            boxShadow: '0 18px 45px rgba(15, 23, 42, 0.11)',
             background: '#ffffff',
             width: '100%',
             boxSizing: 'border-box',
@@ -782,12 +804,12 @@ export default function HomePage() {
                 fontSize: 16,
                 lineHeight: 1.4,
                 color: '#111827',
-                padding: '12px 14px',
+                padding: '14px 16px',
                 boxSizing: 'border-box',
                 borderRadius: 16,
                 resize: 'none',
-                background: 'transparent',
-                minHeight: 48,
+                background: '#f8fafc',
+                minHeight: 54,
                 overflow: 'hidden'
               }}
               onKeyDown={(e) => {
@@ -802,13 +824,13 @@ export default function HomePage() {
             <button
               onClick={run}
               disabled={loading}
-              style={{ border: 'none', borderRadius: 999, padding: '10px 18px', background: '#2563eb', color: '#fff', whiteSpace: 'nowrap', fontWeight: 600 }}
+              style={{ border: 'none', borderRadius: 999, padding: '11px 20px', background: loading ? '#7dd3fc' : '#0f766e', color: '#fff', whiteSpace: 'nowrap', fontWeight: 850, cursor: loading ? 'default' : 'pointer', boxShadow: loading ? 'none' : '0 12px 24px rgba(15, 118, 110, 0.22)' }}
             >
               {loading ? t.searching : t.search}
             </button>
             <button
               onClick={saveSearch}
-              style={{ border: '1px solid #d1d5db', borderRadius: 999, padding: '10px 14px', background: '#fff', whiteSpace: 'nowrap', color: '#374151' }}
+              style={{ border: '1px solid #d8e0eb', borderRadius: 999, padding: '11px 15px', background: '#fff', whiteSpace: 'nowrap', color: '#334155', fontWeight: 800, cursor: 'pointer' }}
             >
               {t.save}
             </button>
@@ -824,15 +846,15 @@ export default function HomePage() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              border: '1px solid #c7d2fe',
+              border: '1px solid #bae6fd',
               borderRadius: 999,
               padding: '9px 14px',
-              background: showHelp ? '#eef2ff' : '#ffffff',
-              color: '#3730a3',
+              background: showHelp ? '#e0f2fe' : '#ffffff',
+              color: '#075985',
               fontSize: 13,
-              fontWeight: 700,
+              fontWeight: 850,
               cursor: 'pointer',
-              boxShadow: '0 8px 22px rgba(67, 56, 202, 0.08)'
+              boxShadow: '0 8px 22px rgba(14, 165, 233, 0.1)'
             }}
           >
             <span
@@ -844,7 +866,7 @@ export default function HomePage() {
                 width: 20,
                 height: 20,
                 borderRadius: 999,
-                background: '#4338ca',
+                background: '#0284c7',
                 color: '#fff',
                 fontSize: 12,
                 fontWeight: 800
@@ -863,18 +885,18 @@ export default function HomePage() {
               marginTop: 14,
               display: 'flex',
               gap: 16,
-              padding: '14px 16px',
-              border: '1px solid #e5e7eb',
+              padding: '16px 18px',
+              border: '1px solid #dbeafe',
               borderRadius: 18,
               background: '#ffffff',
               textAlign: 'left',
-              boxShadow: '0 10px 30px rgba(15, 23, 42, 0.05)'
+              boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)'
             }}
           >
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoPromptLabel}</div>
               <p style={{ margin: '8px 0 6px', fontSize: 15, color: '#1f2937', lineHeight: 1.6 }}>
-                “{t.demoPromptSample}”
+                "{t.demoPromptSample}"
               </p>
               <small style={{ color: '#6b7280' }}>{t.demoCtaHint}</small>
             </div>
@@ -893,15 +915,15 @@ export default function HomePage() {
 
         <div
           style={{
-            marginTop: 14,
+            marginTop: 16,
             textAlign: 'left',
-            border: '1px solid #e5e7eb',
-            background: '#f8fafc',
-            borderRadius: 14,
-            padding: '12px 14px'
+            border: '1px solid #d8e0eb',
+            background: 'rgba(255,255,255,0.8)',
+            borderRadius: 18,
+            padding: '14px 16px'
           }}
         >
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937' }}>{t.suggestionsTitle}</div>
+          <div style={{ fontSize: 14, fontWeight: 850, color: '#0f172a' }}>{t.suggestionsTitle}</div>
           <div style={{ fontSize: 13, color: '#4b5563', margin: '4px 0 9px' }}>{t.suggestionsHint}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {suggestedPrompts.map((prompt, idx) => (
@@ -909,13 +931,14 @@ export default function HomePage() {
                 key={`${prompt}-${idx}`}
                 onClick={() => setQuery(prompt)}
                 style={{
-                  border: '1px solid #d1d5db',
+                  border: '1px solid #cbd5e1',
                   background: '#ffffff',
-                  color: '#374151',
+                  color: '#334155',
                   borderRadius: 999,
-                  padding: '7px 11px',
+                  padding: '8px 12px',
                   fontSize: 13,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontWeight: 700
                 }}
               >
                 {prompt}
@@ -1302,16 +1325,10 @@ export default function HomePage() {
       </footer>
 
       <style jsx global>{`
-        @keyframes rainbowShift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-
         body {
           -webkit-font-smoothing: antialiased;
           text-rendering: optimizeLegibility;
-          background: #f9fafb;
+          background: linear-gradient(180deg, #f8fbff 0%, #f9fafb 38%, #ffffff 100%);
         }
 
         .descClamp {
@@ -1344,11 +1361,26 @@ export default function HomePage() {
             padding: 0 14px !important;
             justify-content: center !important;
             align-items: flex-start !important;
+            flex-wrap: wrap;
+          }
+
+          .miniBrand {
+            width: 100%;
+            text-align: center;
           }
 
           .topNav {
             justify-content: center !important;
             width: 100%;
+          }
+
+          .homeHero {
+            border-radius: 22px !important;
+            padding: 26px 14px !important;
+          }
+
+          .homeHero > a {
+            font-size: 44px !important;
           }
 
           .searchBar {
