@@ -78,7 +78,7 @@ export default function DashboardPage() {
     if (session?.user) load();
   }, [session?.user]);
 
-  async function act(listing_id: number, action: 'pause' | 'resume' | 'extend') {
+  async function act(listing_id: number, action: 'pause' | 'resume' | 'extend' | 'renew') {
     const res = await fetch('/api/my/listings', {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
@@ -150,9 +150,15 @@ export default function DashboardPage() {
                   Created: {new Date(l.created_at).toLocaleString()} · Expires: {l.expires_at ? new Date(l.expires_at).toLocaleString() : 'N/A'}
                 </div>
                 <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                  <button onClick={() => act(l.id, 'pause')}>Pause</button>
-                  <button onClick={() => act(l.id, 'resume')}>Resume</button>
-                  <button onClick={() => act(l.id, 'extend')}>Extend +7d</button>
+                  {l.status === 'expired' ? (
+                    <button onClick={() => act(l.id, 'renew')} style={{ border: '1px solid #16a34a', background: '#16a34a', color: '#fff', borderRadius: 8, padding: '5px 10px', fontSize: 12, cursor: 'pointer' }}>Renew (30d)</button>
+                  ) : (
+                    <>
+                      <button onClick={() => act(l.id, 'pause')}>Pause</button>
+                      <button onClick={() => act(l.id, 'resume')}>Resume</button>
+                      <button onClick={() => act(l.id, 'extend')}>Extend +7d</button>
+                    </>
+                  )}
                 </div>
               </li>
             ))}

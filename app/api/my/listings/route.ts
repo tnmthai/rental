@@ -41,5 +41,11 @@ export async function PATCH(req: NextRequest) {
     await trackEvent({ event_name: 'renew_click', user_id: Number(user.id), listing_id: listingId });
     return NextResponse.json({ item: row });
   }
+  if (body.action === 'renew') {
+    await updateListingStatus(listingId, 'pending');
+    const row = await extendListingExpiry(listingId, Number(body.days || 30));
+    await trackEvent({ event_name: 'renew_click', user_id: Number(user.id), listing_id: listingId });
+    return NextResponse.json({ item: row });
+  }
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
