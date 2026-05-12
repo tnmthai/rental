@@ -406,7 +406,8 @@ export default function HomePage() {
     { href: '/post', label: t.createListing, primary: true },
     { href: '/wanted/post', label: 'Post room request' },
     { href: '/wanted', label: 'Room requests' },
-    { href: '/hosts', label: t.shareRoom }
+    { href: '/hosts', label: t.shareRoom },
+    { href: '/about', label: 'About' }
   ];
   const suggestedPrompts = useMemo(
     () => [
