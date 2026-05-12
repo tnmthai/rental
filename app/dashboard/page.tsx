@@ -15,6 +15,15 @@ type Listing = {
 };
 
 type SavedSearch = { id: number; name: string; query: string; created_at: string };
+type Favorite = {
+  id: number;
+  listing_id: number;
+  title: string;
+  city: string;
+  price_nzd_week: number;
+  status: string;
+  created_at: string;
+};
 type WantedPost = {
   id: number;
   title: string;
@@ -41,22 +50,26 @@ export default function DashboardPage() {
   const [saved, setSaved] = useState<SavedSearch[]>([]);
   const [wanted, setWanted] = useState<WantedPost[]>([]);
   const [growth, setGrowth] = useState<GrowthData | null>(null);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [msg, setMsg] = useState('');
 
   async function load() {
-    const [a, b, c, d] = await Promise.all([
+    const [a, b, c, d, e] = await Promise.all([
       fetch('/api/my/listings'),
       fetch('/api/my/saved-searches'),
       fetch('/api/admin/growth-metrics?days=14'),
-      fetch('/api/my/wanted')
+      fetch('/api/my/wanted'),
+      fetch('/api/my/favorites')
     ]);
     const aj = await a.json();
     const bj = await b.json();
     const cj = await c.json().catch(() => ({}));
     const dj = await d.json().catch(() => ({}));
+    const ej = await e.json().catch(() => ({}));
     setListings(aj.items || []);
     setSaved(bj.items || []);
     setWanted(dj.items || []);
+    setFavorites(ej.items || []);
     if (c.ok) setGrowth(cj.data || null);
   }
 
@@ -149,6 +162,41 @@ export default function DashboardPage() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 20 }}>
+        <h2>Saved Listings (Favorites)</h2>
+        <div style={{ maxHeight: 320, overflowY: 'auto', paddingRight: 4, border: '1px solid #f0f0f0', borderRadius: 10 }}>
+          {favorites.length === 0 ? (
+            <p style={{ padding: 12, color: '#667085' }}>No saved listings yet.</p>
+          ) : (
+            <ul style={{ padding: 10, margin: 0 }}>
+              {favorites.map((f) => (
+                <li key={f.id} style={{ listStyle: 'none', border: '1px solid #eee', padding: 12, borderRadius: 8, marginBottom: 10, background: '#fff' }}>
+                  <a href={`/listing/${f.listing_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <b>{f.title}</b> · {f.city} · ${f.price_nzd_week}/week · status: {f.status}
+                  </a>
+                  <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
+                    Saved: {new Date(f.created_at).toLocaleString()}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await fetch('/api/my/favorites', {
+                        method: 'DELETE',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ listing_id: f.listing_id })
+                      });
+                      await load();
+                    }}
+                    style={{ marginTop: 8, border: '1px solid #dc2626', background: '#fff', color: '#dc2626', borderRadius: 8, padding: '5px 10px', fontSize: 12, cursor: 'pointer' }}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 

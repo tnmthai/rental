@@ -3,6 +3,7 @@ import { getListingById } from '@/lib/db';
 import SubNav from '@/app/components/SubNav';
 import ListingGallery from '@/app/components/ListingGallery';
 import ListingDetailMap from '@/app/components/ListingDetailMap';
+import FavoriteButtonWrapper from './FavoriteButtonWrapper';
 
 function formatDescription(text: string): string[] {
   return text
@@ -100,7 +101,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         {item.bills_included ? 'bills included' : 'bills separate'}
         {item.near_school ? ` · near ${item.near_school}` : ''}
       </p>
-      <div style={{ margin: '8px 0 12px' }}>
+      <div style={{ margin: '8px 0 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <FavoriteButtonWrapper listingId={item.id} />
         <button data-share-btn="1" data-listing-id={item.id} data-share-title={item.title} style={{ border: 'none', background: 'transparent', color: '#1a73e8', padding: 0, cursor: 'pointer' }}>
           Share listing
         </button>

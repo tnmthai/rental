@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSession, signOut } from 'next-auth/react';
+import FavoriteButton from '@/app/components/FavoriteButton';
 
 function normalizeImageUrls(input: unknown): string[] {
   if (!input) return [];
@@ -397,6 +398,7 @@ export default function HomePage() {
   const [visitCount, setVisitCount] = useState<number | null>(null);
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>('en');
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [showHelp, setShowHelp] = useState(false);
   const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
   const searchInputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -543,6 +545,20 @@ export default function HomePage() {
   useEffect(() => {
     localStorage.setItem('rf_lang', lang);
   }, [lang]);
+
+  useEffect(() => {
+    async function loadFavorites() {
+      if (!session?.user) { setFavoriteIds(new Set()); return; }
+      try {
+        const res = await fetch('/api/my/favorites');
+        const data = await res.json();
+        if (res.ok && data.items) {
+          setFavoriteIds(new Set(data.items.map((f: any) => Number(f.listing_id))));
+        }
+      } catch {}
+    }
+    loadFavorites();
+  }, [session?.user]);
 
   useEffect(() => {
     const storageKey = 'rf_online_session_id';
@@ -1084,10 +1100,27 @@ export default function HomePage() {
                           borderRadius: 14,
                           padding: '6px 12px',
                           fontSize: 14,
-                          alignSelf: 'flex-start'
+                          alignSelf: 'flex-start',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6
                         }}
                       >
                         ${h.price_nzd_week.toLocaleString()} {t.perWeek}
+                        {session?.user ? (
+                          <FavoriteButton
+                            listingId={h.id}
+                            initialFavorited={favoriteIds.has(h.id)}
+                            onToggle={(fav) => {
+                              setFavoriteIds((prev) => {
+                                const next = new Set(prev);
+                                if (fav) next.add(h.id);
+                                else next.delete(h.id);
+                                return next;
+                              });
+                            }}
+                          />
+                        ) : null}
                       </span>
                     </div>
 

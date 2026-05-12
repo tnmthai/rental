@@ -786,6 +786,66 @@ export async function searchWantedPosts(filters: ListingSearch, limit = 30) {
   return rows;
 }
 
+async function ensureFavoritesTable() {
+  const p = getPool();
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS favorites (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      listing_id BIGINT NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE(user_id, listing_id)
+    )
+  `);
+}
+
+export async function addFavorite(userId: number, listingId: number) {
+  const p = getPool();
+  await ensureFavoritesTable();
+  const { rows } = await p.query(
+    `INSERT INTO favorites (user_id, listing_id) VALUES ($1, $2)
+     ON CONFLICT (user_id, listing_id) DO NOTHING
+     RETURNING id, user_id, listing_id, created_at`,
+    [userId, listingId]
+  );
+  return rows[0] || { user_id: userId, listing_id: listingId };
+}
+
+export async function removeFavorite(userId: number, listingId: number) {
+  const p = getPool();
+  await ensureFavoritesTable();
+  const { rows } = await p.query(
+    `DELETE FROM favorites WHERE user_id=$1 AND listing_id=$2 RETURNING id`,
+    [userId, listingId]
+  );
+  return rows[0] || null;
+}
+
+export async function getFavoritesByUser(userId: number) {
+  const p = getPool();
+  await ensureFavoritesTable();
+  const { rows } = await p.query(
+    `SELECT f.id, f.listing_id, f.created_at,
+            l.title, l.city, l.price_nzd_week, l.image_urls, l.status, l.source_url
+     FROM favorites f
+     JOIN listings l ON l.id = f.listing_id
+     WHERE f.user_id=$1
+     ORDER BY f.created_at DESC`,
+    [userId]
+  );
+  return rows;
+}
+
+export async function isFavorited(userId: number, listingId: number) {
+  const p = getPool();
+  await ensureFavoritesTable();
+  const { rows } = await p.query(
+    `SELECT id FROM favorites WHERE user_id=$1 AND listing_id=$2 LIMIT 1`,
+    [userId, listingId]
+  );
+  return rows.length > 0;
+}
+
 export async function getWantedPostsByUser(userId: number) {
   const p = getPool();
   await ensureWantedPostsTable();
