@@ -70,6 +70,7 @@ export default function PostListingPage() {
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [msg, setMsg] = useState('');
 
   const areas = useMemo(() => NZ_LOCATIONS.find((r) => r.region === form.region)?.areas ?? [], [form.region]);
@@ -89,6 +90,34 @@ export default function PostListingPage() {
     URL.revokeObjectURL(imagePreviews[idx]);
     setImages((prev) => prev.filter((_, i) => i !== idx));
     setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  async function generateDescription() {
+    setGenerating(true);
+    try {
+      const cityLabel = `${form.suburb}, ${form.area}, ${form.region}`;
+      const res = await fetch('/api/ai/generate-description', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title,
+          city: cityLabel,
+          price_nzd_week: form.price_nzd_week,
+          furnished: form.furnished,
+          bills_included: form.bills_included,
+          near_school: form.near_school === '(None)' ? '' : form.near_school
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.description) {
+        setForm((prev) => ({ ...prev, description: data.description }));
+      } else {
+        setMsg(data.error || 'AI generation failed');
+      }
+    } catch (e: any) {
+      setMsg(e.message || 'AI generation failed');
+    }
+    setGenerating(false);
   }
 
   async function onSubmit() {
@@ -280,7 +309,25 @@ export default function PostListingPage() {
           </label>
 
           <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>
-            Description
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              Description
+              <button
+                onClick={generateDescription}
+                disabled={generating || !form.title}
+                style={{
+                  border: '1px solid #8b5cf6',
+                  borderRadius: 999,
+                  padding: '6px 14px',
+                  background: generating ? '#c4b5fd' : '#8b5cf6',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: generating || !form.title ? 'default' : 'pointer'
+                }}
+              >
+                {generating ? 'Generating...' : '✨ Generate with AI'}
+              </button>
+            </div>
             <textarea
               style={{ ...fieldStyle, minHeight: 190, resize: 'vertical', lineHeight: 1.55 }}
               value={form.description}
