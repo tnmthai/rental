@@ -400,6 +400,7 @@ export default function HomePage() {
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>('en');
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [notifCount, setNotifCount] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
   const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
   const searchInputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -563,6 +564,20 @@ export default function HomePage() {
   }, [session?.user]);
 
   useEffect(() => {
+    async function loadNotifCount() {
+      if (!session?.user) { setNotifCount(0); return; }
+      try {
+        const res = await fetch('/api/my/notifications');
+        const data = await res.json();
+        if (res.ok) setNotifCount(Number(data.unread_count || 0));
+      } catch {}
+    }
+    loadNotifCount();
+    const timer = setInterval(loadNotifCount, 30000);
+    return () => clearInterval(timer);
+  }, [session?.user]);
+
+  useEffect(() => {
     const storageKey = 'rf_online_session_id';
     let sessionId = localStorage.getItem(storageKey);
     if (!sessionId) {
@@ -684,6 +699,36 @@ export default function HomePage() {
                   }}
                 >
                   {newCount > 0 ? newCount : pendingCount}
+                </span>
+              </a>
+            ) : null}
+
+            {notifCount > 0 ? (
+              <a
+                href="/dashboard"
+                style={{ position: 'relative', textDecoration: 'none', fontSize: 18, lineHeight: 1, marginTop: 7 }}
+                title="New notifications"
+              >
+                🔔
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -10,
+                    background: '#2563eb',
+                    color: '#fff',
+                    borderRadius: 999,
+                    minWidth: 18,
+                    height: 18,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '0 4px'
+                  }}
+                >
+                  {notifCount}
                 </span>
               </a>
             ) : null}

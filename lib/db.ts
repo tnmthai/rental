@@ -831,6 +831,68 @@ async function ensureModerationNoteColumn() {
   await p.query(`ALTER TABLE listings ADD COLUMN IF NOT EXISTS moderation_note TEXT`);
 }
 
+async function ensureNotificationsTable() {
+  const p = getPool();
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type TEXT NOT NULL DEFAULT 'listing_match',
+      title TEXT NOT NULL,
+      body TEXT,
+      read BOOLEAN NOT NULL DEFAULT FALSE,
+      listing_id BIGINT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `);
+}
+
+export async function createNotification(userId: number, type: string, title: string, body?: string, listingId?: number) {
+  const p = getPool();
+  await ensureNotificationsTable();
+  const { rows } = await p.query(
+    `INSERT INTO notifications (user_id, type, title, body, listing_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, user_id, type, title, body, read, listing_id, created_at`,
+    [userId, type, title, body || null, listingId || null]
+  );
+  return rows[0];
+}
+
+export async function getNotificationsByUser(userId: number, limit = 50) {
+  const p = getPool();
+  await ensureNotificationsTable();
+  const { rows } = await p.query(
+    `SELECT id, type, title, body, read, listing_id, created_at FROM notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT $2`,
+    [userId, Math.min(Math.max(limit, 1), 200)]
+  );
+  return rows;
+}
+
+export async function getUnreadNotificationCount(userId: number) {
+  const p = getPool();
+  await ensureNotificationsTable();
+  const { rows } = await p.query(
+    `SELECT COUNT(*)::int AS count FROM notifications WHERE user_id=$1 AND read=FALSE`,
+    [userId]
+  );
+  return Number(rows[0]?.count || 0);
+}
+
+export async function markNotificationsRead(userId: number, notificationIds?: number[]) {
+  const p = getPool();
+  await ensureNotificationsTable();
+  if (notificationIds && notificationIds.length > 0) {
+    await p.query(
+      `UPDATE notifications SET read=TRUE WHERE user_id=$1 AND id = ANY($2)`,
+      [userId, notificationIds]
+    );
+  } else {
+    await p.query(
+      `UPDATE notifications SET read=TRUE WHERE user_id=$1 AND read=FALSE`,
+      [userId]
+    );
+  }
+}
+
 export async function addFavorite(userId: number, listingId: number) {
   const p = getPool();
   await ensureFavoritesTable();

@@ -25,6 +25,15 @@ type Favorite = {
   status: string;
   created_at: string;
 };
+type Notification = {
+  id: number;
+  type: string;
+  title: string;
+  body?: string | null;
+  read: boolean;
+  listing_id?: number | null;
+  created_at: string;
+};
 type WantedPost = {
   id: number;
   title: string;
@@ -52,25 +61,29 @@ export default function DashboardPage() {
   const [wanted, setWanted] = useState<WantedPost[]>([]);
   const [growth, setGrowth] = useState<GrowthData | null>(null);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [msg, setMsg] = useState('');
 
   async function load() {
-    const [a, b, c, d, e] = await Promise.all([
+    const [a, b, c, d, e, f] = await Promise.all([
       fetch('/api/my/listings'),
       fetch('/api/my/saved-searches'),
       fetch('/api/admin/growth-metrics?days=14'),
       fetch('/api/my/wanted'),
-      fetch('/api/my/favorites')
+      fetch('/api/my/favorites'),
+      fetch('/api/my/notifications')
     ]);
     const aj = await a.json();
     const bj = await b.json();
     const cj = await c.json().catch(() => ({}));
     const dj = await d.json().catch(() => ({}));
     const ej = await e.json().catch(() => ({}));
+    const fj = await f.json().catch(() => ({}));
     setListings(aj.items || []);
     setSaved(bj.items || []);
     setWanted(dj.items || []);
     setFavorites(ej.items || []);
+    setNotifications(fj.items || []);
     if (c.ok) setGrowth(cj.data || null);
   }
 
@@ -187,7 +200,55 @@ export default function DashboardPage() {
       </section>
 
       <section style={{ marginTop: 20 }}>
-        <h2>Saved Listings (Favorites)</h2>
+        <h2>Notifications</h2>
+        <div style={{ maxHeight: 320, overflowY: 'auto', paddingRight: 4, border: '1px solid #f0f0f0', borderRadius: 10 }}>
+          {notifications.length === 0 ? (
+            <p style={{ padding: 12, color: '#667085' }}>No notifications yet.</p>
+          ) : (
+            <ul style={{ padding: 10, margin: 0 }}>
+              {notifications.map((n) => (
+                <li key={n.id} style={{
+                  listStyle: 'none',
+                  border: '1px solid #eee',
+                  padding: 12,
+                  borderRadius: 8,
+                  marginBottom: 10,
+                  background: n.read ? '#fff' : '#f0f9ff',
+                  borderColor: n.read ? '#eee' : '#bfdbfe'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                    <div>
+                      <b style={{ color: n.read ? '#6b7280' : '#1e40af' }}>{n.title}</b>
+                      {n.body ? <div style={{ color: '#4b5563', fontSize: 13, marginTop: 4 }}>{n.body}</div> : null}
+                      <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>{new Date(n.created_at).toLocaleString()}</div>
+                    </div>
+                    {n.listing_id ? (
+                      <a href={`/listing/${n.listing_id}`} style={{ color: '#1a73e8', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>View</a>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {notifications.some((n) => !n.read) ? (
+          <button
+            onClick={async () => {
+              await fetch('/api/my/notifications', {
+                method: 'PATCH',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({})
+              });
+              await load();
+            }}
+            style={{ marginTop: 8, border: '1px solid #d0d5dd', background: '#fff', color: '#334155', borderRadius: 8, padding: '6px 12px', fontSize: 13, cursor: 'pointer' }}
+          >
+            Mark all as read
+          </button>
+        ) : null}
+      </section>
+
+      <section style={{ marginTop: 20 }}>
         <div style={{ maxHeight: 320, overflowY: 'auto', paddingRight: 4, border: '1px solid #f0f0f0', borderRadius: 10 }}>
           {favorites.length === 0 ? (
             <p style={{ padding: 12, color: '#667085' }}>No saved listings yet.</p>
