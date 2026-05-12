@@ -48,7 +48,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'action must be approve, reject, or update' }, { status: 400 });
   }
 
-  const item = await updateListingStatus(listingId, action === 'approve' ? 'approved' : 'rejected');
+  const moderationNote = typeof body.moderation_note === 'string' ? body.moderation_note.trim() : undefined;
+  const item = await updateListingStatus(listingId, action === 'approve' ? 'approved' : 'rejected', action === 'reject' ? moderationNote : undefined);
 
   if (action === 'approve' && item?.id) {
     const adminUser = session?.user?.email ? await findUserByEmail(session.user.email) : null;

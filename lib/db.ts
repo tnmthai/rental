@@ -249,15 +249,24 @@ export async function createUser(input: {
 
 export async function getListingsByUser(userId: number) {
   const p = getPool();
+  await ensureModerationNoteColumn();
   const { rows } = await p.query(
-    `SELECT id, title, city, price_nzd_week, status, created_at, expires_at FROM listings WHERE user_id=$1 ORDER BY created_at DESC`,
+    `SELECT id, title, city, price_nzd_week, status, created_at, expires_at, moderation_note FROM listings WHERE user_id=$1 ORDER BY created_at DESC`,
     [userId]
   );
   return rows;
 }
 
-export async function updateListingStatus(listingId: number, status: 'approved' | 'rejected' | 'paused' | 'pending') {
+export async function updateListingStatus(listingId: number, status: 'approved' | 'rejected' | 'paused' | 'pending', moderationNote?: string) {
   const p = getPool();
+  await ensureModerationNoteColumn();
+  if (moderationNote !== undefined) {
+    const { rows } = await p.query(
+      `UPDATE listings SET status=$1, moderation_note=$3 WHERE id=$2 RETURNING id, status, moderation_note`,
+      [status, listingId, moderationNote || null]
+    );
+    return rows[0] || null;
+  }
   const { rows } = await p.query(
     `UPDATE listings SET status=$1 WHERE id=$2 RETURNING id, status`,
     [status, listingId]
@@ -399,10 +408,12 @@ export async function deleteListingById(listingId: number) {
 export async function getListingById(listingId: number) {
   const p = getPool();
   await ensureListingGeoColumns();
+  await ensureModerationNoteColumn();
   const { rows } = await p.query(
     `
       SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.image_urls, l.description,
              l.furnished, l.bills_included, l.near_school, l.latitude, l.longitude, l.status, l.created_at, l.expires_at,
+             l.moderation_note,
              u.name AS user_name, u.email AS user_email
       FROM listings l
       LEFT JOIN users u ON u.id = l.user_id
@@ -797,6 +808,11 @@ async function ensureFavoritesTable() {
       UNIQUE(user_id, listing_id)
     )
   `);
+}
+
+async function ensureModerationNoteColumn() {
+  const p = getPool();
+  await p.query(`ALTER TABLE listings ADD COLUMN IF NOT EXISTS moderation_note TEXT`);
 }
 
 export async function addFavorite(userId: number, listingId: number) {

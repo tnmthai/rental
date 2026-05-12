@@ -90,6 +90,24 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       <SubNav />
 
       <h1 style={{ marginBottom: 4 }}>{item.title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 8px' }}>
+        <span style={{
+          display: 'inline-block',
+          padding: '3px 10px',
+          borderRadius: 999,
+          fontSize: 12,
+          fontWeight: 700,
+          background: item.status === 'approved' ? '#dcfce7' : item.status === 'rejected' ? '#fee2e2' : item.status === 'pending' ? '#fef9c3' : '#f3f4f6',
+          color: item.status === 'approved' ? '#166534' : item.status === 'rejected' ? '#991b1b' : item.status === 'pending' ? '#854d0e' : '#6b7280'
+        }}>
+          {item.status === 'approved' ? '✅ Approved' : item.status === 'rejected' ? '❌ Rejected' : item.status === 'pending' ? '⏳ Pending' : '⏸️ Paused'}
+        </span>
+      </div>
+      {item.status === 'rejected' && item.moderation_note ? (
+        <div style={{ margin: '4px 0 8px', padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#991b1b', fontSize: 14 }}>
+          <strong>Rejection reason:</strong> {item.moderation_note}
+        </div>
+      ) : null}
       <div style={{ color: '#006621', fontSize: 14 }}>
         {item.source_url ? (
           <a data-track-contact="1" data-listing-id={item.id} href={item.source_url} target="_blank" rel="noreferrer" style={{ color: '#006621', textDecoration: 'none' }}>

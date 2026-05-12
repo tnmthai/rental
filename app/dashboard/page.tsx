@@ -12,6 +12,7 @@ type Listing = {
   status: string;
   created_at: string;
   expires_at?: string | null;
+  moderation_note?: string | null;
 };
 
 type SavedSearch = { id: number; name: string; query: string; created_at: string };
@@ -130,7 +131,21 @@ export default function DashboardPage() {
           <ul style={{ padding: 10, margin: 0 }}>
             {listings.map((l) => (
               <li key={l.id} style={{ listStyle: 'none', border: '1px solid #eee', padding: 12, borderRadius: 8, marginBottom: 10, background: '#fff' }}>
-                <b>{l.title}</b> · {l.city} · ${l.price_nzd_week}/week · status: {l.status}
+                <b>{l.title}</b> · {l.city} · ${l.price_nzd_week}/week ·{' '}
+                <span style={{
+                  display: 'inline-block',
+                  padding: '2px 8px',
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  background: l.status === 'approved' ? '#dcfce7' : l.status === 'rejected' ? '#fee2e2' : l.status === 'pending' ? '#fef9c3' : l.status === 'expired' ? '#f3f4f6' : '#e0e7ff',
+                  color: l.status === 'approved' ? '#166534' : l.status === 'rejected' ? '#991b1b' : l.status === 'pending' ? '#854d0e' : l.status === 'expired' ? '#6b7280' : '#3730a3'
+                }}>{l.status}</span>
+                {l.moderation_note ? (
+                  <div style={{ marginTop: 6, padding: '4px 8px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#991b1b', fontSize: 13 }}>
+                    Rejection reason: {l.moderation_note}
+                  </div>
+                ) : null}
                 <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
                   Created: {new Date(l.created_at).toLocaleString()} · Expires: {l.expires_at ? new Date(l.expires_at).toLocaleString() : 'N/A'}
                 </div>

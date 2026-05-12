@@ -16,6 +16,7 @@ type ListingItem = {
   longitude?: number | null;
   created_at: string;
   status: 'pending' | 'approved' | 'rejected' | 'paused';
+  moderation_note?: string | null;
 };
 
 export default function ModerationPage() {
@@ -23,6 +24,8 @@ export default function ModerationPage() {
   const [msg, setMsg] = useState('');
   const [scope, setScope] = useState<'pending' | 'all'>('pending');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [rejectingId, setRejectingId] = useState<number | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
   const [draft, setDraft] = useState<{
     title?: string;
     city?: string;
@@ -44,13 +47,19 @@ export default function ModerationPage() {
   }
 
   async function act(id: number, action: 'approve' | 'reject') {
+    const body: any = { listing_id: id, action };
+    if (action === 'reject' && rejectReason.trim()) {
+      body.moderation_note = rejectReason.trim();
+    }
     const res = await fetch('/api/admin/moderation', {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ listing_id: id, action })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     setMsg(res.ok ? `${action}d #${id}` : data.error || 'failed');
+    setRejectingId(null);
+    setRejectReason('');
     await load();
   }
 
@@ -276,7 +285,22 @@ export default function ModerationPage() {
                 <div style={{ marginTop: 8, fontSize: 13, color: '#667085' }}>
                   Posted at: {new Date(i.created_at).toLocaleString()}
                 </div>
-                <div style={{ marginTop: 2, fontSize: 13, color: '#667085' }}>Status: {i.status}</div>
+                <div style={{ marginTop: 2, fontSize: 13, color: '#667085' }}>
+                  Status: <span style={{
+                    display: 'inline-block',
+                    padding: '2px 8px',
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    background: i.status === 'approved' ? '#dcfce7' : i.status === 'rejected' ? '#fee2e2' : i.status === 'pending' ? '#fef9c3' : '#f3f4f6',
+                    color: i.status === 'approved' ? '#166534' : i.status === 'rejected' ? '#991b1b' : i.status === 'pending' ? '#854d0e' : '#6b7280'
+                  }}>{i.status}</span>
+                </div>
+                {i.moderation_note ? (
+                  <div style={{ marginTop: 4, fontSize: 13, color: '#991b1b', background: '#fef2f2', padding: '4px 8px', borderRadius: 6, border: '1px solid #fecaca' }}>
+                    Rejection reason: {i.moderation_note}
+                  </div>
+                ) : null}
                 <div style={{ marginTop: 6, fontSize: 13, display: 'flex', gap: 10 }}>
                   <a href={`/listing/${i.id}`} style={{ color: '#1a73e8' }}>
                     View full post
@@ -325,12 +349,35 @@ export default function ModerationPage() {
                     >
                       Approve
                     </button>
-                    <button
-                      onClick={() => act(i.id, 'reject')}
-                      style={{ border: '1px solid #dc2626', background: '#fff', color: '#dc2626', borderRadius: 8, padding: '8px 12px' }}
-                    >
-                      Reject
-                    </button>
+                    {rejectingId === i.id ? (
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <input
+                          value={rejectReason}
+                          onChange={(e) => setRejectReason(e.target.value)}
+                          placeholder="Rejection reason (optional)"
+                          style={{ border: '1px solid #dc2626', borderRadius: 8, padding: '6px 10px', fontSize: 13, minWidth: 180 }}
+                        />
+                        <button
+                          onClick={() => act(i.id, 'reject')}
+                          style={{ border: '1px solid #dc2626', background: '#dc2626', color: '#fff', borderRadius: 8, padding: '8px 12px' }}
+                        >
+                          Confirm Reject
+                        </button>
+                        <button
+                          onClick={() => { setRejectingId(null); setRejectReason(''); }}
+                          style={{ border: '1px solid #d0d5dd', background: '#fff', color: '#111827', borderRadius: 8, padding: '8px 12px' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setRejectingId(i.id)}
+                        style={{ border: '1px solid #dc2626', background: '#fff', color: '#dc2626', borderRadius: 8, padding: '8px 12px' }}
+                      >
+                        Reject
+                      </button>
+                    )}
                   </>
                 ) : null}
                 <button
