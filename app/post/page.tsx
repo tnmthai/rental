@@ -71,6 +71,8 @@ export default function PostListingPage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [estimating, setEstimating] = useState(false);
+  const [priceEstimate, setPriceEstimate] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
 
   const areas = useMemo(() => NZ_LOCATIONS.find((r) => r.region === form.region)?.areas ?? [], [form.region]);
@@ -118,6 +120,33 @@ export default function PostListingPage() {
       setMsg(e.message || 'AI generation failed');
     }
     setGenerating(false);
+  }
+
+  async function estimatePrice() {
+    setEstimating(true);
+    setPriceEstimate(null);
+    try {
+      const cityLabel = `${form.suburb}, ${form.area}, ${form.region}`;
+      const res = await fetch('/api/ai/estimate-price', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          city: cityLabel,
+          furnished: form.furnished,
+          bills_included: form.bills_included,
+          near_school: form.near_school === '(None)' ? '' : form.near_school
+        })
+      });
+      const data = await res.json();
+      if (data.estimate && data.estimate !== 'Not enough data') {
+        setPriceEstimate(`${data.estimate} (avg: ${data.average}, based on ${data.sample_size} listings)`);
+      } else {
+        setPriceEstimate('Not enough similar listings to estimate.');
+      }
+    } catch {
+      setPriceEstimate('Could not fetch estimate.');
+    }
+    setEstimating(false);
   }
 
   async function onSubmit() {
@@ -267,8 +296,31 @@ export default function PostListingPage() {
           </label>
 
           <label style={labelStyle}>
-            Price (NZD / week)
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              Price (NZD / week)
+              <button
+                onClick={estimatePrice}
+                disabled={estimating}
+                style={{
+                  border: '1px solid #f59e0b',
+                  borderRadius: 999,
+                  padding: '4px 10px',
+                  background: estimating ? '#fcd34d' : '#f59e0b',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  cursor: estimating ? 'default' : 'pointer'
+                }}
+              >
+                {estimating ? 'Estimating...' : '💡 Estimate price'}
+              </button>
+            </div>
             <input style={fieldStyle} type="number" min={1} value={form.price_nzd_week} onChange={(e) => setForm({ ...form, price_nzd_week: Number(e.target.value) })} />
+            {priceEstimate ? (
+              <small style={{ color: '#92400e', fontWeight: 600, background: '#fffbeb', padding: '4px 8px', borderRadius: 6, border: '1px solid #fde68a' }}>
+                {priceEstimate}
+              </small>
+            ) : null}
           </label>
 
           <label style={labelStyle}>
