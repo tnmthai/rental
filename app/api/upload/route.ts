@@ -13,6 +13,7 @@ function slugify(input: string) {
 }
 
 export async function POST(req: NextRequest) {
+  // Deprecated: Use /api/upload-cloudinary instead
   try {
     const form = await req.formData();
     const cityRaw = String(form.get('city') || 'unknown');
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
       .filter((f): f is File => f instanceof File && f.size > 0 && f.type.startsWith('image/'));
 
     if (!files.length) {
-      return NextResponse.json({ error: 'No image files provided' }, { status: 400 });
+      return NextResponse.json({ error: 'No image files provided. Note: This endpoint is deprecated. Please use /api/upload-cloudinary instead.' }, { status: 400 });
     }
 
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', city);
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
       urls.push(`/uploads/${city}/${safeName}`);
     }
 
-    return NextResponse.json({ urls });
+    return NextResponse.json({ urls, deprecated: true, message: 'This endpoint is deprecated. Please use /api/upload-cloudinary instead.' });
   } catch (e: any) {
     return NextResponse.json({ error: e.message || 'Upload failed' }, { status: 500 });
   }

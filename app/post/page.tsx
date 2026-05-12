@@ -67,14 +67,29 @@ export default function PostListingPage() {
     latitude: '',
     longitude: ''
   });
-  const [images, setImages] = useState<FileList | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState('');
 
   const areas = useMemo(() => NZ_LOCATIONS.find((r) => r.region === form.region)?.areas ?? [], [form.region]);
   const suburbs = useMemo(() => areas.find((a) => a.area === form.area)?.suburbs ?? [], [areas, form.area]);
   const schools = useMemo(() => getSchools(form.region, form.area), [form.region, form.area]);
-  const selectedImageCount = images?.length ?? 0;
+  const selectedImageCount = images.length;
+
+  function addImages(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const newFiles = Array.from(files);
+    const newPreviews = newFiles.map((f) => URL.createObjectURL(f));
+    setImages((prev) => [...prev, ...newFiles]);
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+  }
+
+  function removeImage(idx: number) {
+    URL.revokeObjectURL(imagePreviews[idx]);
+    setImages((prev) => prev.filter((_, i) => i !== idx));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   async function onSubmit() {
     setSubmitting(true);
@@ -82,10 +97,10 @@ export default function PostListingPage() {
     try {
       let imageUrls: string[] = [];
 
-      if (images && images.length > 0) {
+      if (images.length > 0) {
         const fd = new FormData();
         fd.set('city', form.suburb || form.area || form.region);
-        Array.from(images).forEach((file) => fd.append('images', file));
+        images.forEach((file) => fd.append('images', file));
 
         const upRes = await fetch('/api/upload-cloudinary', { method: 'POST', body: fd });
         const upData = await upRes.json();
@@ -118,7 +133,9 @@ export default function PostListingPage() {
 
       setMsg(`Listing #${data.item.id} submitted with ${imageUrls.length} image(s). It will appear after moderation.`);
       setForm({ ...form, title: '', source_url: '', description: '', duration_days: 30, available_date: '', latitude: '', longitude: '' });
-      setImages(null);
+      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+      setImages([]);
+      setImagePreviews([]);
     } catch (e: any) {
       setMsg(e.message || 'Something went wrong');
     } finally {
@@ -276,8 +293,61 @@ export default function PostListingPage() {
           <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>
             Images
             <div style={{ border: '1px dashed #93c5fd', borderRadius: 16, padding: 18, background: '#f8fbff' }}>
-              <input style={{ ...fieldStyle, border: 'none', padding: 0, background: 'transparent' }} type="file" accept="image/*" multiple onChange={(e) => setImages(e.target.files)} />
-              <p style={{ margin: '10px 0 0', color: '#64748b', fontSize: 13, fontWeight: 650 }}>{selectedImageCount ? `${selectedImageCount} image(s) selected` : 'Upload bright, real photos of the room and shared spaces.'}</p>
+              <input
+                style={{ ...fieldStyle, border: 'none', padding: 0, background: 'transparent' }}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => addImages(e.target.files)}
+              />
+              <p style={{ margin: '10px 0 0', color: '#64748b', fontSize: 13, fontWeight: 650 }}>
+                {selectedImageCount ? `${selectedImageCount} image(s) selected` : 'Upload bright, real photos of the room and shared spaces.'}
+              </p>
+              {imagePreviews.length > 0 && (
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+                  {imagePreviews.map((url, idx) => (
+                    <div key={idx} style={{ position: 'relative', width: 100, height: 100, borderRadius: 10, overflow: 'hidden', border: '1px solid #d8e0eb' }}>
+                      <img src={url} alt={`Preview ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button
+                        onClick={() => removeImage(idx)}
+                        style={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          width: 22,
+                          height: 22,
+                          borderRadius: '50%',
+                          border: 'none',
+                          background: 'rgba(0,0,0,0.7)',
+                          color: '#fff',
+                          fontSize: 14,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          lineHeight: 1
+                        }}
+                        title="Remove image"
+                      >
+                        ×
+                      </button>
+                      <span style={{
+                        position: 'absolute',
+                        bottom: 4,
+                        left: 4,
+                        background: 'rgba(0,0,0,0.6)',
+                        color: '#fff',
+                        borderRadius: 6,
+                        padding: '2px 6px',
+                        fontSize: 11,
+                        fontWeight: 600
+                      }}>
+                        {idx + 1}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </label>
         </div>
