@@ -4,6 +4,7 @@ import SubNav from '@/app/components/SubNav';
 import ListingGallery from '@/app/components/ListingGallery';
 import ListingDetailMap from '@/app/components/ListingDetailMap';
 import FavoriteButtonWrapper from './FavoriteButtonWrapper';
+import ShareButtons from '@/app/components/ShareButtons';
 
 function formatDescription(text: string): string[] {
   return text
@@ -103,9 +104,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       </p>
       <div style={{ margin: '8px 0 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <FavoriteButtonWrapper listingId={item.id} />
-        <button data-share-btn="1" data-listing-id={item.id} data-share-title={item.title} style={{ border: 'none', background: 'transparent', color: '#1a73e8', padding: 0, cursor: 'pointer' }}>
-          Share listing
-        </button>
+        <ShareButtons listingId={item.id} title={item.title} />
       </div>
       <p style={{ color: '#4d5156', fontSize: 14 }}>
         Posted at: {new Date(item.created_at).toLocaleString()}
@@ -147,33 +146,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
       <Script id="listing-event-track" strategy="afterInteractive">{`
         (() => {
-          const postEvent = async (eventName, listingId) => {
-            try {
-              await fetch('/api/events', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ event_name: eventName, listing_id: listingId })
-              });
-            } catch (_) {}
-          };
-
           document.querySelectorAll('[data-track-contact="1"]').forEach((el) => {
             el.addEventListener('click', () => {
-              postEvent('contact_click', Number(el.getAttribute('data-listing-id') || 0));
-            });
-          });
-
-          document.querySelectorAll('[data-share-btn="1"]').forEach((el) => {
-            el.addEventListener('click', async () => {
               const listingId = Number(el.getAttribute('data-listing-id') || 0);
-              const title = el.getAttribute('data-share-title') || 'Listing';
-              const url = window.location.href;
-              if (navigator.share) {
-                await navigator.share({ title, url }).catch(() => {});
-              } else if (navigator.clipboard) {
-                await navigator.clipboard.writeText(url).catch(() => {});
-              }
-              postEvent('share_click', listingId);
+              fetch('/api/events', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ event_name: 'contact_click', listing_id: listingId })
+              }).catch(() => {});
             });
           });
         })();

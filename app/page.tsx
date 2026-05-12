@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSession, signOut } from 'next-auth/react';
 import FavoriteButton from '@/app/components/FavoriteButton';
+import ShareButtons from '@/app/components/ShareButtons';
 
 function normalizeImageUrls(input: unknown): string[] {
   if (!input) return [];
@@ -1213,28 +1214,7 @@ export default function HomePage() {
                         >
                           {t.viewDetail}
                         </a>
-                        <button
-                          onClick={async () => {
-                            const url = `${window.location.origin}/listing/${h.id}`;
-                            if (navigator.share) {
-                              await navigator.share({ title: h.title, url }).catch(() => {});
-                            } else {
-                              await navigator.clipboard.writeText(url).catch(() => {});
-                            }
-                            trackClientEvent('share_click', h.id);
-                          }}
-                          style={{
-                            border: 'none',
-                            borderRadius: 999,
-                            padding: '8px 16px',
-                            background: '#0ea5e9',
-                            color: '#fff',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {t.share}
-                        </button>
+                        <ShareButtons listingId={h.id} title={h.title} compact />
                       </div>
 
                       <div style={{ fontSize: 12, color: '#006621' }}>
