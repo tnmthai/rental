@@ -194,6 +194,22 @@ export async function createListing(input: NewListing) {
   }
 }
 
+export async function getListingsWithCoords() {
+  const p = getPool();
+  await ensureListingGeoColumns();
+  const { rows } = await p.query(
+    `SELECT id, title, city, price_nzd_week, latitude, longitude
+     FROM listings
+     WHERE status = 'approved'
+       AND (expires_at IS NULL OR expires_at > now())
+       AND latitude IS NOT NULL
+       AND longitude IS NOT NULL
+     ORDER BY created_at DESC
+     LIMIT 500`
+  );
+  return rows;
+}
+
 export async function listRecentListings(limit = 20) {
   const p = getPool();
   await ensureListingGeoColumns();

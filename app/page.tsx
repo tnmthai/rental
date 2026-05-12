@@ -407,6 +407,7 @@ export default function HomePage() {
   const t = I18N[lang];
   const navButtons = [
     { href: '/post', label: t.createListing, primary: true },
+    { href: '/map', label: '🗺️ Map view' },
     { href: '/wanted/post', label: 'Post room request' },
     { href: '/wanted', label: 'Room requests' },
     { href: '/hosts', label: t.shareRoom },
