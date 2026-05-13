@@ -102,6 +102,32 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         }}>
           {item.status === 'approved' ? '✅ Approved' : item.status === 'rejected' ? '❌ Rejected' : item.status === 'pending' ? '⏳ Pending' : '⏸️ Paused'}
         </span>
+        {item.is_featured ? (
+          <span style={{
+            display: 'inline-block',
+            padding: '3px 10px',
+            borderRadius: 999,
+            fontSize: 12,
+            fontWeight: 700,
+            background: '#fef3c7',
+            color: '#92400e'
+          }}>
+            ⭐ Featured
+          </span>
+        ) : null}
+        {item.user_verified ? (
+          <span style={{
+            display: 'inline-block',
+            padding: '3px 10px',
+            borderRadius: 999,
+            fontSize: 12,
+            fontWeight: 700,
+            background: '#d1fae5',
+            color: '#065f46'
+          }}>
+            ✅ Verified Landlord
+          </span>
+        ) : null}
       </div>
       {item.status === 'rejected' && item.moderation_note ? (
         <div style={{ margin: '4px 0 8px', padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#991b1b', fontSize: 14 }}>

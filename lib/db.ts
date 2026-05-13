@@ -56,6 +56,7 @@ async function ensureListingGeoColumns() {
 export async function searchListings(filters: ListingSearch) {
   const p = getPool();
   await ensureListingGeoColumns();
+  await ensureFeaturedColumns();
   const params: Array<string | number | boolean> = [];
   const where: string[] = ["status = 'approved'", '(expires_at IS NULL OR expires_at > now())'];
 
@@ -116,16 +117,19 @@ export async function searchListings(filters: ListingSearch) {
   }
 
   const orderBy = conditionCount > 0
-    ? `(${scoreExpr}) DESC, price_nzd_week ASC, created_at DESC`
-    : `price_nzd_week ASC, created_at DESC`;
+    ? `(CASE WHEN l.is_featured = true AND (l.featured_until IS NULL OR l.featured_until > now()) THEN 1 ELSE 0 END) DESC, (${scoreExpr}) DESC, price_nzd_week ASC, l.created_at DESC`
+    : `(CASE WHEN l.is_featured = true AND (l.featured_until IS NULL OR l.featured_until > now()) THEN 1 ELSE 0 END) DESC, price_nzd_week ASC, l.created_at DESC`;
 
   const sql = `
     SELECT
-      id, user_id, title, city, price_nzd_week, source_url, image_urls, description,
-      furnished, bills_included, near_school, latitude, longitude, created_at, expires_at,
+      l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.image_urls, l.description,
+      l.furnished, l.bills_included, l.near_school, l.latitude, l.longitude, l.created_at, l.expires_at,
       (${scoreExpr})::int AS match_score,
-      ${conditionCount}::int AS condition_count
-    FROM listings
+      ${conditionCount}::int AS condition_count,
+      (l.is_featured = true AND (l.featured_until IS NULL OR l.featured_until > now())) AS is_featured,
+      u.is_verified AS user_verified
+    FROM listings l
+    LEFT JOIN users u ON u.id = l.user_id
     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
     ORDER BY ${orderBy}
     LIMIT 30
@@ -213,11 +217,17 @@ export async function getListingsWithCoords() {
 export async function listRecentListings(limit = 20) {
   const p = getPool();
   await ensureListingGeoColumns();
+  await ensureFeaturedColumns();
+  await ensureVerifiedColumn();
   const { rows } = await p.query(
     `
-      SELECT id, user_id, title, city, price_nzd_week, source_url, image_urls, description, furnished, bills_included, near_school, latitude, longitude, created_at, expires_at, status
-      FROM listings
-      ORDER BY created_at DESC
+      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.image_urls, l.description,
+             l.furnished, l.bills_included, l.near_school, l.latitude, l.longitude, l.created_at, l.expires_at, l.status,
+             (l.is_featured = true AND (l.featured_until IS NULL OR l.featured_until > now())) AS is_featured,
+             u.is_verified AS user_verified
+      FROM listings l
+      LEFT JOIN users u ON u.id = l.user_id
+      ORDER BY (l.is_featured = true AND (l.featured_until IS NULL OR l.featured_until > now())) DESC, l.created_at DESC
       LIMIT $1
     `,
     [Math.min(Math.max(limit, 1), 100)]
@@ -425,12 +435,14 @@ export async function getListingById(listingId: number) {
   const p = getPool();
   await ensureListingGeoColumns();
   await ensureModerationNoteColumn();
+  await ensureFeaturedColumns();
+  await ensureVerifiedColumn();
   const { rows } = await p.query(
     `
       SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.image_urls, l.description,
              l.furnished, l.bills_included, l.near_school, l.latitude, l.longitude, l.status, l.created_at, l.expires_at,
-             l.moderation_note,
-             u.name AS user_name, u.email AS user_email
+             l.moderation_note, l.is_featured, l.featured_until,
+             u.name AS user_name, u.email AS user_email, u.is_verified AS user_verified
       FROM listings l
       LEFT JOIN users u ON u.id = l.user_id
       WHERE l.id = $1
@@ -646,9 +658,10 @@ export async function getGrowthMetrics(days = 14) {
 
 export async function listUsersAdmin(limit = 500) {
   const p = getPool();
+  await ensureVerifiedColumn();
   const { rows } = await p.query(
     `
-      SELECT id, name, email, provider, provider_id, created_at
+      SELECT id, name, email, provider, provider_id, is_verified, created_at
       FROM users
       ORDER BY created_at DESC
       LIMIT $1
@@ -662,6 +675,72 @@ export async function deleteUserById(userId: number) {
   const p = getPool();
   const { rows } = await p.query(
     `DELETE FROM users WHERE id=$1 RETURNING id, email, name`,
+    [userId]
+  );
+  return rows[0] || null;
+}
+
+// ── Featured / Boost ─────────────────────────────────────────────────────────
+
+export async function setListingFeatured(listingId: number, featured: boolean, featuredUntil?: string | null) {
+  const p = getPool();
+  await ensureFeaturedColumns();
+  if (featured) {
+    const { rows } = await p.query(
+      `UPDATE listings SET is_featured = true, featured_until = $2 WHERE id = $1 RETURNING id, is_featured, featured_until`,
+      [listingId, featuredUntil ? featuredUntil : null]
+    );
+    return rows[0] || null;
+  } else {
+    const { rows } = await p.query(
+      `UPDATE listings SET is_featured = false, featured_until = NULL WHERE id = $1 RETURNING id, is_featured, featured_until`,
+      [listingId]
+    );
+    return rows[0] || null;
+  }
+}
+
+export async function listFeaturedListings(limit = 10) {
+  const p = getPool();
+  await ensureFeaturedColumns();
+  await ensureVerifiedColumn();
+  const { rows } = await p.query(
+    `
+      SELECT l.id, l.user_id, l.title, l.city, l.price_nzd_week, l.source_url, l.image_urls, l.description,
+             l.furnished, l.bills_included, l.near_school, l.latitude, l.longitude, l.created_at, l.expires_at, l.status,
+             l.is_featured, l.featured_until,
+             u.is_verified AS user_verified
+      FROM listings l
+      LEFT JOIN users u ON u.id = l.user_id
+      WHERE l.status = 'approved'
+        AND l.is_featured = true
+        AND (l.featured_until IS NULL OR l.featured_until > now())
+        AND (l.expires_at IS NULL OR l.expires_at > now())
+      ORDER BY l.created_at DESC
+      LIMIT $1
+    `,
+    [Math.min(Math.max(limit, 1), 50)]
+  );
+  return rows;
+}
+
+// ── Verified Badge ───────────────────────────────────────────────────────────
+
+export async function setUserVerified(userId: number, verified: boolean) {
+  const p = getPool();
+  await ensureVerifiedColumn();
+  const { rows } = await p.query(
+    `UPDATE users SET is_verified = $2 WHERE id = $1 RETURNING id, name, email, is_verified`,
+    [userId, verified]
+  );
+  return rows[0] || null;
+}
+
+export async function getUserById(userId: number) {
+  const p = getPool();
+  await ensureVerifiedColumn();
+  const { rows } = await p.query(
+    `SELECT id, name, email, provider, provider_id, is_verified, created_at FROM users WHERE id = $1 LIMIT 1`,
     [userId]
   );
   return rows[0] || null;
@@ -829,6 +908,17 @@ async function ensureFavoritesTable() {
 async function ensureModerationNoteColumn() {
   const p = getPool();
   await p.query(`ALTER TABLE listings ADD COLUMN IF NOT EXISTS moderation_note TEXT`);
+}
+
+async function ensureFeaturedColumns() {
+  const p = getPool();
+  await p.query(`ALTER TABLE listings ADD COLUMN IF NOT EXISTS is_featured BOOLEAN NOT NULL DEFAULT FALSE`);
+  await p.query(`ALTER TABLE listings ADD COLUMN IF NOT EXISTS featured_until TIMESTAMPTZ`);
+}
+
+async function ensureVerifiedColumn() {
+  const p = getPool();
+  await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN NOT NULL DEFAULT FALSE`);
 }
 
 async function ensureNotificationsTable() {

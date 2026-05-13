@@ -26,6 +26,8 @@ export default function ModerationPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [featuringId, setFeaturingId] = useState<number | null>(null);
+  const [featuredUntil, setFeaturedUntil] = useState('');
   const [draft, setDraft] = useState<{
     title?: string;
     city?: string;
@@ -74,6 +76,39 @@ export default function ModerationPage() {
     });
     const data = await res.json();
     setMsg(res.ok ? `deleted #${id}` : data.error || 'failed');
+    await load();
+  }
+
+  async function toggleFeatured(id: number, currentlyFeatured: boolean) {
+    if (currentlyFeatured) {
+      const res = await fetch('/api/admin/featured', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ listing_id: id, featured: false })
+      });
+      const data = await res.json();
+      setMsg(res.ok ? `Unfeatured #${id}` : data.error || 'failed');
+      await load();
+    } else {
+      setFeaturingId(id);
+      setFeaturedUntil('');
+    }
+  }
+
+  async function confirmFeature(id: number) {
+    const res = await fetch('/api/admin/featured', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        listing_id: id,
+        featured: true,
+        featured_until: featuredUntil.trim() || null
+      })
+    });
+    const data = await res.json();
+    setMsg(res.ok ? `Featured #${id}` : data.error || 'failed');
+    setFeaturingId(null);
+    setFeaturedUntil('');
     await load();
   }
 
@@ -386,6 +421,36 @@ export default function ModerationPage() {
                 >
                   Delete
                 </button>
+                {featuringId === i.id ? (
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      type="datetime-local"
+                      value={featuredUntil}
+                      onChange={(e) => setFeaturedUntil(e.target.value)}
+                      placeholder="Expiry (optional)"
+                      style={{ border: '1px solid #d97706', borderRadius: 8, padding: '6px 10px', fontSize: 13 }}
+                    />
+                    <button
+                      onClick={() => confirmFeature(i.id)}
+                      style={{ border: '1px solid #d97706', background: '#d97706', color: '#fff', borderRadius: 8, padding: '8px 12px' }}
+                    >
+                      Confirm Feature
+                    </button>
+                    <button
+                      onClick={() => { setFeaturingId(null); setFeaturedUntil(''); }}
+                      style={{ border: '1px solid #d0d5dd', background: '#fff', color: '#111827', borderRadius: 8, padding: '8px 12px' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => toggleFeatured(i.id, false)}
+                    style={{ border: '1px solid #d97706', background: '#fff', color: '#d97706', borderRadius: 8, padding: '8px 12px' }}
+                  >
+                    ⭐ Feature
+                  </button>
+                )}
               </div>
             </div>
           </li>

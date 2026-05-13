@@ -9,6 +9,7 @@ type UserItem = {
   email: string;
   provider?: string | null;
   provider_id?: string | null;
+  is_verified?: boolean;
   created_at: string;
 };
 
@@ -37,6 +38,21 @@ export default function AdminUsersPage() {
     });
     const data = await res.json();
     setMsg(res.ok ? `Deleted user #${id}` : data.error || 'failed');
+    await load();
+  }
+
+  async function toggleVerified(id: number, currentVerified: boolean) {
+    const action = currentVerified ? 'unverify' : 'verify';
+    const ok = window.confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} user #${id}?`);
+    if (!ok) return;
+
+    const res = await fetch('/api/admin/verify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ user_id: id, verified: !currentVerified })
+    });
+    const data = await res.json();
+    setMsg(res.ok ? `User #${id} ${action}ied` : data.error || 'failed');
     await load();
   }
 
@@ -76,12 +92,27 @@ export default function AdminUsersPage() {
                   Provider: {u.provider || 'email'} · Joined: {new Date(u.created_at).toLocaleString()}
                 </div>
               </div>
-              <button
-                onClick={() => removeUser(u.id, u.email)}
-                style={{ border: '1px solid #dc2626', background: '#dc2626', color: '#fff', borderRadius: 8, padding: '8px 12px' }}
-              >
-                Delete user
-              </button>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => toggleVerified(u.id, !!u.is_verified)}
+                  style={{
+                    border: `1px solid ${u.is_verified ? '#059669' : '#d1d5db'}`,
+                    background: u.is_verified ? '#059669' : '#fff',
+                    color: u.is_verified ? '#fff' : '#374151',
+                    borderRadius: 8,
+                    padding: '8px 12px',
+                    fontWeight: 600
+                  }}
+                >
+                  {u.is_verified ? '✅ Verified' : 'Verify user'}
+                </button>
+                <button
+                  onClick={() => removeUser(u.id, u.email)}
+                  style={{ border: '1px solid #dc2626', background: '#dc2626', color: '#fff', borderRadius: 8, padding: '8px 12px' }}
+                >
+                  Delete user
+                </button>
+              </div>
             </div>
           </li>
         ))}

@@ -229,6 +229,8 @@ type Hit = {
   available_date?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  is_featured?: boolean;
+  user_verified?: boolean;
 };
 
 type ExternalHit = {
@@ -318,7 +320,9 @@ const I18N = {
     near: 'near',
     available: 'available',
     femalePreferredBadge: 'female preferred',
-    studyDeskBadge: 'study desk'
+    studyDeskBadge: 'study desk',
+    featuredBadge: '⭐ Featured',
+    verifiedBadge: '✅ Verified'
   },
   vi: {
     signOut: 'Đăng xuất',
@@ -376,7 +380,9 @@ const I18N = {
     near: 'gần',
     available: 'có thể ở từ',
     femalePreferredBadge: 'ưu tiên nữ',
-    studyDeskBadge: 'có bàn học'
+    studyDeskBadge: 'có bàn học',
+    featuredBadge: '⭐ Nổi bật',
+    verifiedBadge: '✅ Đã xác minh'
   }
 } as const;
 
@@ -1191,6 +1197,34 @@ export default function HomePage() {
                     ) : null}
 
                     <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {h.is_featured ? (
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: '#92400e',
+                            background: '#fef3c7',
+                            borderRadius: 999,
+                            padding: '4px 10px'
+                          }}
+                        >
+                          {t.featuredBadge}
+                        </span>
+                      ) : null}
+                      {h.user_verified ? (
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: '#065f46',
+                            background: '#d1fae5',
+                            borderRadius: 999,
+                            padding: '4px 10px'
+                          }}
+                        >
+                          {t.verifiedBadge}
+                        </span>
+                      ) : null}
                       <span
                         style={{
                           fontSize: 12,
