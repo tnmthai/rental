@@ -12,8 +12,12 @@ function slugify(input: string) {
     .replace(/^-+|-+$/g, '') || 'unknown';
 }
 
-export async function POST(req: NextRequest) {
-  // Deprecated: Use /api/upload-cloudinary instead
+export async function POST(_req: NextRequest) {
+  // DISABLED — use /api/upload-cloudinary instead
+  return NextResponse.json(
+    { error: 'This endpoint is disabled for security. Use /api/upload-cloudinary instead.' },
+    { status: 410 }
+  );
   try {
     const form = await req.formData();
     const cityRaw = String(form.get('city') || 'unknown');
