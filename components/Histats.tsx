@@ -23,6 +23,7 @@ export default function Histats() {
           <img src="https://sstatic1.histats.com/0.gif?5027110&101" alt="" />
         </a>
       </noscript>
+      <script type="text/javascript" src="https://s10.histats.com/counters/fr_24.js"></script>
     </>
   );
 }
