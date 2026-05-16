@@ -18,8 +18,7 @@ const values = [
 const stats = [
   { number: '20+', label: 'Cities covered' },
   { number: '1000+', label: 'Listings indexed' },
-  { number: '8', label: 'University areas' },
-  { number: 'Free', label: 'Always' }
+  { number: '8', label: 'University areas' }
 ];
 
 const sections = [
