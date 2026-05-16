@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Providers from './providers';
-import Histats from '../components/Histats';
+import Clarity from '../components/Histats';
 
 const SITE_URL = 'https://www.rentfinder.nz';
 
@@ -75,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </footer>
           </div>
         </Providers>
-        <Histats />
+        <Clarity />
       </body>
     </html>
   );
