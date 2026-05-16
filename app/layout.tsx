@@ -62,39 +62,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ flex: 1 }}>{children}</div>
-            <footer style={{ marginTop: 24, paddingTop: 24, paddingBottom: 16, borderTop: '1px solid #e5e7eb', fontSize: 13, color: '#4b5563' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 48, marginBottom: 16 }}>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#374151', marginBottom: 8 }}>Product</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <a href="/" style={{ color: '#6b7280', textDecoration: 'none' }}>Features</a>
-                    <a href="/" style={{ color: '#6b7280', textDecoration: 'none' }}>Pricing</a>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#374151', marginBottom: 8 }}>Company</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <a href="/about" style={{ color: '#6b7280', textDecoration: 'none' }}>About</a>
-                    <a href="/contact" style={{ color: '#6b7280', textDecoration: 'none' }}>Contact</a>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#374151', marginBottom: 8 }}>Account</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <a href="/login" style={{ color: '#6b7280', textDecoration: 'none' }}>Sign in</a>
-                    <a href="/register" style={{ color: '#6b7280', textDecoration: 'none' }}>Sign up</a>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#374151', marginBottom: 8 }}>Legal</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <a href="/terms" style={{ color: '#6b7280', textDecoration: 'none' }}>Terms</a>
-                    <a href="/privacy" style={{ color: '#6b7280', textDecoration: 'none' }}>Privacy</a>
-                  </div>
-                </div>
+            <footer style={{ marginTop: 24, paddingTop: 12, borderTop: '1px solid #e5e7eb', fontSize: 13, color: '#4b5563' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 8 }}>
+                <a href="/about" style={{ color: '#6b7280', textDecoration: 'none' }}>About</a>
+                <a href="/contact" style={{ color: '#6b7280', textDecoration: 'none' }}>Contact</a>
+                <a href="/terms" style={{ color: '#6b7280', textDecoration: 'none' }}>Terms</a>
+                <a href="/privacy" style={{ color: '#6b7280', textDecoration: 'none' }}>Privacy</a>
               </div>
-              <div style={{ textAlign: 'center', borderTop: '1px solid #f3f4f6', paddingTop: 12 }}>
-                Contact: <a href="mailto:info@rentfinder.nz" style={{ color: '#1a73e8', textDecoration: 'none' }}>info@rentfinder.nz</a>
+              <div style={{ textAlign: 'center' }}>
+                Contact admin: <a href="mailto:info@rentfinder.nz" style={{ color: '#1a73e8', textDecoration: 'none' }}>info@rentfinder.nz</a>
               </div>
             </footer>
           </div>
