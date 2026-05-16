@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
   );
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.cloudinary.com https://api.openai.com https://maps.googleapis.com; frame-ancestors 'none';"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://cdn.jsdelivr.net https://s10.histats.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http: https://sstatic1.histats.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.cloudinary.com https://api.openai.com https://maps.googleapis.com; frame-ancestors 'none';"
   );
 
   return response;

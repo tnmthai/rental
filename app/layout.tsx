@@ -88,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
           })();
         ` }} />
-        <noscript><a href="/" target="_blank"><img src="//sstatic1.histats.com/0.gif?5027110&101" alt="" border="0"></a></noscript>
+        <noscript><a href="/" target="_blank"><img src="//sstatic1.histats.com/0.gif?5027110&101" alt="" /></a></noscript>
         {/* Histats.com END */}
       </body>
     </html>
