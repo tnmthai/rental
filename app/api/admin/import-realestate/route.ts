@@ -3,10 +3,11 @@ import { getPool } from '@/lib/db';
 
 const REGIONS: Record<string, { id: number; label: string }> = {
   auckland: { id: 35, label: 'Auckland' },
-  wellington: { id: 39, label: 'Wellington' },
-  canterbury: { id: 12, label: 'Canterbury' },
-  waikato: { id: 40, label: 'Waikato' },
-  otago: { id: 30, label: 'Otago' }
+  waikato: { id: 36, label: 'Waikato' },
+  hawkesbay: { id: 39, label: 'Hawkes Bay' },
+  taranaki: { id: 40, label: 'Taranaki' },
+  otago: { id: 46, label: 'Otago' },
+  southland: { id: 47, label: 'Southland' }
 };
 
 function parsePrice(priceDisplay: string): number {
