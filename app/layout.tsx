@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import Providers from './providers';
-import Clarity from '../components/Histats';
 
 const SITE_URL = 'https://www.rentfinder.nz';
 
@@ -75,7 +75,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </footer>
           </div>
         </Providers>
-        <Clarity />
+        <Script id="clarity" strategy="beforeInteractive">
+          {`
+            (function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "wrws151z0j");
+          `}
+        </Script>
       </body>
     </html>
   );
