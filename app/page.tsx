@@ -1062,16 +1062,8 @@ export default function HomePage() {
               return (
                 <article
                   key={h.id}
-                  style={{
-                    border: '1px solid #e6ebf2',
-                    borderRadius: 20,
-                    overflow: 'hidden',
-                    background: '#fff',
-                    boxShadow: '0 20px 35px rgba(15, 23, 42, 0.08)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minHeight: '100%'
-                  }}
+                  className="card"
+                  style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}
                 >
                   {primaryImage ? (
                     <div style={{ position: 'relative', width: '100%', paddingTop: '62%', overflow: 'hidden' }}>
@@ -1189,84 +1181,18 @@ export default function HomePage() {
 
                     <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {h.is_featured ? (
-                        <span
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: '#92400e',
-                            background: '#fef3c7',
-                            borderRadius: 999,
-                            padding: '4px 10px'
-                          }}
-                        >
-                          {t.featuredBadge}
-                        </span>
+                        <span className="badge badge-warning">{t.featuredBadge}</span>
                       ) : null}
                       {h.user_verified ? (
-                        <span
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: '#065f46',
-                            background: '#d1fae5',
-                            borderRadius: 999,
-                            padding: '4px 10px'
-                          }}
-                        >
-                          {t.verifiedBadge}
-                        </span>
+                        <span className="badge badge-success">{t.verifiedBadge}</span>
                       ) : null}
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: '#0f172a',
-                          background: '#f1f5f9',
-                          borderRadius: 999,
-                          padding: '4px 10px'
-                        }}
-                      >
-                        {h.furnished ? t.furnished : t.unfurnished}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: '#0f172a',
-                          background: '#f1f5f9',
-                          borderRadius: 999,
-                          padding: '4px 10px'
-                        }}
-                      >
-                        {h.bills_included ? t.billsIncluded : t.billsSeparate}
-                      </span>
+                      <span className="badge badge-neutral">{h.furnished ? t.furnished : t.unfurnished}</span>
+                      <span className="badge badge-neutral">{h.bills_included ? t.billsIncluded : t.billsSeparate}</span>
                       {femaleFriendly ? (
-                        <span
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: '#7f1d1d',
-                            background: '#fee2e2',
-                            borderRadius: 999,
-                            padding: '4px 10px'
-                          }}
-                        >
-                          {t.femalePreferredBadge}
-                        </span>
+                        <span className="badge badge-error">{t.femalePreferredBadge}</span>
                       ) : null}
                       {hasDesk ? (
-                        <span
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: '#1e3a8a',
-                            background: '#dbeafe',
-                            borderRadius: 999,
-                            padding: '4px 10px'
-                          }}
-                        >
-                          {t.studyDeskBadge}
-                        </span>
+                        <span className="badge badge-blue">{t.studyDeskBadge}</span>
                       ) : null}
                     </div>
 
@@ -1274,14 +1200,8 @@ export default function HomePage() {
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                         <a
                           href={`/listing/${h.id}`}
-                          style={{
-                            border: '1px solid #1d4ed8',
-                            color: '#1d4ed8',
-                            borderRadius: 999,
-                            padding: '8px 16px',
-                            fontWeight: 600,
-                            textDecoration: 'none'
-                          }}
+                          className="btn btn-outline btn-sm"
+                          style={{ color: 'var(--brand-blue)', border: '1px solid var(--brand-blue)' }}
                         >
                           {t.viewDetail}
                         </a>
