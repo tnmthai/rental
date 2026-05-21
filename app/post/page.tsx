@@ -8,7 +8,7 @@ import { NZ_LOCATIONS, getSchools } from '@/lib/nz-data';
 
 const fieldStyle: CSSProperties = {
   width: '100%',
-  padding: '12px 13px',
+  padding: '12px 14px',
   border: '1px solid #d8e0eb',
   borderRadius: 12,
   fontSize: 14,
@@ -218,7 +218,7 @@ export default function PostListingPage() {
           <p style={{ margin: '0 0 8px', color: '#2563eb', fontWeight: 850, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.8 }}>Host tools</p>
           <h1 style={{ margin: '0 0 10px', fontSize: 34, letterSpacing: 0 }}>Sign in to create a listing</h1>
           <p style={{ margin: '0 auto 22px', color: '#64748b', lineHeight: 1.6, maxWidth: 520 }}>Add photos, rental details, location, availability, and moderation-ready highlights for renters.</p>
-          <button onClick={() => signIn(undefined, { callbackUrl: '/post' })} style={{ padding: '12px 18px', borderRadius: 999, border: '1px solid #2563eb', background: '#2563eb', color: '#fff', fontWeight: 850, cursor: 'pointer' }}>
+          <button onClick={() => signIn(undefined, { callbackUrl: '/post' })} className="btn btn-blue">
             Go to login
           </button>
         </section>
@@ -377,7 +377,7 @@ export default function PostListingPage() {
                   cursor: generating || !form.title ? 'default' : 'pointer'
                 }}
               >
-                {generating ? 'Generating...' : '✨ Generate with AI'}
+                {generating ? 'Generating...' : 'Generate with AI'}
               </button>
             </div>
             <textarea

@@ -180,19 +180,8 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => signIn('google', { callbackUrl: '/' })}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                border: '1px solid #d8dee8',
-                borderRadius: 12,
-                padding: '11px 12px',
-                background: '#fff',
-                color: '#111827',
-                fontWeight: 800,
-                cursor: 'pointer'
-              }}
+              className="btn btn-outline"
+              style={{ borderRadius: 12, padding: '11px 12px' }}
             >
               <span style={{ color: '#4285F4', fontSize: 18, fontWeight: 900 }}>G</span>
               Continue with Google
@@ -250,18 +239,8 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              style={{
-                border: 'none',
-                borderRadius: 12,
-                padding: '13px 16px',
-                marginTop: 2,
-                background: loading ? '#93c5fd' : '#2563eb',
-                color: '#fff',
-                fontSize: 15,
-                fontWeight: 850,
-                cursor: loading ? 'default' : 'pointer',
-                boxShadow: loading ? 'none' : '0 12px 26px rgba(37, 99, 235, 0.22)'
-              }}
+              className="btn btn-blue"
+              style={{ borderRadius: 12, padding: '13px 16px', marginTop: 2, fontSize: 15 }}
             >
               {loading ? 'Please wait...' : mode === 'login' ? 'Sign in with email' : 'Create account'}
             </button>

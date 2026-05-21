@@ -645,7 +645,7 @@ export default function HomePage() {
           boxSizing: 'border-box'
         }}
       >
-        <a href="/" className="miniBrand" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: 900, fontSize: 18, letterSpacing: 0 }}>
+        <a href="/" className="miniBrand" style={{ textDecoration: 'none', color: 'var(--text-primary)', fontWeight: 900, fontSize: 18 }}>
           RentFinder
         </a>
 

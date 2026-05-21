@@ -35,59 +35,24 @@ const faqs = [
 
 export default function HostsPage() {
   return (
-    <main
-      style={{
-        maxWidth: 900,
-        margin: '0 auto',
-        padding: '48px 20px 80px',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        color: '#111827'
-      }}
-    >
-      <a
-        href="/"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '1px solid #d1d5db',
-          borderRadius: 999,
-          padding: '8px 14px',
-          color: '#374151',
-          textDecoration: 'none',
-          fontSize: 14,
-          fontWeight: 700,
-          background: '#fff',
-          marginBottom: 24
-        }}
-      >
-        Back to home
-      </a>
+    <main className="page-container" style={{ maxWidth: 900 }}>
+      <a href="/" className="btn btn-outline btn-sm" style={{ marginBottom: 24 }}>Back to home</a>
 
-      <section style={{ textAlign: 'center', marginBottom: 40 }}>
-        <p style={{ display: 'inline-block', padding: '6px 14px', borderRadius: 999, background: '#eef2ff', color: '#4338ca', fontWeight: 600 }}>
+      <section className="hero">
+        <div className="hero-badge" style={{ background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe' }}>
           Host beta · free reposting
-        </p>
-        <h1 style={{ fontSize: 36, margin: '18px 0 12px', fontWeight: 800, letterSpacing: -0.5 }}>
+        </div>
+        <h1 style={{ fontSize: 36 }}>
           Share your room once. Let AI handle the inbox.
         </h1>
-        <p style={{ fontSize: 18, color: '#4b5563', margin: '0 auto', maxWidth: 640 }}>
+        <p>
           RentFinder mirrors your existing listing, adds clean AI highlights, and keeps your preferred contact link so students can reach you faster.
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+        <div style={{ marginTop: 24 }}>
           <a
             href="mailto:info@rentfinder.nz?subject=Share%20my%20room&body=Hi%20RentFinder%2C%0AHere%20is%20my%20listing%20link%3A%20"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 999,
-              padding: '12px 26px',
-              fontWeight: 600,
-              background: '#2563eb',
-              color: '#fff',
-              textDecoration: 'none'
-            }}
+            className="btn btn-blue"
+            style={{ padding: '12px 26px' }}
           >
             Email my listing link
           </a>
@@ -96,31 +61,31 @@ export default function HostsPage() {
 
       <section style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', marginBottom: 48 }}>
         {steps.map((step, idx) => (
-          <div key={step.title} style={{ border: '1px solid #e5e7eb', borderRadius: 16, padding: 20, background: '#fff' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 999, background: '#eef2ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, marginBottom: 12 }}>
+          <div key={step.title} className="card card-body">
+            <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-pill)', background: '#eef2ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, marginBottom: 12 }}>
               {idx + 1}
             </div>
             <h3 style={{ margin: '0 0 8px', fontSize: 18 }}>{step.title}</h3>
-            <p style={{ margin: 0, color: '#4b5563', lineHeight: 1.5 }}>{step.body}</p>
+            <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: 1.5 }}>{step.body}</p>
           </div>
         ))}
       </section>
 
-      <section style={{ marginBottom: 48 }}>
+      <section className="section">
         <h2 style={{ fontSize: 24, marginBottom: 12 }}>What you get</h2>
-        <ul style={{ paddingLeft: 20, lineHeight: 1.7, color: '#374151' }}>
+        <ul style={{ paddingLeft: 20, lineHeight: 1.7, color: 'var(--text-secondary)' }}>
           <li>AI-polished highlight card you can forward to applicants.</li>
           <li>Direct link back to your preferred contact channel (FB, email, phone).</li>
           <li>Automatic expiry after 60 days so stale rooms disappear.</li>
         </ul>
       </section>
 
-      <section style={{ border: '1px solid #e5e7eb', borderRadius: 16, padding: 24, background: '#f9fafb' }}>
+      <section className="card card-body" style={{ background: 'var(--bg-subtle)' }}>
         <h2 style={{ fontSize: 24, marginBottom: 18 }}>Questions?</h2>
         {faqs.map((item) => (
           <div key={item.q} style={{ marginBottom: 16 }}>
             <strong style={{ display: 'block', marginBottom: 4 }}>{item.q}</strong>
-            <p style={{ margin: 0, color: '#4b5563' }}>{item.a}</p>
+            <p style={{ margin: 0, color: 'var(--text-muted)' }}>{item.a}</p>
           </div>
         ))}
         <p style={{ marginTop: 24 }}>

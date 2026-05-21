@@ -54,6 +54,15 @@ type GrowthData = {
   eventCounts: Array<{ event_name: string; count: number }>;
 };
 
+function StatusBadge({ status }: { status: string }) {
+  const cls =
+    status === 'approved' ? 'status-approved' :
+    status === 'rejected' ? 'status-rejected' :
+    status === 'pending' ? 'status-pending' :
+    'status-expired';
+  return <span className={`status-badge ${cls}`}>{status}</span>;
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const [listings, setListings] = useState<Listing[]>([]);
@@ -113,63 +122,55 @@ export default function DashboardPage() {
     await load();
   }
 
-  if (status === 'loading') return <main style={{ padding: 24 }}><SubNav />Loading...</main>;
+  if (status === 'loading') return <main className="page-container"><SubNav /><p className="text-muted">Loading...</p></main>;
+
   if (!session?.user)
     return (
-      <main style={{ padding: 24 }}>
+      <main className="page-container">
         <SubNav />
         <h1>My Dashboard</h1>
-        <p>Please sign in first.</p>
-        <button onClick={() => signIn(undefined, { callbackUrl: '/dashboard' })}>Go to login</button>
+        <p className="text-muted">Please sign in first.</p>
+        <button onClick={() => signIn(undefined, { callbackUrl: '/dashboard' })} className="btn btn-blue">Go to login</button>
       </main>
     );
 
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
+    <main className="page-container">
       <SubNav />
-      <h1>My Dashboard</h1>
-      <p>Hello {session.user.name || session.user.email}</p>
-      {msg ? <p>{msg}</p> : null}
+      <h1 style={{ margin: '0 0 4px' }}>My Dashboard</h1>
+      <p className="text-muted">Hello {session.user.name || session.user.email}</p>
+      {msg ? <p style={{ color: 'var(--brand-primary)', fontWeight: 700 }}>{msg}</p> : null}
 
-      <section style={{ marginTop: 20 }}>
-        <h2>Moderation</h2>
-        <p>
+      <section className="section" style={{ marginTop: 20 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 800 }}>Moderation</h2>
+        <p className="text-muted">
           If you are admin, open <a href="/admin/moderation">/admin/moderation</a>
         </p>
       </section>
 
-      <section style={{ marginTop: 20 }}>
-        <h2>My Listings</h2>
-        <div style={{ maxHeight: 420, overflowY: 'auto', paddingRight: 4, border: '1px solid #f0f0f0', borderRadius: 10 }}>
+      <section className="section" style={{ marginTop: 20 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 800 }}>My Listings</h2>
+        <div className="scroll-container">
           <ul style={{ padding: 10, margin: 0 }}>
             {listings.map((l) => (
-              <li key={l.id} style={{ listStyle: 'none', border: '1px solid #eee', padding: 12, borderRadius: 8, marginBottom: 10, background: '#fff' }}>
-                <b>{l.title}</b> · {l.city} · ${l.price_nzd_week}/week ·{' '}
-                <span style={{
-                  display: 'inline-block',
-                  padding: '2px 8px',
-                  borderRadius: 999,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  background: l.status === 'approved' ? '#dcfce7' : l.status === 'rejected' ? '#fee2e2' : l.status === 'pending' ? '#fef9c3' : l.status === 'expired' ? '#f3f4f6' : '#e0e7ff',
-                  color: l.status === 'approved' ? '#166534' : l.status === 'rejected' ? '#991b1b' : l.status === 'pending' ? '#854d0e' : l.status === 'expired' ? '#6b7280' : '#3730a3'
-                }}>{l.status}</span>
+              <li key={l.id} className="list-item">
+                <b>{l.title}</b> · {l.city} · ${l.price_nzd_week}/week · <StatusBadge status={l.status} />
                 {l.moderation_note ? (
-                  <div style={{ marginTop: 6, padding: '4px 8px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#991b1b', fontSize: 13 }}>
+                  <div style={{ marginTop: 6, padding: '4px 8px', background: 'var(--status-error-bg)', border: '1px solid #fecaca', borderRadius: 6, color: 'var(--status-error)', fontSize: 13 }}>
                     Rejection reason: {l.moderation_note}
                   </div>
                 ) : null}
-                <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                   Created: {new Date(l.created_at).toLocaleString()} · Expires: {l.expires_at ? new Date(l.expires_at).toLocaleString() : 'N/A'}
                 </div>
                 <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
                   {l.status === 'expired' ? (
-                    <button onClick={() => act(l.id, 'renew')} style={{ border: '1px solid #16a34a', background: '#16a34a', color: '#fff', borderRadius: 8, padding: '5px 10px', fontSize: 12, cursor: 'pointer' }}>Renew (30d)</button>
+                    <button onClick={() => act(l.id, 'renew')} className="btn btn-primary btn-sm">Renew (30d)</button>
                   ) : (
                     <>
-                      <button onClick={() => act(l.id, 'pause')}>Pause</button>
-                      <button onClick={() => act(l.id, 'resume')}>Resume</button>
-                      <button onClick={() => act(l.id, 'extend')}>Extend +7d</button>
+                      <button onClick={() => act(l.id, 'pause')} className="btn btn-outline btn-sm">Pause</button>
+                      <button onClick={() => act(l.id, 'resume')} className="btn btn-outline btn-sm">Resume</button>
+                      <button onClick={() => act(l.id, 'extend')} className="btn btn-outline btn-sm">Extend +7d</button>
                     </>
                   )}
                 </div>
@@ -179,19 +180,19 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section style={{ marginTop: 20 }}>
-        <h2>My Room Requests</h2>
-        <div style={{ maxHeight: 320, overflowY: 'auto', paddingRight: 4, border: '1px solid #f0f0f0', borderRadius: 10 }}>
+      <section className="section" style={{ marginTop: 20 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 800 }}>My Room Requests</h2>
+        <div className="scroll-container">
           <ul style={{ padding: 10, margin: 0 }}>
             {wanted.map((w) => (
-              <li key={w.id} style={{ listStyle: 'none', border: '1px solid #eee', padding: 12, borderRadius: 8, marginBottom: 10, background: '#fff' }}>
-                <b>{w.title}</b> · {w.city} · budget ${w.budget_nzd_week}/week · status: {w.status}
-                <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
+              <li key={w.id} className="list-item">
+                <b>{w.title}</b> · {w.city} · budget ${w.budget_nzd_week}/week · <StatusBadge status={w.status} />
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                   Created: {new Date(w.created_at).toLocaleString()} · Expires: {w.expires_at ? new Date(w.expires_at).toLocaleString() : 'N/A'}
                 </div>
                 <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                  <button onClick={() => actWanted(w.id, 'pause')}>Pause</button>
-                  <button onClick={() => actWanted(w.id, 'resume')}>Resume</button>
+                  <button onClick={() => actWanted(w.id, 'pause')} className="btn btn-outline btn-sm">Pause</button>
+                  <button onClick={() => actWanted(w.id, 'resume')} className="btn btn-outline btn-sm">Resume</button>
                 </div>
               </li>
             ))}
@@ -199,31 +200,23 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section style={{ marginTop: 20 }}>
-        <h2>Notifications</h2>
-        <div style={{ maxHeight: 320, overflowY: 'auto', paddingRight: 4, border: '1px solid #f0f0f0', borderRadius: 10 }}>
+      <section className="section" style={{ marginTop: 20 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 800 }}>Notifications</h2>
+        <div className="scroll-container">
           {notifications.length === 0 ? (
-            <p style={{ padding: 12, color: '#667085' }}>No notifications yet.</p>
+            <p style={{ padding: 12, color: 'var(--text-muted)' }}>No notifications yet.</p>
           ) : (
             <ul style={{ padding: 10, margin: 0 }}>
               {notifications.map((n) => (
-                <li key={n.id} style={{
-                  listStyle: 'none',
-                  border: '1px solid #eee',
-                  padding: 12,
-                  borderRadius: 8,
-                  marginBottom: 10,
-                  background: n.read ? '#fff' : '#f0f9ff',
-                  borderColor: n.read ? '#eee' : '#bfdbfe'
-                }}>
+                <li key={n.id} className="list-item" style={{ background: n.read ? '#fff' : '#f0f9ff', borderColor: n.read ? 'var(--border-default)' : '#bfdbfe' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                     <div>
-                      <b style={{ color: n.read ? '#6b7280' : '#1e40af' }}>{n.title}</b>
-                      {n.body ? <div style={{ color: '#4b5563', fontSize: 13, marginTop: 4 }}>{n.body}</div> : null}
-                      <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>{new Date(n.created_at).toLocaleString()}</div>
+                      <b style={{ color: n.read ? 'var(--text-muted)' : 'var(--status-info)' }}>{n.title}</b>
+                      {n.body ? <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4 }}>{n.body}</div> : null}
+                      <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 4 }}>{new Date(n.created_at).toLocaleString()}</div>
                     </div>
                     {n.listing_id ? (
-                      <a href={`/listing/${n.listing_id}`} style={{ color: '#1a73e8', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>View</a>
+                      <a href={`/listing/${n.listing_id}`} style={{ color: 'var(--brand-blue)', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>View</a>
                     ) : null}
                   </div>
                 </li>
@@ -234,44 +227,39 @@ export default function DashboardPage() {
         {notifications.some((n) => !n.read) ? (
           <button
             onClick={async () => {
-              await fetch('/api/my/notifications', {
-                method: 'PATCH',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({})
-              });
+              await fetch('/api/my/notifications', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({}) });
               await load();
             }}
-            style={{ marginTop: 8, border: '1px solid #d0d5dd', background: '#fff', color: '#334155', borderRadius: 8, padding: '6px 12px', fontSize: 13, cursor: 'pointer' }}
+            className="btn btn-outline btn-sm"
+            style={{ marginTop: 8 }}
           >
             Mark all as read
           </button>
         ) : null}
       </section>
 
-      <section style={{ marginTop: 20 }}>
-        <div style={{ maxHeight: 320, overflowY: 'auto', paddingRight: 4, border: '1px solid #f0f0f0', borderRadius: 10 }}>
+      <section className="section" style={{ marginTop: 20 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 800 }}>Favorites</h2>
+        <div className="scroll-container">
           {favorites.length === 0 ? (
-            <p style={{ padding: 12, color: '#667085' }}>No saved listings yet.</p>
+            <p style={{ padding: 12, color: 'var(--text-muted)' }}>No saved listings yet.</p>
           ) : (
             <ul style={{ padding: 10, margin: 0 }}>
               {favorites.map((f) => (
-                <li key={f.id} style={{ listStyle: 'none', border: '1px solid #eee', padding: 12, borderRadius: 8, marginBottom: 10, background: '#fff' }}>
+                <li key={f.id} className="list-item">
                   <a href={`/listing/${f.listing_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <b>{f.title}</b> · {f.city} · ${f.price_nzd_week}/week · status: {f.status}
+                    <b>{f.title}</b> · {f.city} · ${f.price_nzd_week}/week · <StatusBadge status={f.status} />
                   </a>
-                  <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                     Saved: {new Date(f.created_at).toLocaleString()}
                   </div>
                   <button
                     onClick={async () => {
-                      await fetch('/api/my/favorites', {
-                        method: 'DELETE',
-                        headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({ listing_id: f.listing_id })
-                      });
+                      await fetch('/api/my/favorites', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ listing_id: f.listing_id }) });
                       await load();
                     }}
-                    style={{ marginTop: 8, border: '1px solid #dc2626', background: '#fff', color: '#dc2626', borderRadius: 8, padding: '5px 10px', fontSize: 12, cursor: 'pointer' }}
+                    className="btn btn-danger btn-sm"
+                    style={{ marginTop: 8 }}
                   >
                     Remove
                   </button>
@@ -282,11 +270,11 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section style={{ marginTop: 20 }}>
-        <h2>Saved Searches</h2>
-        <ul>
+      <section className="section" style={{ marginTop: 20 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 800 }}>Saved Searches</h2>
+        <ul style={{ padding: 0, margin: 0 }}>
           {saved.map((s) => (
-            <li key={s.id}>
+            <li key={s.id} className="list-item">
               <b>{s.name}</b>: {s.query}
             </li>
           ))}
@@ -294,15 +282,15 @@ export default function DashboardPage() {
       </section>
 
       {growth ? (
-        <section style={{ marginTop: 20, border: '1px solid #eee', borderRadius: 10, padding: 14 }}>
-          <h2 style={{ marginTop: 0 }}>Growth Baseline (Last {growth.windowDays} days)</h2>
+        <section className="card card-body" style={{ marginTop: 20 }}>
+          <h2 style={{ marginTop: 0, fontSize: 20 }}>Growth Baseline (Last {growth.windowDays} days)</h2>
           <p style={{ marginTop: 0 }}>
             Baseline: <b>{growth.baselinePerDay.toFixed(2)}</b> listings/day → Target (10x): <b>{growth.targetPerDay}</b> listings/day
           </p>
           <ul>
-            <li>Listing mới/ngày (avg): <b>{growth.baselinePerDay.toFixed(2)}</b></li>
-            <li>% listing có ảnh: <b>{growth.listingWithImagePct.toFixed(1)}%</b></li>
-            <li>% listing có contact click: <b>{growth.listingWithContactClickPct.toFixed(1)}%</b></li>
+            <li>Listings/day (avg): <b>{growth.baselinePerDay.toFixed(2)}</b></li>
+            <li>% with image: <b>{growth.listingWithImagePct.toFixed(1)}%</b></li>
+            <li>% with contact click: <b>{growth.listingWithContactClickPct.toFixed(1)}%</b></li>
             <li>Repeat poster: <b>{growth.repeatPosterPct.toFixed(1)}%</b></li>
           </ul>
 
@@ -321,7 +309,6 @@ export default function DashboardPage() {
           </ul>
         </section>
       ) : null}
-
     </main>
   );
 }
