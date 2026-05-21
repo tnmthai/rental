@@ -654,21 +654,12 @@ export default function HomePage() {
             <a
               key={item.href}
               href={item.href}
+              className="btn btn-sm"
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: 34,
-                border: item.primary ? '1px solid #0f766e' : '1px solid #d8e0eb',
-                borderRadius: 999,
-                padding: '7px 13px',
-                background: item.primary ? '#0f766e' : 'rgba(255,255,255,0.9)',
-                color: item.primary ? '#ffffff' : '#334155',
-                textDecoration: 'none',
-                fontSize: 13,
-                fontWeight: 800,
-                whiteSpace: 'nowrap',
-                boxShadow: item.primary ? '0 10px 22px rgba(15, 118, 110, 0.18)' : '0 8px 18px rgba(15, 23, 42, 0.05)'
+                background: item.primary ? 'var(--brand-primary)' : 'rgba(255,255,255,0.9)',
+                color: item.primary ? '#fff' : 'var(--text-secondary)',
+                border: item.primary ? '1px solid var(--brand-primary)' : '1px solid var(--border-default)',
+                boxShadow: item.primary ? 'var(--shadow-btn-primary)' : 'var(--shadow-sm)'
               }}
             >
               {item.label}
@@ -781,7 +772,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 8 }}>
-            <a href="/login" style={{ border: '1px solid #0f766e', borderRadius: 999, padding: '8px 14px', textDecoration: 'none', color: '#0f766e', background: '#fff', fontWeight: 850, boxShadow: '0 8px 18px rgba(15, 23, 42, 0.06)' }}>
+            <a href="/login" className="btn btn-primary" style={{ background: '#fff', color: 'var(--brand-primary)', border: '1px solid var(--brand-primary)' }}>
               {t.logIn}
             </a>
           </div>
@@ -894,13 +885,13 @@ export default function HomePage() {
             <button
               onClick={run}
               disabled={loading}
-              style={{ border: 'none', borderRadius: 999, padding: '11px 20px', background: loading ? '#7dd3fc' : '#0f766e', color: '#fff', whiteSpace: 'nowrap', fontWeight: 850, cursor: loading ? 'default' : 'pointer', boxShadow: loading ? 'none' : '0 12px 24px rgba(15, 118, 110, 0.22)' }}
+              className="btn btn-primary"
             >
               {loading ? t.searching : t.search}
             </button>
             <button
               onClick={saveSearch}
-              style={{ border: '1px solid #d8e0eb', borderRadius: 999, padding: '11px 15px', background: '#fff', whiteSpace: 'nowrap', color: '#334155', fontWeight: 800, cursor: 'pointer' }}
+              className="btn btn-outline"
             >
               {t.save}
             </button>
