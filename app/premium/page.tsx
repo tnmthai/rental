@@ -8,6 +8,10 @@ export default function PremiumPage() {
   const [loading, setLoading] = useState<number | null>(null);
 
   async function subscribe(plan: number) {
+    if (!session?.user) {
+      window.location.href = '/login?callbackUrl=/premium';
+      return;
+    }
     setLoading(plan);
     try {
       const res = await fetch('/api/stripe/subscribe', {

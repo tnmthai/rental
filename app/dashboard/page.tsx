@@ -75,6 +75,10 @@ export default function DashboardPage() {
   const [boosting, setBoosting] = useState<number | null>(null);
 
   async function boostListing(listingId: number, plan: number) {
+    if (!session?.user) {
+      window.location.href = '/login?callbackUrl=/dashboard';
+      return;
+    }
     setBoosting(listingId);
     try {
       const res = await fetch('/api/stripe/checkout', {
