@@ -531,6 +531,7 @@ export default function HomePage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [compareIds, setCompareIds] = useState<Set<number>>(new Set());
   const [filterPrice, setFilterPrice] = useState<{ min: string; max: string }>({ min: '', max: '' });
   const [filterFurnished, setFilterFurnished] = useState<string>('any');
   const [filterBills, setFilterBills] = useState<string>('any');
@@ -548,7 +549,9 @@ export default function HomePage() {
   const menuNav = [
     { href: '/wanted/post', label: 'Post room request' },
     { href: '/hosts', label: t.shareRoom },
+    { href: '/flatmate', label: '🏠 Flatmate Finder' },
     { href: '/blog', label: '📝 Blog' },
+    { href: '/premium', label: '⭐ Premium' },
     { href: '/about', label: 'About' }
   ];
   const suggestedPrompts = useMemo(
@@ -1406,6 +1409,26 @@ export default function HomePage() {
                           {t.viewDetail}
                         </a>
                         <ShareButtons listingId={h.id} title={h.title} compact />
+                        <button
+                          onClick={() => setCompareIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(h.id)) next.delete(h.id);
+                            else if (next.size < 4) next.add(h.id);
+                            return next;
+                          })}
+                          style={{
+                            border: compareIds.has(h.id) ? '1px solid #2563eb' : '1px solid #d1d5db',
+                            borderRadius: 8,
+                            padding: '4px 10px',
+                            background: compareIds.has(h.id) ? '#eff6ff' : '#fff',
+                            color: compareIds.has(h.id) ? '#2563eb' : '#6b7280',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {compareIds.has(h.id) ? '✓ Compare' : '⇔ Compare'}
+                        </button>
                       </div>
 
                       <div style={{ fontSize: 12, color: '#006621' }}>
@@ -1637,6 +1660,54 @@ export default function HomePage() {
           }
         }
       `}</style>
+
+      {compareIds.size > 0 ? (
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: '#1e293b',
+          color: '#fff',
+          padding: '12px 20px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 12,
+          zIndex: 1000,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.2)'
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>{compareIds.size} selected</span>
+          <a
+            href={`/compare?ids=${Array.from(compareIds).join(',')}`}
+            style={{
+              padding: '8px 20px',
+              background: '#2563eb',
+              color: '#fff',
+              borderRadius: 10,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 700
+            }}
+          >
+            Compare Now
+          </a>
+          <button
+            onClick={() => setCompareIds(new Set())}
+            style={{
+              padding: '8px 16px',
+              background: 'transparent',
+              border: '1px solid #475569',
+              color: '#94a3b8',
+              borderRadius: 10,
+              fontSize: 13,
+              cursor: 'pointer'
+            }}
+          >
+            Clear
+          </button>
+        </div>
+      ) : null}
     </main>
   );
 }

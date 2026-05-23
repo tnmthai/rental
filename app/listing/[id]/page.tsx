@@ -6,6 +6,7 @@ import ListingDetailMap from '@/app/components/ListingDetailMap';
 import FavoriteButtonWrapper from './FavoriteButtonWrapper';
 import ShareButtons from '@/app/components/ShareButtons';
 import ReviewSection from '@/app/components/ReviewSection';
+import NeighborhoodInfo from '@/app/components/NeighborhoodInfo';
 
 function formatDescription(text: string): string[] {
   return text
@@ -159,6 +160,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         <section style={{ margin: '10px 0 14px' }}>
           <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>Location map</h3>
           <ListingDetailMap title={item.title} city={item.city} price={Number(item.price_nzd_week || 0)} lat={coords.lat} lng={coords.lng} />
+          <NeighborhoodInfo lat={coords.lat} lng={coords.lng} />
         </section>
       ) : null}
 

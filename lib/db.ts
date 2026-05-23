@@ -739,9 +739,33 @@ export async function setUserVerified(userId: number, verified: boolean) {
 export async function getUserById(userId: number) {
   const p = getPool();
   await ensureVerifiedColumn();
+  await ensurePremiumColumn();
   const { rows } = await p.query(
-    `SELECT id, name, email, provider, provider_id, is_verified, created_at FROM users WHERE id = $1 LIMIT 1`,
+    `SELECT id, name, email, provider, provider_id, is_verified, plan, plan_expires_at, created_at FROM users WHERE id = $1 LIMIT 1`,
     [userId]
+  );
+  return rows[0] || null;
+}
+
+export async function getUserPlan(userId: number): Promise<{ plan: string; expires_at: string | null }> {
+  const p = getPool();
+  await ensurePremiumColumn();
+  const { rows } = await p.query('SELECT plan, plan_expires_at FROM users WHERE id = $1', [userId]);
+  if (!rows.length) return { plan: 'free', expires_at: null };
+  const r = rows[0];
+  if (r.plan !== 'free' && r.plan_expires_at && new Date(r.plan_expires_at) < new Date()) {
+    await p.query('UPDATE users SET plan = $1, plan_expires_at = NULL WHERE id = $2', ['free', userId]);
+    return { plan: 'free', expires_at: null };
+  }
+  return { plan: r.plan || 'free', expires_at: r.plan_expires_at };
+}
+
+export async function setUserPlan(userId: number, plan: string, expiresAt: string) {
+  const p = getPool();
+  await ensurePremiumColumn();
+  const { rows } = await p.query(
+    'UPDATE users SET plan = $1, plan_expires_at = $2 WHERE id = $3 RETURNING id, plan, plan_expires_at',
+    [plan, expiresAt, userId]
   );
   return rows[0] || null;
 }
@@ -919,6 +943,12 @@ async function ensureFeaturedColumns() {
 async function ensureVerifiedColumn() {
   const p = getPool();
   await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN NOT NULL DEFAULT FALSE`);
+}
+
+async function ensurePremiumColumn() {
+  const p = getPool();
+  await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free'`);
+  await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMPTZ`);
 }
 
 async function ensureNotificationsTable() {

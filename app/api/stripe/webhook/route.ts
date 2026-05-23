@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { setListingFeatured } from '@/lib/db';
+import { setListingFeatured, setUserPlan, getPool } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +26,19 @@ export async function POST(req: NextRequest) {
       const session = event.data.object;
       const listingId = Number(session.metadata?.listing_id);
       const days = Number(session.metadata?.days);
+      const type = session.metadata?.type;
 
-      if (listingId && days && Number.isFinite(listingId) && Number.isFinite(days)) {
+      if (type === 'premium' && session.metadata?.email) {
+        const premiumDays = Number(session.metadata?.days);
+        if (premiumDays && Number.isFinite(premiumDays)) {
+          const p = getPool();
+          const { rows } = await p.query('SELECT id FROM users WHERE email = $1', [session.metadata.email]);
+          if (rows.length) {
+            const expiresAt = new Date(Date.now() + premiumDays * 86_400_000).toISOString();
+            await setUserPlan(rows[0].id, session.metadata.plan === 'yearly' ? 'premium_yearly' : 'premium_monthly', expiresAt);
+          }
+        }
+      } else if (listingId && days && Number.isFinite(listingId) && Number.isFinite(days)) {
         const featuredUntil = new Date(Date.now() + days * 86_400_000).toISOString();
         await setListingFeatured(listingId, true, featuredUntil);
       }
