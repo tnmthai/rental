@@ -408,15 +408,19 @@ export default function HomePage() {
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [notifCount, setNotifCount] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
   const searchInputRef = useRef<HTMLTextAreaElement | null>(null);
   const keywords = useMemo(() => extractKeywords(query), [query]);
   const t = I18N[lang];
-  const navButtons = [
+  const [showMenu, setShowMenu] = useState(false);
+  const primaryNav = [
     { href: '/post', label: t.createListing, primary: true },
-    { href: '/map', label: '🗺️ Map view' },
+    { href: '/map', label: '🗺️ Map' },
+    { href: '/wanted', label: 'Requests' }
+  ];
+  const menuNav = [
     { href: '/wanted/post', label: 'Post room request' },
-    { href: '/wanted', label: 'Room requests' },
     { href: '/hosts', label: t.shareRoom },
     { href: '/about', label: 'About' }
   ];
@@ -635,22 +639,22 @@ export default function HomePage() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 54,
-          gap: 12,
+          marginBottom: 32,
+          gap: 10,
           width: '100vw',
           position: 'relative',
           left: '50%',
           marginLeft: '-50vw',
-          padding: '0 56px',
+          padding: '0 20px',
           boxSizing: 'border-box'
         }}
       >
-        <a href="/" className="miniBrand" style={{ textDecoration: 'none', color: 'var(--text-primary)', fontWeight: 900, fontSize: 18 }}>
+        <a href="/" className="miniBrand" style={{ textDecoration: 'none', color: 'var(--text-primary)', fontWeight: 900, fontSize: 17, flexShrink: 0 }}>
           RentFinder
         </a>
 
-        <nav className="topNav" aria-label="Primary actions" style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', flex: 1 }}>
-          {navButtons.map((item) => (
+        <nav className="topNav" aria-label="Primary actions" style={{ display: 'flex', justifyContent: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
+          {primaryNav.map((item) => (
             <a
               key={item.href}
               href={item.href}
@@ -659,180 +663,132 @@ export default function HomePage() {
                 background: item.primary ? 'var(--brand-primary)' : 'rgba(255,255,255,0.9)',
                 color: item.primary ? '#fff' : 'var(--text-secondary)',
                 border: item.primary ? '1px solid var(--brand-primary)' : '1px solid var(--border-default)',
-                boxShadow: item.primary ? 'var(--shadow-btn-primary)' : 'var(--shadow-sm)'
+                boxShadow: item.primary ? 'var(--shadow-btn-primary)' : 'var(--shadow-sm)',
+                padding: '6px 12px',
+                fontSize: 13
               }}
             >
               {item.label}
             </a>
           ))}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowMenu((v) => !v)}
+              style={{
+                border: '1px solid var(--border-default)',
+                borderRadius: 8,
+                padding: '6px 10px',
+                background: 'rgba(255,255,255,0.9)',
+                cursor: 'pointer',
+                fontSize: 16,
+                lineHeight: 1,
+                color: 'var(--text-secondary)'
+              }}
+              aria-label="More options"
+            >
+              ☰
+            </button>
+            {showMenu ? (
+              <>
+                <div onClick={() => setShowMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 998 }} />
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: 6,
+                  background: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 12,
+                  boxShadow: '0 12px 36px rgba(0,0,0,0.12)',
+                  minWidth: 180,
+                  zIndex: 999,
+                  padding: '6px 0'
+                }}>
+                  {session?.user ? (
+                    <>
+                      <a href="/dashboard" onClick={() => setShowMenu(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', textDecoration: 'none', color: '#1f2937', fontSize: 14, fontWeight: 600 }}>
+                        {session.user.image ? (
+                          <img src={session.user.image} alt="" style={{ width: 22, height: 22, borderRadius: '50%' }} />
+                        ) : null}
+                        {t.myDashboard}
+                        {notifCount > 0 ? <span style={{ marginLeft: 'auto', background: '#2563eb', color: '#fff', borderRadius: 999, fontSize: 11, fontWeight: 700, padding: '1px 7px' }}>{notifCount}</span> : null}
+                      </a>
+                      {(pendingCount > 0 || newCount > 0) ? (
+                        <a href="/admin/moderation" onClick={() => { markAdminSeen(); setShowMenu(false); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', textDecoration: 'none', color: '#1f2937', fontSize: 14 }}>
+                          🔔 Moderation
+                          <span style={{ marginLeft: 'auto', background: '#ef4444', color: '#fff', borderRadius: 999, fontSize: 11, fontWeight: 700, padding: '1px 7px' }}>{newCount > 0 ? newCount : pendingCount}</span>
+                        </a>
+                      ) : null}
+                      <div style={{ height: 1, background: '#f3f4f6', margin: '4px 0' }} />
+                    </>
+                  ) : null}
+                  {menuNav.map((item) => (
+                    <a key={item.href} href={item.href} onClick={() => setShowMenu(false)} style={{ display: 'block', padding: '10px 16px', textDecoration: 'none', color: '#1f2937', fontSize: 14 }}>
+                      {item.label}
+                    </a>
+                  ))}
+                  {session?.user ? (
+                    <>
+                      <div style={{ height: 1, background: '#f3f4f6', margin: '4px 0' }} />
+                      <button
+                        onClick={() => { signOut({ callbackUrl: '/' }); setShowMenu(false); }}
+                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 16px', border: 'none', background: 'none', color: '#ef4444', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        {t.signOut}
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </>
+            ) : null}
+          </div>
         </nav>
 
-        {session?.user ? (
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: '#3c4043' }}>
-            {(pendingCount > 0 || newCount > 0) ? (
-              <a
-                href="/admin/moderation"
-                onClick={markAdminSeen}
-                style={{ position: 'relative', textDecoration: 'none', fontSize: 18, lineHeight: 1, marginTop: 7 }}
-                title="Moderation notifications"
-              >
-                🔔
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -10,
-                    background: '#ef4444',
-                    color: '#fff',
-                    borderRadius: 999,
-                    minWidth: 18,
-                    height: 18,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: '0 4px'
-                  }}
-                >
-                  {newCount > 0 ? newCount : pendingCount}
-                </span>
-              </a>
-            ) : null}
-
-            {notifCount > 0 ? (
-              <a
-                href="/dashboard"
-                style={{ position: 'relative', textDecoration: 'none', fontSize: 18, lineHeight: 1, marginTop: 7 }}
-                title="New notifications"
-              >
-                🔔
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -10,
-                    background: '#2563eb',
-                    color: '#fff',
-                    borderRadius: 999,
-                    minWidth: 18,
-                    height: 18,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: '0 4px'
-                  }}
-                >
-                  {notifCount}
-                </span>
-              </a>
-            ) : null}
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                <a
-                  href="/dashboard"
-                  style={{
-                    border: '1px solid #bfdbfe',
-                    borderRadius: 999,
-                    padding: '6px 12px',
-                    background: '#eff6ff',
-                    color: '#1d4ed8',
-                    textDecoration: 'none',
-                    fontSize: 13,
-                    fontWeight: 700
-                  }}
-                >
-                  {t.myDashboard}
-                </a>
-                <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
-                  style={{ border: '1px solid #d8e0eb', borderRadius: 999, padding: '7px 12px', background: '#fff', color: '#334155', fontWeight: 700 }}
-                >
-                  {t.signOut}
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#5f6368' }}>
-                {session.user.image ? (
-                  <img
-                    src={session.user.image}
-                    alt="profile"
-                    style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid #e5e7eb' }}
-                  />
-                ) : null}
-                <div style={{ textAlign: 'right', lineHeight: 1.2 }}>
-                  <div style={{ color: '#3c4043', fontWeight: 600 }}>{session.user.name || 'Google user'}</div>
-                  <div>{session.user.email || ''}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <a href="/login" className="btn btn-primary" style={{ background: '#fff', color: 'var(--brand-primary)', border: '1px solid var(--brand-primary)' }}>
-              {t.logIn}
-            </a>
-          </div>
-        )}
+        {!session?.user ? (
+          <a href="/login" className="btn btn-sm" style={{ background: '#fff', color: 'var(--brand-primary)', border: '1px solid var(--brand-primary)', flexShrink: 0, fontSize: 13, padding: '6px 12px' }}>
+            {t.logIn}
+          </a>
+        ) : null}
       </header>
 
-      <section
-        className="homeHero"
+      {/* Center hero when no results, push to top when results appear */}
+      <div
         style={{
-          textAlign: 'center',
-          marginBottom: 26,
-          border: '1px solid #e5eaf2',
-          borderRadius: 30,
-          padding: '34px clamp(18px, 5vw, 48px)',
-          background: 'linear-gradient(135deg, #ffffff 0%, #f0fdfa 42%, #eff6ff 100%)',
-          boxShadow: '0 24px 70px rgba(15, 23, 42, 0.11)',
-          overflow: 'hidden',
-          position: 'relative'
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: hits.length > 0 || externalHits.length > 0 || wantedHits.length > 0 || loading ? 'flex-start' : 'center',
+          flex: hits.length > 0 || externalHits.length > 0 || wantedHits.length > 0 || loading ? 0 : 1,
+          transition: 'flex 0.3s ease'
         }}
       >
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid #ccfbf1', borderRadius: 999, padding: '7px 12px', background: 'rgba(255,255,255,0.78)', color: '#0f766e', fontSize: 13, fontWeight: 850, marginBottom: 14 }}>
-          AI rental search for New Zealand
-        </div>
-        <a
-          href="/"
+        <section
+          className="homeHero"
           style={{
-            display: 'inline-block',
-            fontSize: 60,
-            fontWeight: 950,
-            letterSpacing: 0,
-            marginBottom: 10,
-            textDecoration: 'none',
-            background: 'linear-gradient(90deg, #0f766e 0%, #2563eb 48%, #7c3aed 100%)',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            color: 'transparent'
-          }}
-          title="Back to home"
-        >
-          RentFinder
-        </a>
-        <h1
-          style={{
-            margin: '0 auto 18px',
-            fontSize: 18,
-            fontWeight: 850,
-            letterSpacing: 0,
-            color: '#334155'
+            textAlign: 'center',
+            marginBottom: 20,
+            border: '1px solid #e5eaf2',
+            borderRadius: 22,
+            padding: '24px clamp(14px, 4vw, 36px)',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f0fdfa 42%, #eff6ff 100%)',
+            boxShadow: '0 16px 48px rgba(15, 23, 42, 0.08)',
+            overflow: 'hidden',
+            position: 'relative',
+            width: '100%',
+            maxWidth: 800
           }}
         >
-          {t.heroTitle}
-        </h1>
-
-        <div className="heroStats" style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
-          {['Rooms', 'Flats', 'University areas'].map((label) => (
-            <span key={label} style={{ border: '1px solid #d8e0eb', borderRadius: 999, padding: '7px 11px', background: 'rgba(255,255,255,0.72)', color: '#475569', fontSize: 13, fontWeight: 800 }}>
-              {label}
-            </span>
-          ))}
-        </div>
+          <h1
+            style={{
+              margin: '0 auto 14px',
+              fontSize: 20,
+              fontWeight: 850,
+              letterSpacing: 0,
+              color: '#334155'
+            }}
+          >
+            {t.heroTitle}
+          </h1>
 
         <div
           className="searchBar"
@@ -898,7 +854,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8 }}>
           <button
             type="button"
             onClick={() => setShowHelp((v) => !v)}
@@ -906,36 +862,38 @@ export default function HomePage() {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 8,
+              gap: 6,
               border: '1px solid #bae6fd',
               borderRadius: 999,
-              padding: '9px 14px',
+              padding: '6px 12px',
               background: showHelp ? '#e0f2fe' : '#ffffff',
               color: '#075985',
-              fontSize: 13,
-              fontWeight: 850,
-              cursor: 'pointer',
-              boxShadow: '0 8px 22px rgba(14, 165, 233, 0.1)'
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer'
             }}
           >
-            <span
-              aria-hidden="true"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 20,
-                height: 20,
-                borderRadius: 999,
-                background: '#0284c7',
-                color: '#fff',
-                fontSize: 12,
-                fontWeight: 800
-              }}
-            >
-              ?
-            </span>
-            {t.helpButton}
+            ? {t.helpButton}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowSuggestions((v) => !v)}
+            aria-expanded={showSuggestions}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              border: '1px solid #cbd5e1',
+              borderRadius: 999,
+              padding: '6px 12px',
+              background: showSuggestions ? '#f1f5f9' : '#ffffff',
+              color: '#475569',
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            💡 {t.suggestionsTitle}
           </button>
         </div>
 
@@ -943,27 +901,27 @@ export default function HomePage() {
           <div
             className="heroDemo"
             style={{
-              marginTop: 14,
+              marginTop: 12,
               display: 'flex',
-              gap: 16,
-              padding: '16px 18px',
+              gap: 14,
+              padding: '14px 16px',
               border: '1px solid #dbeafe',
-              borderRadius: 18,
+              borderRadius: 14,
               background: '#ffffff',
               textAlign: 'left',
-              boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)'
+              boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)'
             }}
           >
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoPromptLabel}</div>
-              <p style={{ margin: '8px 0 6px', fontSize: 15, color: '#1f2937', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoPromptLabel}</div>
+              <p style={{ margin: '6px 0 4px', fontSize: 14, color: '#1f2937', lineHeight: 1.5 }}>
                 "{t.demoPromptSample}"
               </p>
-              <small style={{ color: '#6b7280' }}>{t.demoCtaHint}</small>
+              <small style={{ color: '#6b7280', fontSize: 12 }}>{t.demoCtaHint}</small>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoOutputLabel}</div>
-              <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#374151', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', letterSpacing: 1, textTransform: 'uppercase' }}>{t.demoOutputLabel}</div>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 16, color: '#374151', lineHeight: 1.5, fontSize: 14 }}>
                 {t.demoPoints.map((point) => (
                   <li key={point}>{point}</li>
                 ))}
@@ -974,40 +932,42 @@ export default function HomePage() {
 
         {saveMsg ? <p style={{ marginTop: 4, fontSize: 12, color: '#5f6368' }}>{saveMsg}</p> : null}
 
-        <div
-          style={{
-            marginTop: 16,
-            textAlign: 'left',
-            border: '1px solid #d8e0eb',
-            background: 'rgba(255,255,255,0.8)',
-            borderRadius: 18,
-            padding: '14px 16px'
-          }}
-        >
-          <div style={{ fontSize: 14, fontWeight: 850, color: '#0f172a' }}>{t.suggestionsTitle}</div>
-          <div style={{ fontSize: 13, color: '#4b5563', margin: '4px 0 9px' }}>{t.suggestionsHint}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {suggestedPrompts.map((prompt, idx) => (
-              <button
-                key={`${prompt}-${idx}`}
-                onClick={() => setQuery(prompt)}
-                style={{
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#334155',
-                  borderRadius: 999,
-                  padding: '8px 12px',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  fontWeight: 700
-                }}
-              >
-                {prompt}
-              </button>
-            ))}
+        {showSuggestions ? (
+          <div
+            style={{
+              marginTop: 12,
+              textAlign: 'left',
+              border: '1px solid #d8e0eb',
+              background: 'rgba(255,255,255,0.8)',
+              borderRadius: 14,
+              padding: '12px 14px'
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>{t.suggestionsTitle}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {suggestedPrompts.map((prompt, idx) => (
+                <button
+                  key={`${prompt}-${idx}`}
+                  onClick={() => setQuery(prompt)}
+                  style={{
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#334155',
+                    borderRadius: 999,
+                    padding: '6px 10px',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
       </section>
+      </div>
 
       {(aiOverview || reply) && (
         <section
@@ -1279,53 +1239,48 @@ export default function HomePage() {
         </section>
       )}
 
-      <section style={{ marginTop: 22, padding: '10px 0 4px', borderTop: '1px dashed #e5e7eb' }}>
-        <h4 style={{ margin: '0 0 8px', color: '#111827' }}>Popular searches: room for rent in</h4>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', fontSize: 13 }}>
-          <a href="/rent/auckland">Auckland</a>
-          <a href="/rent/auckland-aut">Auckland (AUT)</a>
-          <a href="/rent/hamilton">Hamilton</a>
-          <a href="/rent/wellington">Wellington</a>
-          <a href="/rent/christchurch">Christchurch</a>
-          <a href="/rent/lincoln">Lincoln</a>
-          <a href="/rent/dunedin">Dunedin</a>
-          <a href="/rent/palmerston-north">Palmerston North</a>
+      <section style={{ marginTop: 18, padding: '8px 0 4px', borderTop: '1px dashed #e5e7eb' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Popular:</span>
+          {['Auckland', 'Hamilton', 'Wellington', 'Christchurch', 'Lincoln', 'Dunedin'].map((city) => (
+            <a key={city} href={`/rent/${city.toLowerCase()}`} style={{ fontSize: 12, padding: '4px 10px', border: '1px solid #e5e7eb', borderRadius: 999, textDecoration: 'none', color: '#4b5563', background: '#fff' }}>
+              {city}
+            </a>
+          ))}
         </div>
       </section>
 
       <footer
         style={{
           marginTop: 'auto',
-          paddingTop: 14,
+          paddingTop: 12,
           borderTop: '1px solid #eceff3',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: 14,
-          color: '#6b7280',
-          fontSize: 13
+          gap: 12,
+          color: '#9ca3af',
+          fontSize: 12
         }}
       >
-        {typeof visitCount === 'number' ? <span>👀 {visitCount.toLocaleString()} {t.visits}</span> : null}
-        {typeof onlineCount === 'number' ? <span>🟢 {onlineCount.toLocaleString()} {t.online}</span> : null}
-        <span>🌐 {t.language}</span>
+        {typeof visitCount === 'number' ? <span>👀 {visitCount.toLocaleString()}</span> : null}
+        {typeof onlineCount === 'number' ? <span>🟢 {onlineCount.toLocaleString()} online</span> : null}
         <select
           value={lang}
           onChange={(e) => setLang(e.target.value as Lang)}
           aria-label={t.language}
           style={{
-            border: '1px solid #d0d5dd',
+            border: '1px solid #e5e7eb',
             borderRadius: 999,
-            padding: '6px 12px',
+            padding: '4px 10px',
             background: '#fff',
-            color: '#111827',
-            fontSize: 13,
-            fontWeight: 600
+            color: '#6b7280',
+            fontSize: 12
           }}
         >
-          <option value="en">{t.english}</option>
-          <option value="vi">{t.vietnamese}</option>
+          <option value="en">EN</option>
+          <option value="vi">VI</option>
         </select>
       </footer>
 
@@ -1362,36 +1317,41 @@ export default function HomePage() {
 
         @media (max-width: 768px) {
           .home-topbar {
-            margin-bottom: 24px !important;
-            padding: 0 14px !important;
+            margin-bottom: 20px !important;
+            padding: 0 12px !important;
             justify-content: center !important;
-            align-items: flex-start !important;
-            flex-wrap: wrap;
+            align-items: center !important;
+            flex-wrap: nowrap !important;
           }
 
           .miniBrand {
-            width: 100%;
-            text-align: center;
+            font-size: 16px !important;
           }
 
           .topNav {
-            justify-content: center !important;
-            width: 100%;
+            justify-content: flex-end !important;
+            gap: 4px !important;
+          }
+
+          .topNav .btn-sm {
+            padding: 5px 8px !important;
+            font-size: 12px !important;
           }
 
           .homeHero {
-            border-radius: 22px !important;
-            padding: 26px 14px !important;
+            border-radius: 16px !important;
+            padding: 18px 12px !important;
           }
 
-          .homeHero > a {
-            font-size: 44px !important;
+          .homeHero > h1 {
+            font-size: 17px !important;
           }
 
           .searchBar {
-            border-radius: 18px !important;
+            border-radius: 14px !important;
             flex-wrap: wrap;
             gap: 8px !important;
+            padding: 8px !important;
           }
 
           .searchInputWrap {
@@ -1399,7 +1359,9 @@ export default function HomePage() {
           }
 
           .searchInputWrap textarea {
-            min-height: 72px;
+            min-height: 60px;
+            font-size: 14px !important;
+            padding: '10px 12px' !important;
           }
 
           .heroDemo {
@@ -1409,7 +1371,7 @@ export default function HomePage() {
           .searchActions {
             width: 100%;
             justify-content: flex-start;
-            gap: 8px !important;
+            gap: 6px !important;
             flex-wrap: wrap;
           }
 
