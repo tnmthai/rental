@@ -1098,3 +1098,55 @@ export async function deleteWantedPostById(wantedId: number) {
   const { rows } = await p.query(`DELETE FROM wanted_posts WHERE id=$1 RETURNING id, title`, [wantedId]);
   return rows[0] || null;
 }
+
+// ============ Reviews ============
+
+async function ensureReviewsTable() {
+  const p = getPool();
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id BIGSERIAL PRIMARY KEY,
+      listing_id BIGINT NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      rating SMALLINT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      comment TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE(listing_id, user_id)
+    )
+  `);
+}
+
+export async function addReview(listingId: number, userId: number, rating: number, comment?: string) {
+  const p = getPool();
+  await ensureReviewsTable();
+  const { rows } = await p.query(
+    `INSERT INTO reviews (listing_id, user_id, rating, comment) VALUES ($1, $2, $3, $4)
+     ON CONFLICT (listing_id, user_id) DO UPDATE SET rating = $3, comment = $4, created_at = now()
+     RETURNING id, listing_id, user_id, rating, comment, created_at`,
+    [listingId, userId, Math.min(5, Math.max(1, Math.round(rating))), comment || null]
+  );
+  return rows[0];
+}
+
+export async function getReviewsByListing(listingId: number) {
+  const p = getPool();
+  await ensureReviewsTable();
+  const { rows } = await p.query(
+    `SELECT r.id, r.rating, r.comment, r.created_at, u.name AS user_name
+     FROM reviews r LEFT JOIN users u ON u.id = r.user_id
+     WHERE r.listing_id = $1 ORDER BY r.created_at DESC`,
+    [listingId]
+  );
+  return rows;
+}
+
+export async function getReviewSummaryByListing(listingId: number) {
+  const p = getPool();
+  await ensureReviewsTable();
+  const { rows } = await p.query(
+    `SELECT COUNT(*)::int AS count, ROUND(AVG(rating), 1)::float AS avg_rating
+     FROM reviews WHERE listing_id = $1`,
+    [listingId]
+  );
+  return rows[0] || { count: 0, avg_rating: null };
+}

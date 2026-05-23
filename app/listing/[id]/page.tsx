@@ -5,6 +5,7 @@ import ListingGallery from '@/app/components/ListingGallery';
 import ListingDetailMap from '@/app/components/ListingDetailMap';
 import FavoriteButtonWrapper from './FavoriteButtonWrapper';
 import ShareButtons from '@/app/components/ShareButtons';
+import ReviewSection from '@/app/components/ReviewSection';
 
 function formatDescription(text: string): string[] {
   return text
@@ -187,6 +188,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       ) : null}
 
       {images.length > 0 ? <ListingGallery title={item.title} images={images} /> : null}
+
+      <ReviewSection listingId={item.id} />
 
       <Script id="listing-event-track" strategy="afterInteractive">{`
         (() => {

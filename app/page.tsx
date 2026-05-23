@@ -548,6 +548,7 @@ export default function HomePage() {
   const menuNav = [
     { href: '/wanted/post', label: 'Post room request' },
     { href: '/hosts', label: t.shareRoom },
+    { href: '/blog', label: '📝 Blog' },
     { href: '/about', label: 'About' }
   ];
   const suggestedPrompts = useMemo(

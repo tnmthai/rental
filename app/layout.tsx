@@ -67,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <footer style={{ marginTop: 24, paddingTop: 12, borderTop: '1px solid #e5e7eb', fontSize: 13, color: '#4b5563' }}>
               <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 8 }}>
                 <a href="/about" style={{ color: '#6b7280', textDecoration: 'none' }}>About</a>
+                <a href="/blog" style={{ color: '#6b7280', textDecoration: 'none' }}>Blog</a>
                 <a href="/contact" style={{ color: '#6b7280', textDecoration: 'none' }}>Contact</a>
                 <a href="/terms" style={{ color: '#6b7280', textDecoration: 'none' }}>Terms</a>
                 <a href="/privacy" style={{ color: '#6b7280', textDecoration: 'none' }}>Privacy</a>

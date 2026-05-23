@@ -72,6 +72,28 @@ export default function DashboardPage() {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [msg, setMsg] = useState('');
+  const [boosting, setBoosting] = useState<number | null>(null);
+
+  async function boostListing(listingId: number, plan: number) {
+    setBoosting(listingId);
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ listing_id: listingId, plan })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setMsg(data.error || 'Failed to create checkout');
+      }
+    } catch {
+      setMsg('Network error');
+    } finally {
+      setBoosting(null);
+    }
+  }
 
   async function load() {
     const [a, b, c, d, e, f] = await Promise.all([
@@ -163,7 +185,56 @@ export default function DashboardPage() {
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                   Created: {new Date(l.created_at).toLocaleString()} · Expires: {l.expires_at ? new Date(l.expires_at).toLocaleString() : 'N/A'}
                 </div>
-                <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {l.status === 'approved' ? (
+                    <div style={{ position: 'relative' }}>
+                      <button
+                        onClick={() => setBoosting(boosting === l.id ? null : l.id)}
+                        className="btn btn-sm"
+                        style={{ background: '#f59e0b', color: '#fff', border: 'none' }}
+                      >
+                        🚀 Boost
+                      </button>
+                      {boosting === l.id ? (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          marginTop: 4,
+                          background: '#fff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: 12,
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                          padding: 8,
+                          zIndex: 10,
+                          minWidth: 180
+                        }}>
+                          {[7, 14, 30].map((days, i) => (
+                            <button
+                              key={days}
+                              onClick={() => boostListing(l.id, i)}
+                              style={{
+                                display: 'block',
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '8px 12px',
+                                border: 'none',
+                                background: 'none',
+                                cursor: 'pointer',
+                                fontSize: 13,
+                                color: '#1f2937',
+                                borderRadius: 6
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                            >
+                              ⭐ {days} days — ${days === 7 ? 5 : days === 14 ? 9 : 15} NZD
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                   {l.status === 'expired' ? (
                     <button onClick={() => act(l.id, 'renew')} className="btn btn-primary btn-sm">Renew (30d)</button>
                   ) : (
