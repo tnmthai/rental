@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import Icon, { BackToHome } from '@/app/components/Icon';
 
 type Profile = {
   id: number;
@@ -78,7 +79,8 @@ export default function FlatmatePage() {
 
   return (
     <main style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 900, marginBottom: 8 }}>🏠 Flatmate Finder</h1>
+      <BackToHome />
+      <h1 style={{ fontSize: 28, fontWeight: 900, marginBottom: 8 }}><Icon name="users" size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} />Flatmate Finder</h1>
       <p style={{ color: '#6b7280', marginBottom: 24 }}>Find your perfect flatmate based on lifestyle compatibility.</p>
 
       <div style={{ padding: 20, border: '1px solid #e5e7eb', borderRadius: 14, background: '#fafbfc', marginBottom: 24 }}>

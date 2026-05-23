@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import SubNav from '@/app/components/SubNav';
+import Icon from '@/app/components/Icon';
 
 type Listing = {
   id: number;
@@ -197,7 +198,7 @@ export default function DashboardPage() {
                         className="btn btn-sm"
                         style={{ background: '#f59e0b', color: '#fff', border: 'none' }}
                       >
-                        🚀 Boost
+                        <Icon name="zap" size={14} /> Boost
                       </button>
                       {boosting === l.id ? (
                         <div style={{
@@ -232,7 +233,7 @@ export default function DashboardPage() {
                               onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
                               onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                             >
-                              ⭐ {days} days — ${days === 7 ? 5 : days === 14 ? 9 : 15} NZD
+                              <Icon name="star" size={12} /> {days} days — ${days === 7 ? 5 : days === 14 ? 9 : 15} NZD
                             </button>
                           ))}
                         </div>

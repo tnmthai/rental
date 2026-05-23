@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { BackToHome } from '@/app/components/Icon';
 
 type Listing = {
   id: number;
@@ -44,6 +45,7 @@ export default function ComparePage() {
   if (ids.length === 0) {
     return (
       <main style={{ maxWidth: 900, margin: '0 auto', padding: 32, textAlign: 'center' }}>
+      <BackToHome />
         <h1>Compare Listings</h1>
         <p style={{ color: '#6b7280' }}>Add listings to compare from search results.</p>
       </main>
@@ -63,6 +65,7 @@ export default function ComparePage() {
 
   return (
     <main style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
+      <BackToHome />
       <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 16 }}>Compare Listings</h1>
 
       <div style={{ overflowX: 'auto' }}>

@@ -7,6 +7,7 @@ import FavoriteButtonWrapper from './FavoriteButtonWrapper';
 import ShareButtons from '@/app/components/ShareButtons';
 import ReviewSection from '@/app/components/ReviewSection';
 import NeighborhoodInfo from '@/app/components/NeighborhoodInfo';
+import Icon from '@/app/components/Icon';
 
 function formatDescription(text: string): string[] {
   return text
@@ -102,7 +103,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           background: item.status === 'approved' ? '#dcfce7' : item.status === 'rejected' ? '#fee2e2' : item.status === 'pending' ? '#fef9c3' : '#f3f4f6',
           color: item.status === 'approved' ? '#166534' : item.status === 'rejected' ? '#991b1b' : item.status === 'pending' ? '#854d0e' : '#6b7280'
         }}>
-          {item.status === 'approved' ? '✅ Approved' : item.status === 'rejected' ? '❌ Rejected' : item.status === 'pending' ? '⏳ Pending' : '⏸️ Paused'}
+          {item.status === 'approved' ? <><Icon name="check" size={12} /> Approved</> : item.status === 'rejected' ? <><Icon name="x" size={12} /> Rejected</> : item.status === 'pending' ? 'Pending' : 'Paused'}
         </span>
         {item.is_featured ? (
           <span style={{
@@ -114,7 +115,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             background: '#fef3c7',
             color: '#92400e'
           }}>
-            ⭐ Featured
+            <Icon name="star" size={12} /> Featured
           </span>
         ) : null}
         {item.user_verified ? (
@@ -127,7 +128,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             background: '#d1fae5',
             color: '#065f46'
           }}>
-            ✅ Verified Landlord
+            <Icon name="shield" size={12} /> Verified Landlord
           </span>
         ) : null}
       </div>

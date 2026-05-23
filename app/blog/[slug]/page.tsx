@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import fs from 'fs';
 import path from 'path';
+import { BackToHome } from '@/app/components/Icon';
 
 function parseFrontmatter(raw: string) {
   const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -63,7 +64,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <main style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px' }}>
-      <Link href="/blog" style={{ color: '#2563eb', fontSize: 14, textDecoration: 'none' }}>← Back to blog</Link>
+      <BackToHome label="Blog" />
       <h1 style={{ fontSize: 28, fontWeight: 900, margin: '16px 0 8px' }}>{post.title}</h1>
       <p style={{ color: '#9ca3af', fontSize: 13, marginBottom: 24 }}>{post.date}</p>
       <article

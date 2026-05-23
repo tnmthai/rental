@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import fs from 'fs';
 import path from 'path';
+import { BackToHome } from '@/app/components/Icon';
 
 type Post = {
   title: string;
@@ -52,6 +53,7 @@ export default function BlogPage() {
 
   return (
     <main style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px' }}>
+      <BackToHome />
       <h1 style={{ fontSize: 28, fontWeight: 900, marginBottom: 8 }}>Blog</h1>
       <p style={{ color: '#6b7280', marginBottom: 24 }}>Tips, guides, and insights about renting in New Zealand.</p>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Icon from '@/app/components/Icon';
 
 type Review = {
   id: number;
@@ -75,7 +76,7 @@ export default function ReviewSection({ listingId }: { listingId: number }) {
           onClick={() => setShowForm((v) => !v)}
           style={{ border: '1px solid #d1d5db', borderRadius: 8, padding: '5px 12px', background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#374151' }}
         >
-          ✍️ Write review
+          <Icon name="edit" size={14} /> Write review
         </button>
       </div>
 

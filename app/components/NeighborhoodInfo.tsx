@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Icon from '@/app/components/Icon';
 
 type Place = {
   name: string;
@@ -9,13 +10,13 @@ type Place = {
 };
 
 const CATEGORIES: Record<string, { icon: string; label: string; tags: string[] }> = {
-  supermarket: { icon: '🛒', label: 'Supermarkets', tags: ['shop=supermarket', 'shop=convenience'] },
-  restaurant: { icon: '🍽️', label: 'Restaurants', tags: ['amenity=restaurant', 'amenity=fast_food'] },
-  bus: { icon: '🚌', label: 'Bus Stops', tags: ['highway=bus_stop', 'public_transport=platform'] },
-  school: { icon: '🎓', label: 'Schools/Uni', tags: ['amenity=school', 'amenity=university'] },
-  park: { icon: '🌳', label: 'Parks', tags: ['leisure=park'] },
-  gym: { icon: '💪', label: 'Gyms', tags: ['leisure=fitness_centre'] },
-  pharmacy: { icon: '💊', label: 'Pharmacy', tags: ['amenity=pharmacy'] }
+  supermarket: { icon: 'grid', label: 'Supermarkets', tags: ['shop=supermarket', 'shop=convenience'] },
+  restaurant: { icon: 'list', label: 'Restaurants', tags: ['amenity=restaurant', 'amenity=fast_food'] },
+  bus: { icon: 'map', label: 'Bus Stops', tags: ['highway=bus_stop', 'public_transport=platform'] },
+  school: { icon: 'fileText', label: 'Schools/Uni', tags: ['amenity=school', 'amenity=university'] },
+  park: { icon: 'sun', label: 'Parks', tags: ['leisure=park'] },
+  gym: { icon: 'zap', label: 'Gyms', tags: ['leisure=fitness_centre'] },
+  pharmacy: { icon: 'plus', label: 'Pharmacy', tags: ['amenity=pharmacy'] }
 };
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -70,7 +71,7 @@ export default function NeighborhoodInfo({ lat, lng }: { lat: number; lng: numbe
   if (loading) {
     return (
       <section style={{ margin: '12px 0', padding: 14, border: '1px solid #e5e7eb', borderRadius: 12, background: '#fafbfc' }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>📍 Nearby Amenities</h3>
+      <h3 style={{ margin: '0 0 8px', fontSize: 15 }}><Icon name="map" size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />Nearby Amenities</h3>
         <p style={{ color: '#9ca3af', fontSize: 13 }}>Loading neighborhood info...</p>
       </section>
     );
@@ -81,14 +82,14 @@ export default function NeighborhoodInfo({ lat, lng }: { lat: number; lng: numbe
 
   return (
     <section style={{ margin: '12px 0', padding: 14, border: '1px solid #e5e7eb', borderRadius: 12, background: '#fafbfc' }}>
-      <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>📍 Nearby Amenities (within 1km)</h3>
+      <h3 style={{ margin: '0 0 10px', fontSize: 15 }}><Icon name="map" size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />Nearby Amenities (within 1km)</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
         {Object.entries(CATEGORIES).map(([key, cat]) => {
           const items = places[key] || [];
           if (items.length === 0) return null;
           return (
             <div key={key}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}>{cat.icon} {cat.label}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}><Icon name={cat.icon} size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />{cat.label}</div>
               {items.map((p, i) => (
                 <div key={i} style={{ fontSize: 12, color: '#6b7280', padding: '2px 0' }}>
                   {p.name} <span style={{ color: '#9ca3af' }}>({(p.distance * 1000).toFixed(0)}m)</span>

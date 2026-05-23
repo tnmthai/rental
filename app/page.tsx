@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useSession, signOut } from 'next-auth/react';
 import FavoriteButton from '@/app/components/FavoriteButton';
 import ShareButtons from '@/app/components/ShareButtons';
+import Icon from '@/app/components/Icon';
 
 function normalizeImageUrls(input: unknown): string[] {
   if (!input) return [];
@@ -321,8 +322,8 @@ const I18N = {
     available: 'available',
     femalePreferredBadge: 'female preferred',
     studyDeskBadge: 'study desk',
-    featuredBadge: '⭐ Featured',
-    verifiedBadge: '✅ Verified'
+    featuredBadge: 'Featured',
+    verifiedBadge: 'Verified'
   },
   vi: {
     signOut: 'Đăng xuất',
@@ -381,8 +382,8 @@ const I18N = {
     available: 'có thể ở từ',
     femalePreferredBadge: 'ưu tiên nữ',
     studyDeskBadge: 'có bàn học',
-    featuredBadge: '⭐ Nổi bật',
-    verifiedBadge: '✅ Đã xác minh'
+    featuredBadge: 'Nổi bật',
+    verifiedBadge: 'Đã xác minh'
   },
   zh: {
     signOut: '退出登录',
@@ -441,8 +442,8 @@ const I18N = {
     available: '可入住',
     femalePreferredBadge: '女生优先',
     studyDeskBadge: '有书桌',
-    featuredBadge: '⭐ 精选',
-    verifiedBadge: '✅ 已认证'
+    featuredBadge: '精选',
+    verifiedBadge: '已认证'
   },
   hi: {
     signOut: 'लॉग आउट',
@@ -501,8 +502,8 @@ const I18N = {
     available: 'उपलब्ध',
     femalePreferredBadge: 'महिला वरीयता',
     studyDeskBadge: 'स्टडी डेस्क',
-    featuredBadge: '⭐ विशेष',
-    verifiedBadge: '✅ सत्यापित'
+    featuredBadge: 'विशेष',
+    verifiedBadge: 'सत्यापित'
   }
 } as const;
 
@@ -1384,10 +1385,10 @@ export default function HomePage() {
 
                     <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {h.is_featured ? (
-                        <span className="badge badge-warning">{t.featuredBadge}</span>
+                        <span className="badge badge-warning"><Icon name="star" size={11} /> {t.featuredBadge}</span>
                       ) : null}
                       {h.user_verified ? (
-                        <span className="badge badge-success">{t.verifiedBadge}</span>
+                        <span className="badge badge-success"><Icon name="shield" size={11} /> {t.verifiedBadge}</span>
                       ) : null}
                       <span className="badge badge-neutral">{h.furnished ? t.furnished : t.unfurnished}</span>
                       <span className="badge badge-neutral">{h.bills_included ? t.billsIncluded : t.billsSeparate}</span>
