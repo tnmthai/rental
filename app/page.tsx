@@ -383,6 +383,126 @@ const I18N = {
     studyDeskBadge: 'có bàn học',
     featuredBadge: '⭐ Nổi bật',
     verifiedBadge: '✅ Đã xác minh'
+  },
+  zh: {
+    signOut: '退出登录',
+    logIn: '登录',
+    searchPlaceholder: '用自然语言搜索租房...',
+    samplePrompt: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    helpButton: '帮助 / 说明',
+    suggestionsTitle: 'AI 搜索建议',
+    suggestionsHint: '点击快速填入搜索词',
+    demoPromptLabel: '你输入',
+    demoOutputLabel: 'RentFinder 返回',
+    demoPromptSample: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    demoPoints: [
+      '筛选 Lincoln 大学 5 公里内低于 $250/周的 10 个房间',
+      '自动标记含账单和带家具的标签',
+      '生成 AI 摘要 + 可复制的联系方式'
+    ],
+    demoCtaHint: '按 Enter 搜索 · Shift+Enter 换行',
+    searching: '搜索中...',
+    search: '搜索',
+    save: '保存',
+    createListing: '发布房源',
+    shareRoom: '分享你的房间',
+    myDashboard: '我的控制台',
+    aiOverview: 'AI 概述',
+    internalListings: '内部房源',
+    viewDetail: '查看详情',
+    share: '分享',
+    viewSource: '打开原始链接',
+    perWeek: '每周',
+    noPhoto: '暂无照片',
+    photosLabel: '张照片',
+    readMore: '展开',
+    readLess: '收起',
+    externalSuggestions: '外部网页建议',
+    externalHint: '这些是外部数据库之外的结果。',
+    visits: '次访问',
+    online: '在线',
+    language: '语言',
+    english: 'English',
+    vietnamese: 'Tiếng Việt',
+    slogan: '快速发布，智能搜索',
+    heroTitle: '少搜索，快匹配。',
+    saveNeedLogin: '请先登录。',
+    saveOk: '已保存搜索。',
+    saveFail: '保存失败',
+    searchingOverview1: '正在读取请求并提取筛选条件…',
+    searchingOverview2: '正在检查内部房源并排序最佳匹配…',
+    searchingOverview3: '即将完成 — 正在准备摘要和建议…',
+    noSource: '（无来源链接）',
+    furnished: '带家具',
+    unfurnished: '不带家具',
+    billsIncluded: '含账单',
+    billsSeparate: '不含账单',
+    near: '靠近',
+    available: '可入住',
+    femalePreferredBadge: '女生优先',
+    studyDeskBadge: '有书桌',
+    featuredBadge: '⭐ 精选',
+    verifiedBadge: '✅ 已认证'
+  },
+  hi: {
+    signOut: 'लॉग आउट',
+    logIn: 'लॉग इन',
+    searchPlaceholder: 'प्राकृतिक भाषा में किराया खोजें...',
+    samplePrompt: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    helpButton: 'सहायता / निर्देश',
+    suggestionsTitle: 'AI सुझाव',
+    suggestionsHint: 'जल्दी भरने के लिए टैप करें',
+    demoPromptLabel: 'आप लिखते हैं',
+    demoOutputLabel: 'RentFinder दिखाता है',
+    demoPromptSample: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    demoPoints: [
+      'Lincoln Uni के 5km के भीतर $250/सप्ताह से कम के 10 कमरे फ़िल्टर करता है',
+      'बिल-इन्क्लूडेड और फर्निश्ड टैग स्वचालित रूप से दिखाता है',
+      'AI सारांश + कॉपी करने योग्य संपर्क लिंक बनाता है'
+    ],
+    demoCtaHint: 'खोजने के लिए Enter दबाएं · Shift+Enter नई लाइन',
+    searching: 'खोज रहा है...',
+    search: 'खोजें',
+    save: 'सहेजें',
+    createListing: 'लिस्टिंग बनाएं',
+    shareRoom: 'अपना कमरा साझा करें',
+    myDashboard: 'मेरा डैशबोर्ड',
+    aiOverview: 'AI अवलोकन',
+    internalListings: 'आंतरिक लिस्टिंग',
+    viewDetail: 'विवरण देखें',
+    share: 'साझा करें',
+    viewSource: 'मूल लिस्टिंग खोलें',
+    perWeek: 'प्रति सप्ताह',
+    noPhoto: 'अभी फोटो नहीं',
+    photosLabel: 'फोटो',
+    readMore: 'और पढ़ें',
+    readLess: 'कम पढ़ें',
+    externalSuggestions: 'बाहरी वेब सुझाव',
+    externalHint: 'ये हमारे आंतरिक डेटाबेस के बाहर के परिणाम हैं।',
+    visits: 'विज़िट',
+    online: 'ऑनलाइन',
+    language: 'भाषा',
+    english: 'English',
+    vietnamese: 'Tiếng Việt',
+    slogan: 'तेज़ी से पोस्ट करें, समझदारी से खोजें',
+    heroTitle: 'कम खोजें। तेज़ी से मिलाएं।',
+    saveNeedLogin: 'कृपया पहले लॉग इन करें।',
+    saveOk: 'खोज सहेजी गई।',
+    saveFail: 'सहेजने में विफल',
+    searchingOverview1: 'आपका अनुरोध पढ़ रहा है और फ़िल्टर निकाल रहा है…',
+    searchingOverview2: 'आंतरिक लिस्टिंग जांच रहा है और सर्वोत्तम मिलान रैंक कर रहा है…',
+    searchingOverview3: 'लगभग हो गया — सारांश और सुझाव तैयार कर रहा है…',
+    noSource: '(कोई स्रोत लिंक नहीं)',
+    furnished: 'फर्निश्ड',
+    unfurnished: 'अनफर्निश्ड',
+    billsIncluded: 'बिल शामिल',
+    billsSeparate: 'बिल अलग',
+    near: 'पास',
+    available: 'उपलब्ध',
+    femalePreferredBadge: 'महिला वरीयता',
+    studyDeskBadge: 'स्टडी डेस्क',
+    featuredBadge: '⭐ विशेष',
+    verifiedBadge: '✅ सत्यापित'
   }
 } as const;
 
@@ -409,6 +529,12 @@ export default function HomePage() {
   const [notifCount, setNotifCount] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [filterPrice, setFilterPrice] = useState<{ min: string; max: string }>({ min: '', max: '' });
+  const [filterFurnished, setFilterFurnished] = useState<string>('any');
+  const [filterBills, setFilterBills] = useState<string>('any');
+  const [filterCity, setFilterCity] = useState<string>('');
   const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
   const searchInputRef = useRef<HTMLTextAreaElement | null>(null);
   const keywords = useMemo(() => extractKeywords(query), [query]);
@@ -462,7 +588,19 @@ export default function HomePage() {
     el.style.height = `${Math.min(el.scrollHeight, 240)}px`;
   }, [query]);
 
+  function buildFilterQuery(): string {
+    const parts: string[] = [];
+    if (query.trim()) parts.push(query.trim());
+    if (filterCity) parts.push(`in ${filterCity}`);
+    if (filterPrice.max) parts.push(`under ${filterPrice.max} NZD/week`);
+    if (filterFurnished === 'yes') parts.push('furnished');
+    if (filterFurnished === 'no') parts.push('unfurnished');
+    if (filterBills === 'yes') parts.push('bills included');
+    return parts.join(', ') || 'room for rent';
+  }
+
   async function run() {
+    const searchQuery = buildFilterQuery();
     setLoading(true);
     setReply('');
     setHits([]);
@@ -481,7 +619,7 @@ export default function HomePage() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ message: query })
+        body: JSON.stringify({ message: searchQuery })
       });
       const data = await res.json();
       setReply(data.reply || data.error || 'No reply');
@@ -552,12 +690,24 @@ export default function HomePage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('rf_lang');
-    if (saved === 'en' || saved === 'vi') setLang(saved);
+    if (saved === 'en' || saved === 'vi' || saved === 'zh' || saved === 'hi') setLang(saved);
   }, []);
 
   useEffect(() => {
     localStorage.setItem('rf_lang', lang);
   }, [lang]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('rf_theme') as 'light' | 'dark' | null;
+    const preferred = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    setTheme(preferred);
+    document.documentElement.setAttribute('data-theme', preferred);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('rf_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     async function loadFavorites() {
@@ -837,13 +987,24 @@ export default function HomePage() {
               }}
             />
           </div>
-          <div className="searchActions" style={{ display: 'flex', gap: 10 }}>
+          <div className="searchActions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button
               onClick={run}
               disabled={loading}
               className="btn btn-primary"
             >
               {loading ? t.searching : t.search}
+            </button>
+            <button
+              onClick={() => setShowFilters((v) => !v)}
+              className="btn btn-outline"
+              style={{
+                background: showFilters ? '#eff6ff' : undefined,
+                borderColor: showFilters ? '#3b82f6' : undefined,
+                color: showFilters ? '#2563eb' : undefined
+              }}
+            >
+              ⚙️ Filters
             </button>
             <button
               onClick={saveSearch}
@@ -853,6 +1014,84 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+
+        {showFilters ? (
+          <div style={{
+            marginTop: 10,
+            padding: '14px 16px',
+            border: '1px solid #e5e7eb',
+            borderRadius: 14,
+            background: '#fafbfc',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 14,
+            alignItems: 'flex-end'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>City</label>
+              <select
+                value={filterCity}
+                onChange={(e) => setFilterCity(e.target.value)}
+                style={{ border: '1px solid #d1d5db', borderRadius: 8, padding: '6px 10px', fontSize: 13, minWidth: 140, background: '#fff' }}
+              >
+                <option value="">Any</option>
+                {['Auckland', 'Wellington', 'Christchurch', 'Hamilton', 'Dunedin', 'Lincoln', 'Nelson', 'Palmerston North', 'Tauranga', 'Napier', 'New Plymouth', 'Whangarei', 'Invercargill', 'Queenstown'].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Price (NZD/wk)</label>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={filterPrice.min}
+                  onChange={(e) => setFilterPrice((p) => ({ ...p, min: e.target.value }))}
+                  style={{ border: '1px solid #d1d5db', borderRadius: 8, padding: '6px 8px', fontSize: 13, width: 70, background: '#fff' }}
+                />
+                <span style={{ color: '#9ca3af' }}>–</span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={filterPrice.max}
+                  onChange={(e) => setFilterPrice((p) => ({ ...p, max: e.target.value }))}
+                  style={{ border: '1px solid #d1d5db', borderRadius: 8, padding: '6px 8px', fontSize: 13, width: 70, background: '#fff' }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Furnished</label>
+              <select
+                value={filterFurnished}
+                onChange={(e) => setFilterFurnished(e.target.value)}
+                style={{ border: '1px solid #d1d5db', borderRadius: 8, padding: '6px 10px', fontSize: 13, minWidth: 100, background: '#fff' }}
+              >
+                <option value="any">Any</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Bills included</label>
+              <select
+                value={filterBills}
+                onChange={(e) => setFilterBills(e.target.value)}
+                style={{ border: '1px solid #d1d5db', borderRadius: 8, padding: '6px 10px', fontSize: 13, minWidth: 100, background: '#fff' }}
+              >
+                <option value="any">Any</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <button
+              onClick={() => { setFilterCity(''); setFilterPrice({ min: '', max: '' }); setFilterFurnished('any'); setFilterBills('any'); }}
+              style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 12px', background: '#fff', color: '#6b7280', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Clear
+            </button>
+          </div>
+        ) : null}
 
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8 }}>
           <button
@@ -1281,7 +1520,24 @@ export default function HomePage() {
         >
           <option value="en">EN</option>
           <option value="vi">VI</option>
+          <option value="zh">中文</option>
+          <option value="hi">हिंदी</option>
         </select>
+        <button
+          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          style={{
+            border: '1px solid #e5e7eb',
+            borderRadius: 999,
+            padding: '4px 10px',
+            background: 'transparent',
+            color: '#9ca3af',
+            fontSize: 12,
+            cursor: 'pointer'
+          }}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
       </footer>
 
       <style jsx global>{`

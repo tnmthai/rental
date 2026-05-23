@@ -53,7 +53,8 @@ export const metadata: Metadata = {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',
     apple: '/favicon.svg'
-  }
+  },
+  manifest: '/manifest.json'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -76,6 +77,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </footer>
           </div>
         </Providers>
+        <Script id="pwa-register" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+              });
+            }
+          `}
+        </Script>
         <Script id="clarity" strategy="beforeInteractive">
           {`
             (function(c,l,a,r,i,t,y){

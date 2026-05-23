@@ -80,11 +80,38 @@ export default function PostListingPage() {
   const schools = useMemo(() => getSchools(form.region, form.area), [form.region, form.area]);
   const selectedImageCount = images.length;
 
-  function addImages(files: FileList | null) {
+  async function compressImage(file: File, maxWidth = 1600, quality = 0.8): Promise<File> {
+    if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        if (img.width <= maxWidth && file.size < 500_000) { resolve(file); return; }
+        const ratio = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(file); return; }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) { resolve(file); return; }
+            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  async function addImages(files: FileList | null) {
     if (!files || files.length === 0) return;
-    const newFiles = Array.from(files);
-    const newPreviews = newFiles.map((f) => URL.createObjectURL(f));
-    setImages((prev) => [...prev, ...newFiles]);
+    const compressed = await Promise.all(Array.from(files).map((f) => compressImage(f)));
+    const newPreviews = compressed.map((f) => URL.createObjectURL(f));
+    setImages((prev) => [...prev, ...compressed]);
     setImagePreviews((prev) => [...prev, ...newPreviews]);
   }
 
