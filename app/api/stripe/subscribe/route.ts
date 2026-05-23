@@ -5,8 +5,8 @@ import { authOptions } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 const PLANS = [
-  { id: 'monthly', price: 2900, label: 'Monthly — $29 NZD/month', days: 30 },
-  { id: 'yearly', price: 24900, label: 'Yearly — $249 NZD/year (save 28%)', days: 365 }
+  { id: 'monthly', price: 200, label: 'Monthly — $2 NZD/month', days: 30 },
+  { id: 'yearly', price: 1200, label: 'Yearly — $12 NZD/year (save 50%)', days: 365 }
 ];
 
 export async function POST(req: NextRequest) {

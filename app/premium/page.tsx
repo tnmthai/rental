@@ -33,19 +33,19 @@ export default function PremiumPage() {
   }
 
   const features = [
-    { icon: '♾️', title: 'Unlimited listings', desc: 'Post as many rooms as you want' },
-    { icon: '📊', title: 'Analytics dashboard', desc: 'See views, clicks, and engagement' },
-    { icon: '✅', title: 'Verified badge', desc: 'Build trust with a verified landlord badge' },
-    { icon: '⭐', title: '1 free boost/month', desc: 'Feature 1 listing per month at no extra cost' },
-    { icon: '🔔', title: 'Priority notifications', desc: 'Your listings appear first in search alerts' },
-    { icon: '💬', title: 'Priority support', desc: 'Get help within 24 hours' }
+    { icon: '●', title: 'Unlimited listings', desc: 'Post as many rooms as you want' },
+    { icon: '●', title: 'Analytics dashboard', desc: 'See views, clicks, and engagement' },
+    { icon: '●', title: 'Verified badge', desc: 'Build trust with a verified landlord badge' },
+    { icon: '●', title: '1 free boost/month', desc: 'Feature 1 listing per month at no extra cost' },
+    { icon: '●', title: 'Priority notifications', desc: 'Your listings appear first in search alerts' },
+    { icon: '●', title: 'Priority support', desc: 'Get help within 24 hours' }
   ];
 
   return (
     <main style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
         <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 8 }}>
-          ⭐ RentFinder Premium
+          RentFinder Premium
         </h1>
         <p style={{ fontSize: 16, color: '#6b7280', maxWidth: 500, margin: '0 auto' }}>
           Supercharge your listings. Get more views, more tenants, and powerful tools.
@@ -55,7 +55,7 @@ export default function PremiumPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 40 }}>
         {features.map((f) => (
           <div key={f.title} style={{ padding: 16, border: '1px solid #e5e7eb', borderRadius: 12, background: '#fff' }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>{f.icon}</div>
+            <div style={{ fontSize: 10, marginBottom: 8, color: '#0f766e' }}>{f.icon}</div>
             <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 800 }}>{f.title}</h3>
             <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>{f.desc}</p>
           </div>
@@ -65,7 +65,7 @@ export default function PremiumPage() {
       <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap' }}>
         <div style={{ padding: 24, border: '2px solid #e5e7eb', borderRadius: 16, background: '#fff', textAlign: 'center', minWidth: 240 }}>
           <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800 }}>Monthly</h3>
-          <div style={{ fontSize: 36, fontWeight: 900, color: '#111827' }}>$29<span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280' }}>/mo</span></div>
+          <div style={{ fontSize: 36, fontWeight: 900, color: '#111827' }}>$2<span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280' }}>/mo</span></div>
           <button
             onClick={() => subscribe(0)}
             disabled={loading !== null}
@@ -89,8 +89,8 @@ export default function PremiumPage() {
         <div style={{ padding: 24, border: '2px solid #0f766e', borderRadius: 16, background: 'linear-gradient(135deg, #f0fdfa, #eff6ff)', textAlign: 'center', minWidth: 240, position: 'relative' }}>
           <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#0f766e', color: '#fff', padding: '4px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>BEST VALUE</div>
           <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800 }}>Yearly</h3>
-          <div style={{ fontSize: 36, fontWeight: 900, color: '#111827' }}>$249<span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280' }}>/yr</span></div>
-          <div style={{ fontSize: 13, color: '#0f766e', fontWeight: 600, marginBottom: 4 }}>Save 28%</div>
+          <div style={{ fontSize: 36, fontWeight: 900, color: '#111827' }}>$12<span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280' }}>/yr</span></div>
+          <div style={{ fontSize: 13, color: '#0f766e', fontWeight: 600, marginBottom: 4 }}>Save 50%</div>
           <button
             onClick={() => subscribe(1)}
             disabled={loading !== null}
