@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { findUserByEmail, trackEvent } from '@/lib/db';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const allowed = new Set(['listing_created', 'listing_published', 'contact_click', 'share_click', 'renew_click']);
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rl = checkRateLimit(`events:${ip}`, 60, 60_000);
+    if (!rl.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const eventName = String(body?.event_name || '').trim();
     if (!allowed.has(eventName)) {

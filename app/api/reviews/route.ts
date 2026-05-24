@@ -3,6 +3,16 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { addReview, getReviewsByListing, getReviewSummaryByListing } from '@/lib/db';
 
+function sanitizeComment(text: string): string {
+  return text
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim()
+    .slice(0, 2000);
+}
+
 export async function GET(req: NextRequest) {
   const listingId = Number(req.nextUrl.searchParams.get('listing_id'));
   if (!listingId) return NextResponse.json({ error: 'listing_id required' }, { status: 400 });
@@ -24,7 +34,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const listingId = Number(body.listing_id);
     const rating = Number(body.rating);
-    const comment = typeof body.comment === 'string' ? body.comment.trim() : undefined;
+    const comment = typeof body.comment === 'string' ? sanitizeComment(body.comment) : undefined;
 
     if (!listingId || !rating || rating < 1 || rating > 5) {
       return NextResponse.json({ error: 'listing_id and rating (1-5) required' }, { status: 400 });

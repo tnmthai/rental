@@ -104,11 +104,25 @@ function inferCoordsFromCity(city: string): [number, number] | null {
 
 function sanitizeRichText(html: string) {
   return html
+    // Remove dangerous tags entirely (including nested content)
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
+    .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, '')
+    .replace(/<embed[\s\S]*?\/?>/gi, '')
+    .replace(/<form[\s\S]*?>[\s\S]*?<\/form>/gi, '')
+    .replace(/<svg[\s\S]*?>[\s\S]*?<\/svg>/gi, '')
+    .replace(/<math[\s\S]*?>[\s\S]*?<\/math>/gi, '')
+    .replace(/<base[\s\S]*?\/?>/gi, '')
+    .replace(/<link[\s\S]*?\/?>/gi, '')
+    .replace(/<meta[\s\S]*?\/?>/gi, '')
+    // Remove event handlers
     .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
     .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
     .replace(/\son\w+\s*=\s*[^\s>]+/gi, '')
+    // Remove javascript: and data: URIs in href/src
     .replace(/javascript:/gi, '')
+    .replace(/data:\s*text\/html/gi, '')
+    .replace(/vbscript:/gi, '')
     .trim();
 }
 

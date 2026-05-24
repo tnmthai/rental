@@ -16,11 +16,18 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const user = await findUserByEmail(session.user.email);
+  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 401 });
 
   const body = await req.json();
   const wantedId = Number(body.wanted_id || 0);
   const action = String(body.action || '');
   if (!wantedId) return NextResponse.json({ error: 'wanted_id required' }, { status: 400 });
+
+  // Verify ownership: only allow users to modify their own wanted posts
+  const userPosts = await getWantedPostsByUser(Number(user.id));
+  const ownsPost = userPosts.some((p: any) => Number(p.id) === wantedId);
+  if (!ownsPost) return NextResponse.json({ error: 'Forbidden: you can only modify your own posts' }, { status: 403 });
 
   if (action === 'pause') {
     const item = await updateWantedPostStatus(wantedId, 'paused');

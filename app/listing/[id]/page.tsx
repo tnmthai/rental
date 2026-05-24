@@ -21,11 +21,25 @@ function formatDescription(text: string): string[] {
 
 function sanitizeDescriptionHtml(raw: string): string {
   return raw
+    // Remove dangerous tags entirely (including nested content)
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
+    .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, '')
+    .replace(/<embed[\s\S]*?\/?>/gi, '')
+    .replace(/<form[\s\S]*?>[\s\S]*?<\/form>/gi, '')
+    .replace(/<svg[\s\S]*?>[\s\S]*?<\/svg>/gi, '')
+    .replace(/<math[\s\S]*?>[\s\S]*?<\/math>/gi, '')
+    .replace(/<base[\s\S]*?\/?>/gi, '')
+    .replace(/<link[\s\S]*?\/?>/gi, '')
+    .replace(/<meta[\s\S]*?\/?>/gi, '')
+    // Remove event handlers
     .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
     .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
     .replace(/\son\w+\s*=\s*[^\s>]+/gi, '')
-    .replace(/javascript:/gi, '');
+    // Remove javascript: and data: URIs
+    .replace(/javascript:/gi, '')
+    .replace(/data:\s*text\/html/gi, '')
+    .replace(/vbscript:/gi, '');
 }
 
 function hasHtmlTags(text: string): boolean {
