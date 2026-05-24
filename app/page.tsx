@@ -550,9 +550,10 @@ export default function HomePage() {
   const menuNav = [
     { href: '/wanted/post', label: 'Post room request' },
     { href: '/hosts', label: t.shareRoom },
-    { href: '/flatmate', label: '🏠 Flatmate Finder' },
-    { href: '/blog', label: '📝 Blog' },
-    { href: '/premium', label: '⭐ Premium' },
+    { href: '/flatmate', label: 'Flatmate Finder' },
+    { href: '/blog', label: 'Blog' },
+    { href: '/premium', label: 'Premium' },
+    { href: '/contact', label: 'Contact' },
     { href: '/about', label: 'About' }
   ];
   const suggestedPrompts = useMemo(
