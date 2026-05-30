@@ -530,7 +530,7 @@ export async function touchOnlineSession(sessionId: string, windowMinutes = 5) {
 }
 
 export async function trackEvent(input: {
-  event_name: 'listing_created' | 'listing_published' | 'contact_click' | 'share_click' | 'renew_click';
+  event_name: 'listing_created' | 'listing_published' | 'contact_click' | 'share_click' | 'renew_click' | 'boost_listing';
   user_id?: number | null;
   listing_id?: number | null;
   meta?: Record<string, unknown> | null;

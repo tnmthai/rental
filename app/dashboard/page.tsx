@@ -75,23 +75,24 @@ export default function DashboardPage() {
   const [msg, setMsg] = useState('');
   const [boosting, setBoosting] = useState<number | null>(null);
 
-  async function boostListing(listingId: number, plan: number) {
+  async function boostListing(listingId: number, days: number) {
     if (!session?.user) {
       window.location.href = '/login?callbackUrl=/dashboard';
       return;
     }
     setBoosting(listingId);
     try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
+      const res = await fetch('/api/my/listings', {
+        method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ listing_id: listingId, plan })
+        body: JSON.stringify({ listing_id: listingId, action: 'boost', days })
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      if (res.ok) {
+        setMsg(`Listing #${listingId} boosted for ${days} days!`);
+        await load();
       } else {
-        setMsg(data.error || 'Failed to create checkout');
+        setMsg(data.error || 'Failed to boost');
       }
     } catch {
       setMsg('Network error');
@@ -214,10 +215,10 @@ export default function DashboardPage() {
                           zIndex: 10,
                           minWidth: 180
                         }}>
-                          {[7, 14, 30].map((days, i) => (
+                          {[7, 14, 30].map((days) => (
                             <button
                               key={days}
-                              onClick={() => boostListing(l.id, i)}
+                              onClick={() => boostListing(l.id, days)}
                               style={{
                                 display: 'block',
                                 width: '100%',
@@ -233,7 +234,7 @@ export default function DashboardPage() {
                               onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
                               onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                             >
-                              <Icon name="star" size={12} /> {days} days — ${days === 7 ? 5 : days === 14 ? 9 : 15} NZD
+                              <Icon name="star" size={12} /> {days} days — Free
                             </button>
                           ))}
                         </div>

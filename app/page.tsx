@@ -504,6 +504,66 @@ const I18N = {
     studyDeskBadge: 'स्टडी डेस्क',
     featuredBadge: 'विशेष',
     verifiedBadge: 'सत्यापित'
+  },
+  mi: {
+    signOut: 'Takiuru',
+    logIn: 'Takiuru mai',
+    searchPlaceholder: 'Rapua ngā rēhi me te reo ā-nature...',
+    samplePrompt: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    helpButton: 'Āwhina / Tohutohu',
+    suggestionsTitle: 'Ngā tohutohu AI',
+    suggestionsHint: 'Pāwhiritia kia whakakī tere i tō rapu',
+    demoPromptLabel: 'Ka tuhia e koe',
+    demoOutputLabel: 'Ka whakahoki a RentFinder',
+    demoPromptSample: 'Room under 250 NZD/week near LU in Lincoln, furnished, bills included',
+    demoPoints: [
+      'Tātari 10 rūma i raro i $250/wiki i roto i te 5km o Lincoln Uni',
+      'Tohu aunoa ngā tūtohu me ngā nama e whakaurua ana',
+      'Waihanga he whakarāpopoto AI + hononga whakapā hei tārua'
+    ],
+    demoCtaHint: 'Pēhia Enter ki te rapu · Shift+Enter mō te raina hōu',
+    searching: 'Kei te rapu...',
+    search: 'Rapua',
+    save: 'Tiaki',
+    createListing: 'Waihanga rēhi',
+    shareRoom: 'Tōkia tō rūma',
+    myDashboard: 'Tō papa mahi',
+    aiOverview: 'Whakarāpopoto AI',
+    internalListings: 'Ngā rēhi ā-roto',
+    viewDetail: 'Tirohia ngā taipitopito',
+    share: 'Tōkia',
+    viewSource: 'Whakatuwheratia te rēhi taketake',
+    perWeek: 'ia wiki',
+    noPhoto: 'Kāore anō he whakaahua',
+    photosLabel: 'whakaahua',
+    readMore: 'Pānui anō',
+    readLess: 'Iti ake',
+    externalSuggestions: 'Ngā tohutohu ipurangi ā-waho',
+    externalHint: 'Ko ēnei ngā hua o waho i tō mātou puna raraunga.',
+    visits: 'ngā tirotiro',
+    online: 'tuihono',
+    language: 'Reo',
+    english: 'English',
+    vietnamese: 'Tiếng Việt',
+    slogan: 'Tukua tere, rapu māia',
+    heroTitle: 'Rapa iti. Tūtiri tere.',
+    saveNeedLogin: 'Takiuru mai koa.',
+    saveOk: 'Kua tiakina te rapu.',
+    saveFail: 'I rahua te tiaki',
+    searchingOverview1: 'Kei te pānui i tō tono me te tango i ngā tātari…',
+    searchingOverview2: 'Kei te tirotiro i ngā rēhi ā-roto me te whakarōpū i ngā tūturu pai…',
+    searchingOverview3: 'Kā tata mutu — kei te whakarite whakarāpopoto me ngā tohutohu…',
+    noSource: '(kāore he hononga puna)',
+    furnished: 'whakaritea',
+    unfurnished: 'kāore i whakaritea',
+    billsIncluded: 'ngā nama e whakaurua ana',
+    billsSeparate: 'ngā nama motuhake',
+    near: 'tata ki',
+    available: 'wātea',
+    femalePreferredBadge: 'manawa wāhine',
+    studyDeskBadge: 'papa ako',
+    featuredBadge: 'Motuhake',
+    verifiedBadge: 'Whakaaetia'
   }
 } as const;
 
@@ -696,7 +756,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('rf_lang');
-    if (saved === 'en' || saved === 'vi' || saved === 'zh' || saved === 'hi') setLang(saved);
+    if (saved === 'en' || saved === 'vi' || saved === 'zh' || saved === 'hi' || saved === 'mi') setLang(saved);
   }, []);
 
   useEffect(() => {
@@ -1548,6 +1608,7 @@ export default function HomePage() {
           <option value="vi">VI</option>
           <option value="zh">中文</option>
           <option value="hi">हिंदी</option>
+          <option value="mi">Māori</option>
         </select>
         <button
           onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}

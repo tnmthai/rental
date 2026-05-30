@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { extendListingExpiry, findUserByEmail, getListingsByUser, trackEvent, updateListingStatus } from '@/lib/db';
+import { extendListingExpiry, findUserByEmail, getListingsByUser, setListingFeatured, trackEvent, updateListingStatus } from '@/lib/db';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -45,6 +45,13 @@ export async function PATCH(req: NextRequest) {
     await updateListingStatus(listingId, 'pending');
     const row = await extendListingExpiry(listingId, Number(body.days || 30));
     await trackEvent({ event_name: 'renew_click', user_id: Number(user.id), listing_id: listingId });
+    return NextResponse.json({ item: row });
+  }
+  if (body.action === 'boost') {
+    const days = Number(body.days || 7);
+    const featuredUntil = new Date(Date.now() + days * 86_400_000).toISOString();
+    const row = await setListingFeatured(listingId, true, featuredUntil);
+    await trackEvent({ event_name: 'boost_listing', user_id: Number(user.id), listing_id: listingId, meta: { days, free: true } });
     return NextResponse.json({ item: row });
   }
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
