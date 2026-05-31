@@ -1606,9 +1606,9 @@ export default function HomePage() {
         >
           <option value="en">EN</option>
           <option value="vi">VI</option>
+          <option value="mi">Māori</option>
           <option value="zh">中文</option>
           <option value="hi">हिंदी</option>
-          <option value="mi">Māori</option>
         </select>
         <button
           onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
