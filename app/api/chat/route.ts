@@ -82,7 +82,9 @@ async function parseNeedAI(message: string): Promise<Need | null> {
 
   const prompt = `Extract rental search filters from user query. Return strict JSON only with keys:
 city, suburb, maxPrice, furnished, billsIncluded, nearSchool, femalePreferred, requiresDesk, queryText.
-Use null when unknown. Query: ${message}`;
+Use null when unknown.
+IMPORTANT: queryText must always be in English. If the user query is in another language, translate queryText to English.
+Query: ${message}`;
 
   try {
     const controller = new AbortController();
@@ -469,7 +471,7 @@ async function buildAIOverview(message: string, need: Need, results: any[]): Pro
   if (need.femalePreferred && compact.length && !compact.some((r) => r.femaleFriendly)) unmet.push('female preferred');
   if (need.requiresDesk && compact.length && !compact.some((r) => r.hasDeskMention)) unmet.push('study desk');
 
-  const prompt = `User query: ${message}\nParsed filters: ${JSON.stringify(need)}\nTop results: ${JSON.stringify(compact)}\nPotential unmet constraints: ${JSON.stringify(unmet)}\n\nWrite a short AI overview in plain English (2-4 sentences):\n- answer the user's intent directly\n- never claim a constraint is satisfied unless explicit in data\n- if constraints are unmet, state that clearly and suggest what to relax first\n- do not mention listings outside the filtered scope as "best"\nNo markdown.`;
+  const prompt = `User query: ${message}\nParsed filters: ${JSON.stringify(need)}\nTop results: ${JSON.stringify(compact)}\nPotential unmet constraints: ${JSON.stringify(unmet)}\n\nWrite a short AI overview (2-4 sentences) in the SAME LANGUAGE as the user query:\n- answer the user's intent directly\n- never claim a constraint is satisfied unless explicit in data\n- if constraints are unmet, state that clearly and suggest what to relax first\n- do not mention listings outside the filtered scope as "best"\nNo markdown.`;
 
   try {
     const controller = new AbortController();
