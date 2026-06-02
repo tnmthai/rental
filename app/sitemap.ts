@@ -1,4 +1,6 @@
 import type { MetadataRoute } from 'next';
+import fs from 'fs';
+import path from 'path';
 import { UNIVERSITY_LOCATIONS } from '@/lib/university-seo';
 import { getPool } from '@/lib/db';
 
@@ -88,5 +90,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB unavailable during build — skip listing routes
   }
 
-  return [...staticRoutes, ...universityRoutes, ...listingRoutes];
+  // Blog posts
+  let blogRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const blogDir = path.join(process.cwd(), 'content', 'blog');
+    if (fs.existsSync(blogDir)) {
+      const files = fs.readdirSync(blogDir).filter((f) => f.endsWith('.md'));
+      blogRoutes = files.map((file) => {
+        const raw = fs.readFileSync(path.join(blogDir, file), 'utf8');
+        const dateMatch = raw.match(/date:\s*["']?(\d{4}-\d{2}-\d{2})/);
+        const slug = file.replace(/\.md$/, '');
+        return {
+          url: `${SITE_URL}/blog/${slug}`,
+          lastModified: dateMatch ? new Date(dateMatch[1]) : now,
+          changeFrequency: 'monthly' as const,
+          priority: 0.7
+        };
+      });
+    }
+  } catch {
+    // ignore
+  }
+
+  return [...staticRoutes, ...universityRoutes, ...listingRoutes, ...blogRoutes];
 }
