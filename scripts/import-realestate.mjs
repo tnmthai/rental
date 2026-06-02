@@ -206,6 +206,23 @@ async function main() {
 
   if (pool) await pool.end();
 
+  // Notify IndexNow about new listings
+  if (imported > 0 && !DRY_RUN) {
+    try {
+      const indexNowKey = '842d43d77ea7f789e79e927f1e4c2a4e';
+      await fetch('https://api.indexnow.org/indexnow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        body: JSON.stringify({
+          host: 'www.rentfinder.nz',
+          key: indexNowKey,
+          urlList: ['/', '/blog', `/rent/${REGION}`]
+        })
+      }).then(r => console.error(`📡 IndexNow notified (status: ${r.status})`))
+        .catch(() => console.error('⚠️ IndexNow notification failed'));
+    } catch {}
+  }
+
   console.log(
     JSON.stringify(
       {

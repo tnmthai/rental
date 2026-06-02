@@ -216,3 +216,21 @@ for (const l of listings) {
 await pool.end();
 
 console.log(`\n✅ Done! Inserted: ${inserted}, Skipped (duplicates): ${skipped}`);
+
+// Notify IndexNow (Bing, Yandex) about new listings
+if (inserted > 0) {
+  try {
+    const indexNowKey = '842d43d77ea7f789e79e927f1e4c2a4e';
+    const payload = JSON.stringify({
+      host: 'www.rentfinder.nz',
+      key: indexNowKey,
+      urlList: ['/', '/blog', `/rent/${CITY}`]
+    });
+    await fetch('https://api.indexnow.org/indexnow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: payload
+    }).then(r => console.log(`📡 IndexNow notified (status: ${r.status})`))
+      .catch(() => console.log('⚠️ IndexNow notification failed'));
+  } catch {}
+}
