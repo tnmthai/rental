@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   title: 'RentFinder NZ — AI Rental Search for Rooms & Flats in New Zealand',
   description:
     'Find rooms, flats, and rental homes across New Zealand with AI-powered search. Compare listings by city, suburb, budget, furnished options, bills included, and nearby universities.',
+  verification: {
+    other: {
+      'msvalidate.01': '9E75D6A7127743A5B245667CE88AFC68'
+    }
+  },
   keywords: [
     'New Zealand rentals',
     'NZ rental search',
