@@ -13,7 +13,12 @@ export const UNIVERSITY_LOCATIONS: UniversityLocation[] = [
   { slug: 'christchurch', location: 'Christchurch', university: 'University of Canterbury' },
   { slug: 'lincoln', location: 'Lincoln', university: 'Lincoln University', regionHint: 'Canterbury' },
   { slug: 'dunedin', location: 'Dunedin', university: 'University of Otago' },
-  { slug: 'palmerston-north', location: 'Palmerston North', university: 'Massey University' }
+  { slug: 'palmerston-north', location: 'Palmerston North', university: 'Massey University' },
+  { slug: 'tauranga', location: 'Tauranga', university: 'University of Waikato Tauranga', regionHint: 'Bay of Plenty' },
+  { slug: 'queenstown', location: 'Queenstown', university: 'Queenstown Resort College', regionHint: 'Otago' },
+  { slug: 'new-plymouth', location: 'New Plymouth', university: 'Western Institute of Technology', regionHint: 'Taranaki' },
+  { slug: 'napier', location: 'Napier', university: 'EIT Hawke\'s Bay', regionHint: 'Hawke\'s Bay' },
+  { slug: 'hastings', location: 'Hastings', university: 'EIT Hawke\'s Bay', regionHint: 'Hawke\'s Bay' }
 ];
 
 export function getUniversityLocationBySlug(slug: string) {

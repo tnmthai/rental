@@ -1,9 +1,10 @@
 import type { MetadataRoute } from 'next';
 import { UNIVERSITY_LOCATIONS } from '@/lib/university-seo';
+import { getPool } from '@/lib/db';
 
 const SITE_URL = 'https://www.rentfinder.nz';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -20,9 +21,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7
     },
     {
+      url: `${SITE_URL}/map`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.8
+    },
+    {
       url: `${SITE_URL}/contact`,
       lastModified: now,
       changeFrequency: 'monthly',
+      priority: 0.7
+    },
+    {
+      url: `${SITE_URL}/blog`,
+      lastModified: now,
+      changeFrequency: 'weekly',
       priority: 0.7
     },
     {
@@ -44,13 +57,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8
     },
     {
-      url: `${SITE_URL}/login`,
+      url: `${SITE_URL}/wanted`,
       lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.4
+      changeFrequency: 'daily',
+      priority: 0.7
     }
   ];
 
+  // University / city landing pages
   const universityRoutes: MetadataRoute.Sitemap = UNIVERSITY_LOCATIONS.map((u) => ({
     url: `${SITE_URL}/rent/${u.slug}`,
     lastModified: now,
@@ -58,5 +72,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.85
   }));
 
-  return [...staticRoutes, ...universityRoutes];
+  // Individual listing pages (top 500 most recent)
+  let listingRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const { rows } = await getPool().query(
+      "SELECT id, created_at FROM listings WHERE status = 'active' ORDER BY created_at DESC LIMIT 500"
+    );
+    listingRoutes = rows.map((r: any) => ({
+      url: `${SITE_URL}/listing/${r.id}`,
+      lastModified: new Date(r.created_at),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6
+    }));
+  } catch {
+    // DB unavailable during build — skip listing routes
+  }
+
+  return [...staticRoutes, ...universityRoutes, ...listingRoutes];
 }

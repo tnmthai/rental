@@ -102,8 +102,48 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const images: string[] = Array.isArray(item.image_urls) ? item.image_urls : [];
   const coords = normalizeCoords(item.latitude, item.longitude, item.city);
 
+  // JSON-LD structured data for AI search engines
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Apartment',
+    name: item.title,
+    url: `https://www.rentfinder.nz/listing/${item.id}`,
+    description: item.description || undefined,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: item.city,
+      addressCountry: 'NZ'
+    },
+    offers: {
+      '@type': 'Offer',
+      price: item.price_nzd_week,
+      priceCurrency: 'NZD',
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: item.price_nzd_week,
+        priceCurrency: 'NZD',
+        billingDuration: 'P1W'
+      },
+      availability: item.status === 'approved' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+    },
+    ...(item.furnished ? { amenityFeature: { '@type': 'LocationFeatureSpecification', name: 'Furnished', value: true } } : {}),
+    ...(coords ? {
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: coords.lat,
+        longitude: coords.lng
+      }
+    } : {}),
+    ...(images.length > 0 ? { image: images[0] } : {})
+  };
+
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
       <SubNav />
 
       <h1 style={{ marginBottom: 4 }}>{item.title}</h1>
@@ -223,5 +263,6 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         })();
       `}</Script>
     </main>
+    </>
   );
 }

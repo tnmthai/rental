@@ -69,8 +69,48 @@ export default async function RentByLocationPage({ params }: Props) {
     return Number(b?.id || 0) - Number(a?.id || 0);
   });
 
+  // JSON-LD structured data for AI search engines
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Room for rent in ${item.location}, New Zealand`,
+    description: `Student-friendly rentals near ${item.university} in ${item.location}. Compare weekly prices, furnished options, and bills included listings.`,
+    url: `https://www.rentfinder.nz/rent/${item.slug}`,
+    numberOfItems: rows.length,
+    itemListElement: rows.slice(0, 40).map((h: any, i: number) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Apartment',
+        name: h.title,
+        url: `https://www.rentfinder.nz/listing/${h.id}`,
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: h.city,
+          addressCountry: 'NZ'
+        },
+        offers: {
+          '@type': 'Offer',
+          price: h.price_nzd_week,
+          priceCurrency: 'NZD',
+          priceSpecification: {
+            '@type': 'UnitPriceSpecification',
+            price: h.price_nzd_week,
+            priceCurrency: 'NZD',
+            billingDuration: 'P1W'
+          }
+        }
+      }
+    }))
+  };
+
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
       <h1 style={{ marginBottom: 6 }}>Room for rent in {item.location}</h1>
       <p style={{ color: '#4b5563', marginTop: 0 }}>
         Student-focused rentals near {item.university}
@@ -121,5 +161,6 @@ export default async function RentByLocationPage({ params }: Props) {
         </ul>
       </section>
     </main>
+    </>
   );
 }
