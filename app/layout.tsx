@@ -92,6 +92,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           `}
         </Script>
+        {/* Google Analytics 4 */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-PB7W2DKP0M" strategy="afterInteractive" />
+        <Script id="ga4" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-PB7W2DKP0M');
+          `}
+        </Script>
+
         <Script id="clarity" strategy="beforeInteractive">
           {`
             (function(c,l,a,r,i,t,y){
