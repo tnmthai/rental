@@ -301,7 +301,6 @@ const I18N = {
     externalSuggestions: 'External web suggestions',
     externalHint: 'These are web results outside our internal database.',
     visits: 'visits',
-    online: 'online',
     language: 'Language',
     english: 'English',
     vietnamese: 'Vietnamese',
@@ -361,7 +360,6 @@ const I18N = {
     externalSuggestions: 'Gợi ý từ web bên ngoài',
     externalHint: 'Đây là kết quả ngoài cơ sở dữ liệu nội bộ.',
     visits: 'lượt truy cập',
-    online: 'đang online',
     language: 'Ngôn ngữ',
     english: 'English',
     vietnamese: 'Tiếng Việt',
@@ -421,7 +419,6 @@ const I18N = {
     externalSuggestions: '外部网页建议',
     externalHint: '这些是外部数据库之外的结果。',
     visits: '次访问',
-    online: '在线',
     language: '语言',
     english: 'English',
     vietnamese: 'Tiếng Việt',
@@ -481,7 +478,6 @@ const I18N = {
     externalSuggestions: 'बाहरी वेब सुझाव',
     externalHint: 'ये हमारे आंतरिक डेटाबेस के बाहर के परिणाम हैं।',
     visits: 'विज़िट',
-    online: 'ऑनलाइन',
     language: 'भाषा',
     english: 'English',
     vietnamese: 'Tiếng Việt',
@@ -541,7 +537,6 @@ const I18N = {
     externalSuggestions: 'Ngā tohutohu ipurangi ā-waho',
     externalHint: 'Ko ēnei ngā hua o waho i tō mātou puna raraunga.',
     visits: 'ngā tirotiro',
-    online: 'tuihono',
     language: 'Reo',
     english: 'English',
     vietnamese: 'Tiếng Việt',
@@ -584,7 +579,6 @@ export default function HomePage() {
   const [pendingCount, setPendingCount] = useState(0);
   const [newCount, setNewCount] = useState(0);
   const [visitCount, setVisitCount] = useState<number | null>(null);
-  const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>('en');
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [notifCount, setNotifCount] = useState(0);
@@ -803,33 +797,7 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, [session?.user]);
 
-  useEffect(() => {
-    const storageKey = 'rf_online_session_id';
-    let sessionId = localStorage.getItem(storageKey);
-    if (!sessionId) {
-      sessionId = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
-      localStorage.setItem(storageKey, sessionId);
-    }
 
-    let timer: any;
-
-    async function trackOnline() {
-      const r = await fetch('/api/metrics/online', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ sessionId })
-      });
-      const j = await r.json().catch(() => ({}));
-      if (typeof j.online === 'number') setOnlineCount(j.online);
-    }
-
-    trackOnline();
-    timer = setInterval(trackOnline, 45000);
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, []);
 
   function markAdminSeen() {
     localStorage.setItem('admin_last_seen_pending_count', String(pendingCount));
@@ -1590,7 +1558,6 @@ export default function HomePage() {
         }}
       >
         {typeof visitCount === 'number' ? <span>👀 {visitCount.toLocaleString()}</span> : null}
-        {typeof onlineCount === 'number' ? <span>🟢 {onlineCount.toLocaleString()} online</span> : null}
         <select
           value={lang}
           onChange={(e) => setLang(e.target.value as Lang)}
