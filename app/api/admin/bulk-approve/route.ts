@@ -9,7 +9,15 @@ function isAdmin(email?: string | null) {
   return list.includes(email.toLowerCase());
 }
 
+export async function GET(req: NextRequest) {
+  return handleBulkApprove(req);
+}
+
 export async function POST(req: NextRequest) {
+  return handleBulkApprove(req);
+}
+
+async function handleBulkApprove(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!isAdmin(session?.user?.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
