@@ -300,7 +300,6 @@ const I18N = {
     readLess: 'Read less',
     externalSuggestions: 'External web suggestions',
     externalHint: 'These are web results outside our internal database.',
-    visits: 'visits',
     language: 'Language',
     english: 'English',
     vietnamese: 'Vietnamese',
@@ -359,7 +358,6 @@ const I18N = {
     readLess: 'Thu gọn',
     externalSuggestions: 'Gợi ý từ web bên ngoài',
     externalHint: 'Đây là kết quả ngoài cơ sở dữ liệu nội bộ.',
-    visits: 'lượt truy cập',
     language: 'Ngôn ngữ',
     english: 'English',
     vietnamese: 'Tiếng Việt',
@@ -418,7 +416,6 @@ const I18N = {
     readLess: '收起',
     externalSuggestions: '外部网页建议',
     externalHint: '这些是外部数据库之外的结果。',
-    visits: '次访问',
     language: '语言',
     english: 'English',
     vietnamese: 'Tiếng Việt',
@@ -477,7 +474,6 @@ const I18N = {
     readLess: 'कम पढ़ें',
     externalSuggestions: 'बाहरी वेब सुझाव',
     externalHint: 'ये हमारे आंतरिक डेटाबेस के बाहर के परिणाम हैं।',
-    visits: 'विज़िट',
     language: 'भाषा',
     english: 'English',
     vietnamese: 'Tiếng Việt',
@@ -536,7 +532,6 @@ const I18N = {
     readLess: 'Iti ake',
     externalSuggestions: 'Ngā tohutohu ipurangi ā-waho',
     externalHint: 'Ko ēnei ngā hua o waho i tō mātou puna raraunga.',
-    visits: 'ngā tirotiro',
     language: 'Reo',
     english: 'English',
     vietnamese: 'Tiếng Việt',
@@ -578,7 +573,6 @@ export default function HomePage() {
   const [saveMsg, setSaveMsg] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
   const [newCount, setNewCount] = useState(0);
-  const [visitCount, setVisitCount] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>('en');
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [notifCount, setNotifCount] = useState(0);
@@ -730,23 +724,6 @@ export default function HomePage() {
       if (timer) clearInterval(timer);
     };
   }, [session?.user]);
-
-  useEffect(() => {
-    async function trackVisit() {
-      const key = 'rf_visit_counted';
-      if (!sessionStorage.getItem(key)) {
-        const r = await fetch('/api/metrics/visits', { method: 'POST' });
-        const j = await r.json().catch(() => ({}));
-        if (typeof j.total === 'number') setVisitCount(j.total);
-        sessionStorage.setItem(key, '1');
-      } else {
-        const r = await fetch('/api/metrics/visits');
-        const j = await r.json().catch(() => ({}));
-        if (typeof j.total === 'number') setVisitCount(j.total);
-      }
-    }
-    trackVisit();
-  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('rf_lang');
@@ -1557,7 +1534,6 @@ export default function HomePage() {
           fontSize: 12
         }}
       >
-        {typeof visitCount === 'number' ? <span>👀 {visitCount.toLocaleString()}</span> : null}
         <select
           value={lang}
           onChange={(e) => setLang(e.target.value as Lang)}
