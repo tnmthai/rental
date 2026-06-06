@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 
-function trackShareEvent(listingId: number) {
+function trackShareEvent(listingId: number, platform: string) {
   try {
     fetch('/api/events', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ event_name: 'share_click', listing_id: listingId })
+      body: JSON.stringify({ event_name: 'share_click', listing_id: listingId, meta: { platform } })
     });
   } catch {}
 }
@@ -30,19 +30,19 @@ export default function ShareButtons({ listingId, title, compact = false }: {
     const url = getShareUrl();
     const text = encodeURIComponent(`${title} - ${url}`);
     window.open(`https://wa.me/?text=${text}`, '_blank');
-    trackShareEvent(listingId);
+    trackShareEvent(listingId, 'whatsapp');
   }
 
   function shareFacebook() {
     const url = encodeURIComponent(getShareUrl());
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-    trackShareEvent(listingId);
+    trackShareEvent(listingId, 'facebook');
   }
 
   async function shareZalo() {
     await copyLink();
     alert('Link copied! Paste it in Zalo to share.');
-    trackShareEvent(listingId);
+    trackShareEvent(listingId, 'zalo');
   }
 
   async function copyLink() {
@@ -51,7 +51,7 @@ export default function ShareButtons({ listingId, title, compact = false }: {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {}
-    trackShareEvent(listingId);
+    trackShareEvent(listingId, 'copy_link');
   }
 
   async function nativeShare() {
@@ -62,7 +62,7 @@ export default function ShareButtons({ listingId, title, compact = false }: {
     } else {
       await copyLink();
     }
-    trackShareEvent(listingId);
+    trackShareEvent(listingId, 'copy_link');
   }
 
   const btnStyle: React.CSSProperties = {
