@@ -58,44 +58,7 @@ export default function MapPage() {
         <ListingMap points={points} />
       </div>
 
-      <section style={{ marginTop: 22, padding: '14px 0', borderTop: '1px dashed #e5e7eb' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>
-            Click any marker to see listing details. Blue markers with $/w tooltips indicate approved listings.
-          </p>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <a
-              href="/"
-              style={{
-                border: '1px solid #0f766e',
-                borderRadius: 999,
-                padding: '8px 16px',
-                textDecoration: 'none',
-                color: '#0f766e',
-                fontWeight: 700,
-                fontSize: 14
-              }}
-            >
-              ← Back to search
-            </a>
-            <a
-              href="/post"
-              style={{
-                border: '1px solid #0f766e',
-                borderRadius: 999,
-                padding: '8px 16px',
-                background: '#0f766e',
-                textDecoration: 'none',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: 14
-              }}
-            >
-              Post a listing
-            </a>
-          </div>
-        </div>
-      </section>
+
     </main>
   );
 }

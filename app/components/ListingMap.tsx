@@ -23,12 +23,32 @@ function FitBounds({ points }: { points: DisplayPoint[] }) {
 
   useEffect(() => {
     if (!points.length) return;
-    if (points.length === 1) {
-      map.setView([points[0].lat, points[0].lng], 12);
-      return;
+    // Try geolocation first
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          map.setView([latitude, longitude], 11);
+        },
+        () => {
+          // Geolocation denied, fall back to points
+          if (points.length === 1) {
+            map.setView([points[0].lat, points[0].lng], 12);
+          } else {
+            const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
+            map.fitBounds(bounds.pad(0.15));
+          }
+        },
+        { enableHighAccuracy: false, timeout: 5000 }
+      );
+    } else {
+      if (points.length === 1) {
+        map.setView([points[0].lat, points[0].lng], 12);
+      } else {
+        const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
+        map.fitBounds(bounds.pad(0.15));
+      }
     }
-    const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
-    map.fitBounds(bounds.pad(0.25));
   }, [map, points]);
 
   return null;
@@ -70,7 +90,7 @@ export default function ListingMap({ points }: { points: Point[] }) {
     <section style={{ marginBottom: 16 }}>
       <h3 style={{ margin: '0 0 10px', color: '#111827' }}>Map view</h3>
       <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
-        <MapContainer center={[-41.2865, 174.7762]} zoom={5} style={{ width: '100%', height: 360 }}>
+        <MapContainer center={[-41.2865, 174.7762]} zoom={6} style={{ width: '100%', height: 'calc(100vh - 220px)', minHeight: 500 }}>
           <TileLayer
             attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors'
             url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
