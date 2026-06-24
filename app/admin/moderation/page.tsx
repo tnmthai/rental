@@ -28,6 +28,7 @@ export default function ModerationPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [featuringId, setFeaturingId] = useState<number | null>(null);
   const [featuredUntil, setFeaturedUntil] = useState('');
+  const [approvingAll, setApprovingAll] = useState(false);
   const [draft, setDraft] = useState<{
     title?: string;
     city?: string;
@@ -109,6 +110,21 @@ export default function ModerationPage() {
     setMsg(res.ok ? `Featured #${id}` : data.error || 'failed');
     setFeaturingId(null);
     setFeaturedUntil('');
+    await load();
+  }
+
+  async function approveAll() {
+    const ok = window.confirm('Approve ALL pending listings?');
+    if (!ok) return;
+    setApprovingAll(true);
+    const res = await fetch('/api/admin/moderation', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'approve-all' })
+    });
+    const data = await res.json();
+    setMsg(res.ok ? `Approved ${data.approved} listings` : data.error || 'failed');
+    setApprovingAll(false);
     await load();
   }
 
@@ -226,6 +242,23 @@ export default function ModerationPage() {
           >
             Wanted moderation
           </a>
+          {scope === 'pending' && items.length > 0 && (
+            <button
+              onClick={approveAll}
+              disabled={approvingAll}
+              style={{
+                border: '1px solid #16a34a',
+                background: '#16a34a',
+                color: '#fff',
+                borderRadius: 8,
+                padding: '7px 11px',
+                cursor: approvingAll ? 'not-allowed' : 'pointer',
+                opacity: approvingAll ? 0.6 : 1
+              }}
+            >
+              {approvingAll ? 'Approving...' : `Approve All (${items.length})`}
+            </button>
+          )}
         </div>
       </header>
 

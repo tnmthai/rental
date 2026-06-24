@@ -300,6 +300,14 @@ export async function updateListingStatus(listingId: number, status: 'approved' 
   return rows[0] || null;
 }
 
+export async function approveAllPending() {
+  const p = getPool();
+  const { rowCount } = await p.query(
+    `UPDATE listings SET status='approved' WHERE status='pending'`
+  );
+  return rowCount || 0;
+}
+
 export async function extendListingExpiry(listingId: number, extraDays: number) {
   const p = getPool();
   const days = Math.min(Math.max(extraDays, 1), 180);

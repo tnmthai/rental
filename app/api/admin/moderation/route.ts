@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { deleteListingById, findUserByEmail, listAllListingsAdmin, listPendingListings, trackEvent, updateListingByAdmin, updateListingStatus } from '@/lib/db';
+import { approveAllPending, deleteListingById, findUserByEmail, listAllListingsAdmin, listPendingListings, trackEvent, updateListingByAdmin, updateListingStatus } from '@/lib/db';
 
 function isAdmin(email?: string | null) {
   if (!email) return false;
@@ -62,6 +62,21 @@ export async function PATCH(req: NextRequest) {
   }
 
   return NextResponse.json({ item });
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!isAdmin(session?.user?.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const body = await req.json();
+  const action = String(body.action || '');
+
+  if (action === 'approve-all') {
+    const count = await approveAllPending();
+    return NextResponse.json({ approved: count });
+  }
+
+  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
 
 export async function DELETE(req: NextRequest) {
