@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { approveAllPending, deleteListingById, findUserByEmail, listAllListingsAdmin, listPendingListings, trackEvent, updateListingByAdmin, updateListingStatus } from '@/lib/db';
+import { approveAllPending, convertListingToWanted, deleteListingById, findUserByEmail, listAllListingsAdmin, listPendingListings, trackEvent, updateListingByAdmin, updateListingStatus } from '@/lib/db';
 
 function isAdmin(email?: string | null) {
   if (!email) return false;
@@ -44,8 +44,14 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ item });
   }
 
+  if (action === 'convert') {
+    const wanted = await convertListingToWanted(listingId);
+    if (!wanted) return NextResponse.json({ error: 'Listing not found or already converted' }, { status: 404 });
+    return NextResponse.json({ item: wanted, message: `Converted to wanted post #${wanted.id}` });
+  }
+
   if (!['approve', 'reject'].includes(action)) {
-    return NextResponse.json({ error: 'action must be approve, reject, or update' }, { status: 400 });
+    return NextResponse.json({ error: 'action must be approve, reject, update, or convert' }, { status: 400 });
   }
 
   const moderationNote = typeof body.moderation_note === 'string' ? body.moderation_note.trim() : undefined;

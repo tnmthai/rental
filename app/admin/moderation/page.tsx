@@ -454,6 +454,23 @@ export default function ModerationPage() {
                 >
                   Delete
                 </button>
+                <button
+                  onClick={async () => {
+                    const ok = window.confirm(`Convert listing #${i.id} to a wanted post?`);
+                    if (!ok) return;
+                    const res = await fetch('/api/admin/moderation', {
+                      method: 'PATCH',
+                      headers: { 'content-type': 'application/json' },
+                      body: JSON.stringify({ listing_id: i.id, action: 'convert' })
+                    });
+                    const data = await res.json();
+                    setMsg(res.ok ? data.message : data.error || 'failed');
+                    await load();
+                  }}
+                  style={{ border: '1px solid #0f766e', background: '#0f766e', color: '#fff', borderRadius: 8, padding: '8px 12px' }}
+                >
+                  Convert to Wanted
+                </button>
                 {featuringId === i.id ? (
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     <input

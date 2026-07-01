@@ -439,6 +439,44 @@ export async function deleteListingById(listingId: number) {
   return rows[0] || null;
 }
 
+export async function convertListingToWanted(listingId: number) {
+  const p = getPool();
+  await ensureWantedPostsTable();
+
+  // Lấy listing data
+  const listing = await getListingById(listingId);
+  if (!listing) return null;
+
+  // Insert vào wanted_posts
+  const { rows: inserted } = await p.query(
+    `
+      INSERT INTO wanted_posts (user_id, title, city, budget_nzd_week, description, furnished, bills_included, near_school, available_date, created_at, expires_at, status)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::date, $10::timestamptz, $11::timestamptz, $12)
+      RETURNING id, title, city, budget_nzd_week, status
+    `,
+    [
+      listing.user_id,
+      listing.title,
+      listing.city,
+      listing.price_nzd_week,
+      listing.description || null,
+      Boolean(listing.furnished),
+      Boolean(listing.bills_included),
+      listing.near_school || null,
+      listing.available_date || null,
+      listing.created_at,
+      listing.expires_at,
+      listing.status
+    ]
+  );
+  const wanted = inserted[0];
+
+  // Xoá khỏi listings
+  await p.query(`DELETE FROM listings WHERE id=$1`, [listingId]);
+
+  return wanted;
+}
+
 export async function getListingById(listingId: number) {
   const p = getPool();
   await ensureListingGeoColumns();
