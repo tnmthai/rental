@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { searchListings } from '@/lib/db';
 import { UNIVERSITY_LOCATIONS, getUniversityLocationBySlug } from '@/lib/university-seo';
 import Pagination from './Pagination';
+import Icon from '@/app/components/Icon';
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ page?: string }> };
 
@@ -120,48 +121,163 @@ export default async function RentByLocationPage({ params, searchParams }: Props
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
-        <h1 style={{ marginBottom: 6 }}>Room for rent in {item.location}</h1>
-        <p style={{ color: '#4b5563', marginTop: 0 }}>
-          Student-focused rentals near {item.university}
-          {item.regionHint ? ` (${item.regionHint})` : ''}.
-        </p>
+      <main style={{ maxWidth: 980, margin: '0 auto', padding: '0 16px' }}>
+        {/* Hero Section */}
+        <div style={{
+          background: 'linear-gradient(135deg, var(--brand-primary-light) 0%, var(--brand-blue-light) 100%)',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--border-light)',
+          padding: '40px 24px',
+          marginBottom: 32,
+          textAlign: 'center'
+        }}>
+          <h1 style={{
+            fontSize: 'clamp(24px, 4vw, 36px)',
+            fontWeight: 900,
+            margin: '0 0 8px',
+            color: 'var(--text-primary)'
+          }}>
+            Room for rent in {item.location}
+          </h1>
+          <p style={{
+            color: 'var(--text-muted)',
+            margin: '0 0 6px',
+            fontSize: 16
+          }}>
+            Student-focused rentals near {item.university}
+            {item.regionHint ? ` (${item.regionHint})` : ''}
+          </p>
+          <p style={{
+            color: 'var(--text-secondary)',
+            margin: 0,
+            fontSize: 15,
+            maxWidth: 520,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            lineHeight: 1.6
+          }}>
+            Compare weekly rent, furnished options, and listing details.
+          </p>
+        </div>
 
-        <p style={{ color: '#4b5563' }}>
-          Looking for a room for rent in {item.location}? Compare weekly rent, furnished options, and listing details.
-        </p>
-
-        <div style={{ margin: '14px 0 20px' }}>
-          <Link href="/" style={{ color: '#1a73e8', textDecoration: 'none' }}>← Back to search</Link>
+        {/* Back Link */}
+        <div style={{ marginBottom: 20 }}>
+          <Link href="/" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            color: 'var(--text-muted)',
+            textDecoration: 'none',
+            fontSize: 14,
+            fontWeight: 600
+          }}>
+            <Icon name="arrowLeft" size={16} />
+            Back to search
+          </Link>
         </div>
 
         {allRows.length === 0 ? (
-          <section style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: 14, background: '#fafafa' }}>
-            <strong>No internal listings yet in {item.location}.</strong>
-            <p style={{ marginBottom: 0, color: '#4b5563' }}>
+          <section style={{
+            border: '1px solid var(--border-default)',
+            borderRadius: 'var(--radius-lg)',
+            padding: 24,
+            background: 'var(--bg-card)',
+            textAlign: 'center'
+          }}>
+            <strong style={{ color: 'var(--text-primary)' }}>No listings yet in {item.location}.</strong>
+            <p style={{ marginBottom: 0, color: 'var(--text-muted)', marginTop: 8 }}>
               Try broader search from homepage, or check nearby areas.
             </p>
           </section>
         ) : (
           <section>
-            <p style={{ color: '#6b7280', fontSize: 14, margin: '0 0 12px' }}>
-              Showing {startIdx + 1}–{Math.min(startIdx + PAGE_SIZE, allRows.length)} of {allRows.length} listings
-            </p>
+            {/* Results count */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 16,
+              paddingBottom: 12,
+              borderBottom: '1px solid var(--border-default)'
+            }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
+                <strong style={{ color: 'var(--text-primary)' }}>{allRows.length}</strong> rooms available
+              </p>
+              <p style={{ color: 'var(--text-faint)', fontSize: 13, margin: 0 }}>
+                Page {safePage} of {totalPages}
+              </p>
+            </div>
 
-            {rows.map((h: any) => (
-              <article key={h.id} style={{ borderTop: '1px solid #eee', padding: '14px 0' }}>
-                <h3 style={{ margin: '0 0 4px', color: '#1a0dab' }}>
-                  <Link href={`/listing/${h.id}`} style={{ color: '#1a0dab', textDecoration: 'none' }}>
+            {/* Listing Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {rows.map((h: any) => (
+                <Link
+                  key={h.id}
+                  href={`/listing/${h.id}`}
+                  style={{
+                    display: 'block',
+                    padding: '18px 20px',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-default)',
+                    borderRadius: 'var(--radius-lg)',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    transition: 'all 0.15s ease',
+                    position: 'relative'
+                  }}
+                >
+                  {/* Price - top right */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 18,
+                    right: 20,
+                    fontSize: 20,
+                    fontWeight: 900,
+                    color: 'var(--brand-primary)'
+                  }}>
+                    ${h.price_nzd_week}
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>/wk</span>
+                  </div>
+
+                  {/* Title */}
+                  <h3 style={{
+                    margin: '0 0 8px',
+                    fontSize: 17,
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    paddingRight: 100,
+                    lineHeight: 1.3
+                  }}>
                     {h.title}
-                  </Link>
-                </h3>
-                <div style={{ color: '#006621', fontSize: 13 }}>{h.city}</div>
-                <div style={{ color: '#4d5156', marginTop: 5 }}>
-                  ${h.price_nzd_week}/week · {h.furnished ? 'furnished' : 'unfurnished'} · {h.bills_included ? 'bills included' : 'bills separate'}
-                </div>
-              </article>
-            ))}
+                  </h3>
 
+                  {/* Location */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    color: 'var(--text-muted)',
+                    fontSize: 14,
+                    marginBottom: 12
+                  }}>
+                    <Icon name="map" size={14} />
+                    {h.city}, New Zealand
+                  </div>
+
+                  {/* Badges */}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span className={h.furnished ? 'badge badge-brand' : 'badge badge-neutral'}>
+                      {h.furnished ? 'Furnished' : 'Unfurnished'}
+                    </span>
+                    <span className={h.bills_included ? 'badge badge-success' : 'badge badge-neutral'}>
+                      {h.bills_included ? 'Bills included' : 'Bills separate'}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Pagination */}
             {totalPages > 1 && (
               <Pagination
                 currentPage={safePage}
@@ -172,15 +288,51 @@ export default async function RentByLocationPage({ params, searchParams }: Props
           </section>
         )}
 
-        <section style={{ marginTop: 24 }}>
-          <h3>Popular university locations</h3>
-          <ul>
+        {/* Popular Locations */}
+        <section style={{
+          marginTop: 40,
+          padding: '28px 24px',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-default)',
+          borderRadius: 'var(--radius-xl)'
+        }}>
+          <h3 style={{
+            margin: '0 0 16px',
+            fontSize: 18,
+            fontWeight: 800,
+            color: 'var(--text-primary)'
+          }}>
+            Popular university locations
+          </h3>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: 8
+          }}>
             {UNIVERSITY_LOCATIONS.map((u) => (
-              <li key={u.slug}>
-                <Link href={`/rent/${u.slug}`}>Room for rent in {u.location}</Link>
-              </li>
+              <Link
+                key={u.slug}
+                href={`/rent/${u.slug}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '10px 14px',
+                  borderRadius: 'var(--radius-md)',
+                  textDecoration: 'none',
+                  color: 'var(--text-secondary)',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  transition: 'background 0.15s ease',
+                  background: u.slug === slug ? 'var(--brand-primary-light)' : 'transparent',
+                  border: u.slug === slug ? '1px solid var(--brand-primary-border)' : '1px solid transparent'
+                }}
+              >
+                <Icon name="map" size={14} color={u.slug === slug ? 'var(--brand-primary)' : 'var(--text-faint)'} />
+                {u.location}
+              </Link>
             ))}
-          </ul>
+          </div>
         </section>
       </main>
     </>

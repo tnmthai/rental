@@ -21,16 +21,15 @@ export default function Pagination({
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    padding: '10px 18px',
-    borderRadius: 8,
+    padding: '10px 20px',
+    borderRadius: 'var(--radius-md)',
     fontSize: 14,
     fontWeight: 700,
     textDecoration: 'none',
-    border: '1px solid #e5e7eb',
-    background: '#fff',
-    color: '#374151',
-    transition: 'all 0.15s ease',
-    cursor: 'pointer'
+    border: '1px solid var(--border-default)',
+    background: 'var(--bg-card)',
+    color: 'var(--text-secondary)',
+    transition: 'all 0.15s ease'
   };
 
   const disabledStyle: React.CSSProperties = {
@@ -41,25 +40,33 @@ export default function Pagination({
   };
 
   return (
-    <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 24, paddingTop: 20, borderTop: '1px solid #e5e7eb' }}>
-      <Link
-        href={prevHref}
-        style={prevPage ? btnStyle : disabledStyle}
-      >
+    <nav style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      marginTop: 28,
+      paddingTop: 24,
+      borderTop: '1px solid var(--border-default)'
+    }}>
+      <Link href={prevHref} style={prevPage ? btnStyle : disabledStyle}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6" />
         </svg>
         Prev
       </Link>
 
-      <span style={{ fontSize: 14, color: '#6b7280', fontWeight: 600 }}>
+      <span style={{
+        fontSize: 14,
+        color: 'var(--text-faint)',
+        fontWeight: 600,
+        minWidth: 60,
+        textAlign: 'center'
+      }}>
         {currentPage} / {totalPages}
       </span>
 
-      <Link
-        href={nextHref}
-        style={nextPage ? btnStyle : disabledStyle}
-      >
+      <Link href={nextHref} style={nextPage ? btnStyle : disabledStyle}>
         Next
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="9 18 15 12 9 6" />
