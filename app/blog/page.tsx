@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import fs from 'fs';
 import path from 'path';
-import { BackToHome } from '@/app/components/Icon';
+import Icon from '@/app/components/Icon';
 
 type Post = {
   title: string;
   slug: string;
   date: string;
   excerpt: string;
+  readingTime: string;
 };
 
 function parseFrontmatter(raw: string) {
@@ -25,6 +26,18 @@ function parseFrontmatter(raw: string) {
   return { meta, content: match[2].trim() };
 }
 
+function getReadingTime(text: string): string {
+  const words = text.split(/\s+/).length;
+  const minutes = Math.max(1, Math.round(words / 200));
+  return `${minutes} min read`;
+}
+
+function formatDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 function getPosts(): Post[] {
   const dir = path.join(process.cwd(), 'content', 'blog');
   if (!fs.existsSync(dir)) return [];
@@ -37,7 +50,8 @@ function getPosts(): Post[] {
         title: meta.title || f.replace(/\.md$/, ''),
         slug: meta.slug || f.replace(/\.md$/, ''),
         date: meta.date || '',
-        excerpt: meta.excerpt || content.slice(0, 160)
+        excerpt: meta.excerpt || content.slice(0, 160),
+        readingTime: getReadingTime(content)
       };
     })
     .sort((a, b) => (b.date > a.date ? 1 : -1));
@@ -52,32 +66,54 @@ export default function BlogPage() {
   const posts = getPosts();
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px' }}>
-      <BackToHome />
-      <h1 style={{ fontSize: 28, fontWeight: 900, marginBottom: 8 }}>Blog</h1>
-      <p style={{ color: '#6b7280', marginBottom: 24 }}>Tips, guides, and insights about renting in New Zealand.</p>
+    <main style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px' }}>
+      <a
+        href="/"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          color: 'var(--text-muted)',
+          textDecoration: 'none',
+          fontSize: 14,
+          fontWeight: 600,
+          marginBottom: 24,
+          transition: 'color 0.15s'
+        }}
+      >
+        <Icon name="arrowLeft" size={16} />
+        Home
+      </a>
+
+      <div className="blog-hero">
+        <h1>
+          <span className="gradient-text">Blog</span>
+        </h1>
+        <p>Tips, guides, and insights about renting in New Zealand.</p>
+      </div>
 
       {posts.length === 0 ? (
-        <p style={{ color: '#9ca3af' }}>No posts yet.</p>
+        <div className="blog-empty">
+          <p>No posts yet. Check back soon!</p>
+        </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {posts.map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
-              style={{
-                display: 'block',
-                padding: '16px 20px',
-                border: '1px solid #e5e7eb',
-                borderRadius: 12,
-                textDecoration: 'none',
-                color: 'inherit',
-                transition: 'box-shadow 0.2s'
-              }}
+              className="blog-card"
             >
-              <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: '#111827' }}>{post.title}</h2>
-              <p style={{ margin: '0 0 6px', fontSize: 13, color: '#9ca3af' }}>{post.date}</p>
-              <p style={{ margin: 0, fontSize: 14, color: '#4b5563', lineHeight: 1.5 }}>{post.excerpt}</p>
+              <h2>{post.title}</h2>
+              <p className="blog-card-excerpt">{post.excerpt}</p>
+              <div className="blog-card-meta">
+                <span>{formatDate(post.date)}</span>
+                <span className="blog-reading-time">{post.readingTime}</span>
+              </div>
+              <span className="blog-card-link">
+                Read more
+                <Icon name="chevronRight" size={16} />
+              </span>
             </Link>
           ))}
         </div>
